@@ -77,7 +77,7 @@ nav {
 .hero {
     height: 100vh;
     background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)),
-                url('https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=1600') center/cover;
+                url('images/hero.jpg') center/cover;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -436,7 +436,7 @@ section {
 
 .reserve-hero {
     background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
-                url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1600') center/cover;
+                url('images/reserve-hero.jpg') center/cover;
     height: 40vh;
     display: flex;
     align-items: center;
