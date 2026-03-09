@@ -2,6 +2,7 @@ backend:
   name: github
   repo: Paralleltraveler1801/Projects-sushi2026
   branch: main
+  site_domain: projects-sushi2026.netlify.app
 
 media_folder: "images/uploads"
 public_folder: "/images/uploads"
