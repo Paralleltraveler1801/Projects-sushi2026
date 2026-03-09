@@ -2,13 +2,16 @@ backend:
   name: github
   repo: Paralleltraveler1801/Projects-sushi2026
   branch: main
+  auth_type: pkce
+  app_id: Ov23li6jkNqxe6TuldpR
 
 media_folder: "images/uploads"
+public_folder: "/images/uploads"
 
 collections:
   - name: "news"
     label: "お知らせ"
-    folder: "news"
+    folder: "news/_posts"
     create: true
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
     fields:
