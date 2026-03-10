@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>予約カレンダー管理 - 鮨処ひし田</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+    <!-- ローディングオーバーレイ（通信中に表示） -->
+    <div class="loading-overlay" id="loading">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- ヘッダー -->
+    <header>
+        <nav>
+            <div class="logo">鮨処ひし田</div>
+            <span class="admin-label">予約カレンダー管理</span>
+        </nav>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="admin-container">
+
+        <!-- 表示月ラベル（JSで書き換え） -->
+        <div id="month-label" class="month-label"></div>
+
+        <!-- カレンダーグリッド（日付マスはJSで動的生成） -->
+        <div class="calendar" id="calendar">
+            <div class="day-header">月</div>
+            <div class="day-header">火</div>
+            <div class="day-header">水</div>
+            <div class="day-header">木</div>
+            <div class="day-header">金</div>
+            <div class="day-header">土</div>
+            <div class="day-header">日</div>
+        </div>
+
+    </main>
+
+    <!-- ステータス変更モーダル -->
+    <div class="modal" id="modal">
+        <div class="modal-box">
+            <h2 id="modal-date"></h2>
+            <p class="modal-sub">予約状況を選択してください</p>
+            <div class="modal-buttons">
+                <button class="modal-btn btn-○" onclick="update('○')">○ 空席あり</button>
+                <button class="modal-btn btn-△" onclick="update('△')">△ 残りわずか</button>
+                <button class="modal-btn btn-×" onclick="update('×')">× 満席</button>
+            </div>
+            <button class="modal-btn btn-cancel" onclick="closeModal()">キャンセル</button>
+        </div>
+    </div>
+
+    <script>
+        // GAS（Google Apps Script）のエンドポイントURL
+        const GAS_URL = "https://script.google.com/macros/s/AKfycby-G5Gh2tPQkcgsPnakXn4MyPQDIEfFE2Dtzb0M4mVvnsHiROSxY7yHbr2Mrn_R2Tbn/exec";
+
+        let calendarData = [];   // GASから取得した予約データ（キャッシュ）
+        let selectedDate = null; // モーダルで選択中の日付文字列
+
+        // ============================================================
+        // カレンダー描画: 今月・来月の2ヶ月分を表示する
+        // ============================================================
+        function renderCalendar(data) {
+            calendarData = data;
+            const calendar = document.getElementById("calendar");
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+
+            // 表示対象: 今月 と 来月
+            const targetMonths = [
+                { year: year, month: month },
+                { year: month === 11 ? year + 1 : year, month: (month + 1) % 12 }
+            ];
+
+            // 月ラベルを更新
+            document.getElementById("month-label").textContent =
+                `${year}年${month + 1}月 〜 ${targetMonths[1].year}年${targetMonths[1].month + 1}月`;
+
+            // 既存の日付マスをクリア（曜日ヘッダーは維持）
+            calendar.querySelectorAll(".day, .empty, .month-separator").forEach(el => el.remove());
+
+            // 今日の日付（時刻をリセット）
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // 表示上限: 今日から30日後まで
+            const limit = new Date(today);
+            limit.setDate(today.getDate() + 30);
+
+            targetMonths.forEach(({ year: y, month: m }) => {
+
+                // 月区切りラベルを追加
+                const label = document.createElement("div");
+                label.className = "month-separator";
+                label.style = "grid-column: 1 / -1; text-align:center; padding: 12px 0 4px; font-weight:600; color:#c8a882; letter-spacing:0.1em;";
+                label.textContent = `${y}年${m + 1}月`;
+                calendar.appendChild(label);
+
+                // 月初の曜日から空白マスの数を計算（月曜始まり）
+                const firstDay = new Date(y, m, 1).getDay();
+                const adjust = (firstDay === 0) ? 6 : firstDay - 1;
+                const daysInMonth = new Date(y, m + 1, 0).getDate();
+
+                // 空白マス（月初の曜日ずれを埋める）
+                for (let i = 0; i < adjust; i++) {
+                    const empty = document.createElement("div");
+                    empty.className = "day empty";
+                    calendar.appendChild(empty);
+                }
+
+                // 日付マスを1日〜末日まで生成
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    const found = data.find(item => item.date.trim() === dateStr);
+                    const status = found ? found.status : "";
+                    const thisDate = new Date(y, m, d);
+                    const isPast = thisDate <= today; // 過去日
+                    const isOver = thisDate > limit;  // 表示期限外
+
+                    const div = document.createElement("div");
+                    div.className = `day${(isPast || isOver) ? " past" : ""}`;
+                    div.innerHTML = `
+                        <div class="num">${d}</div>
+                        <div class="status ${(isPast || isOver) ? "" : "status-" + status}">
+                            ${(isPast || isOver) ? "-" : status}
+                        </div>`;
+
+                    // 未来かつ期限内 かつ データ登録済みの日のみクリック可能
+                    if (!isPast && !isOver && found) {
+                        div.onclick = () => openModal(dateStr);
+                    }
+                    calendar.appendChild(div);
+                }
+            });
+        }
+
+        // ============================================================
+        // モーダル開閉
+        // ============================================================
+        function openModal(date) {
+            selectedDate = date;
+            document.getElementById("modal-date").textContent = `${date} のステータス変更`;
+            document.getElementById("modal").classList.add("show");
+        }
+
+        function closeModal() {
+            document.getElementById("modal").classList.remove("show");
+            selectedDate = null;
+        }
+
+        // ============================================================
+        // ステータス更新（GASへPOSTリクエスト）
+        // ============================================================
+        function update(status) {
+            const dateToUpdate = selectedDate; // モーダルを閉じる前に日付を保存
+            closeModal();
+            document.getElementById("loading").classList.add("show");
+
+            fetch(GAS_URL, {
+                method: "POST",
+                body: JSON.stringify({ date: dateToUpdate, status: status })
+            })
+            .then(res => res.text())
+            .then(() => {
+                // ローカルデータを更新して再描画（再フェッチ不要）
+                const idx = calendarData.findIndex(item => item.date.trim() === dateToUpdate);
+                if (idx !== -1) calendarData[idx].status = status;
+                renderCalendar(calendarData);
+                document.getElementById("loading").classList.remove("show");
+            })
+            .catch(err => {
+                console.error("更新エラー:", err);
+                document.getElementById("loading").classList.remove("show");
+            });
+        }
+
+
+
+
+        // ============================================================
+        // 初期データ読み込み（GASからGETリクエスト）
+        // ============================================================
+        function loadData() {
+            fetch(GAS_URL)
+                .then(res => res.json())
+                .then(data => renderCalendar(data));
+        }
+
+        // ページ読み込み時にデータ取得
+        loadData();
+    </script>
+</body>
+</html>
