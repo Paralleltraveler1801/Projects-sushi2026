@@ -722,6 +722,7 @@ footer {
     letter-spacing: 0.15em;
     color: #333;
     margin-bottom: 1.2rem;
+    flex: 0 0 auto;
 }
 
 /* カレンダーグリッド */
@@ -808,8 +809,24 @@ footer {
     margin-bottom: 1rem;
 }
 
+/* 左右グループを同幅にして月ラベルを正確に中央寄せ */
+.calendar-nav-left,
+.calendar-nav-right {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+}
+
+.calendar-nav-right {
+    justify-content: flex-end;
+}
+
+.month-label {
+    text-align: center;
+    flex: 0 0 auto;
+}
+
 .month-btn {
-    background: none;
     border: 1px solid #c8a882;
     color: #c8a882;
     padding: 6px 14px;
@@ -849,4 +866,83 @@ footer {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* ============================================================
+   スマホ向けカレンダー調整
+   ============================================================ */
+@media (max-width: 768px) {
+
+    /* カレンダーセクションのパディング縮小 */
+    #calendar {
+        padding: 50px 3%;
+    }
+
+    #calendar h2 {
+        font-size: 1.6rem;
+    }
+
+    /* 凡例を小さく・折り返し許可 */
+    .calendar-sub {
+        font-size: 0.78rem;
+        letter-spacing: 0;
+    }
+
+    /* ナビゲーション: 上下2段に変更 */
+    .calendar-nav {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .calendar-nav-left,
+    .calendar-nav-right {
+        flex: none;
+    }
+
+    #month-label {
+        order: -1;          /* 月ラベルを1行目中央に */
+        width: 100%;
+        margin-bottom: 4px;
+    }
+
+    .month-label {
+        font-size: 1.1rem;
+    }
+
+    .month-btn {
+        padding: 5px 10px;
+        font-size: 0.78rem;
+    }
+
+    /* カレンダーグリッドをコンパクトに */
+    .calendar {
+        gap: 3px;
+        padding: 0.6rem;
+    }
+
+    .day-header {
+        padding: 6px 2px;
+        font-size: 0.72rem;
+    }
+
+    /* 日付マスを小さく */
+    .day {
+        min-height: 46px;
+        padding: 5px 2px;
+        border-radius: 4px;
+    }
+
+    .day .num {
+        font-size: 0.72rem;
+    }
+
+    .day .status {
+        font-size: 0.9rem;
+        margin-top: 2px;
+    }
+
+    /* Googleフォームのiframe高さをスマホ向けに調整 */
+    .form-container iframe {
+        height: 800px;
+    }
 }

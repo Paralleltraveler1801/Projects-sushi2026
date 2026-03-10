@@ -40,19 +40,23 @@
         <div id="calendar-wrap" style="display:none;">
         <div class="calendar-wrap">
             <div class="calendar-nav">
-                <button id="prev-month" class="month-btn">← 前の月</button>
-                <button id="refresh-btn" class="month-btn" onclick="refreshCalendar()">予約状況を更新</button>
+                <div class="calendar-nav-left">
+                    <button id="prev-month" class="month-btn">← 前の月</button>
+                    <button id="refresh-btn" class="month-btn" onclick="refreshCalendar()">更新</button>
+                </div>
                 <div id="month-label" class="month-label"></div>
-                <button id="next-month" class="month-btn">次の月 →</button>
+                <div class="calendar-nav-right">
+                    <button id="next-month" class="month-btn">次の月 →</button>
+                </div>
             </div>
             <div class="calendar" id="calendar-grid">
+            <div class="day-header">日</div>
             <div class="day-header">月</div>
             <div class="day-header">火</div>
             <div class="day-header">水</div>
             <div class="day-header">木</div>
             <div class="day-header">金</div>
             <div class="day-header">土</div>
-            <div class="day-header">日</div>
             </div>
         </div>
             </div>

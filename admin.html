@@ -29,13 +29,13 @@
 
         <!-- カレンダーグリッド（日付マスはJSで動的生成） -->
         <div class="calendar" id="calendar">
+            <div class="day-header">日</div>
             <div class="day-header">月</div>
             <div class="day-header">火</div>
             <div class="day-header">水</div>
             <div class="day-header">木</div>
             <div class="day-header">金</div>
             <div class="day-header">土</div>
-            <div class="day-header">日</div>
         </div>
 
     </main>
@@ -103,7 +103,7 @@
 
                 // 月初の曜日から空白マスの数を計算（月曜始まり）
                 const firstDay = new Date(y, m, 1).getDay();
-                const adjust = (firstDay === 0) ? 6 : firstDay - 1;
+                const adjust = firstDay; // 日曜始まり
                 const daysInMonth = new Date(y, m + 1, 0).getDate();
 
                 // 空白マス（月初の曜日ずれを埋める）

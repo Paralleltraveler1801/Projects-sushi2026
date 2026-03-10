@@ -74,7 +74,7 @@ function renderPublicCalendar(data, year, month) {
   calendar.querySelectorAll(".day, .empty").forEach(el => el.remove());
 
   const firstDay = new Date(year, month, 1).getDay();
-  const adjust = (firstDay === 0) ? 6 : firstDay - 1;
+  const adjust = firstDay; // 日曜始まり（getDay()の日=0がそのまま使える）
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
   for (let i = 0; i < adjust; i++) {
