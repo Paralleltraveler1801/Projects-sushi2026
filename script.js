@@ -115,9 +115,43 @@ document.getElementById("next-month")?.addEventListener("click", () => {
   renderPublicCalendar(publicCalendarData, currentYear, currentMonth);
 });
 
+// ===== 初回データ取得 =====
 fetch(GAS_URL)
   .then(res => res.json())
   .then(data => {
     publicCalendarData = data;
     renderPublicCalendar(data, currentYear, currentMonth);
   });
+
+async function refreshCalendar() {
+  const btn = document.getElementById("refresh-btn");
+  const loading = document.getElementById("calendar-loading");
+  const wrap = document.getElementById("calendar-wrap");
+
+  // ぐるぐる表示・カレンダー非表示
+  btn.disabled = true;
+  wrap.style.display = "none";
+  loading.style.display = "flex";
+
+  const res = await fetch(GAS_URL);
+  const data = await res.json();
+  publicCalendarData = data;
+  renderPublicCalendar(data, currentYear, currentMonth);
+
+  // ぐるぐる消してカレンダー表示
+  loading.style.display = "none";
+  wrap.style.display = "block";
+  btn.disabled = false;
+}
+fetch(GAS_URL)
+  .then(res => res.json())
+  .then(data => {
+    publicCalendarData = data;
+    renderPublicCalendar(data, currentYear, currentMonth);
+
+    // ↓ これがないとぐるぐるが消えない！
+    document.getElementById("calendar-loading").style.display = "none";
+    document.getElementById("calendar-wrap").style.display = "block";
+  });
+
+

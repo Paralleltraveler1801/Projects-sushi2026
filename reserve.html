@@ -34,11 +34,16 @@
     <section id="calendar">
         <h2>予約状況</h2>
         <p class="calendar-sub">○ 予約受付中　△ 残りわずか　× 満席</p>
+        <div id="calendar-loading">
+        <div class="spinner"></div>
+        </div>
+        <div id="calendar-wrap" style="display:none;">
         <div class="calendar-wrap">
             <div class="calendar-nav">
-            <button id="prev-month" class="month-btn">← 前の月</button>
-            <div id="month-label" class="month-label"></div>
-            <button id="next-month" class="month-btn">次の月 →</button>
+                <button id="prev-month" class="month-btn">← 前の月</button>
+                <button id="refresh-btn" class="month-btn" onclick="refreshCalendar()">予約状況を更新</button>
+                <div id="month-label" class="month-label"></div>
+                <button id="next-month" class="month-btn">次の月 →</button>
             </div>
             <div class="calendar" id="calendar-grid">
             <div class="day-header">月</div>
@@ -50,6 +55,7 @@
             <div class="day-header">日</div>
             </div>
         </div>
+            </div>
     </section>
 
     <!-- 予約コンテンツ -->
