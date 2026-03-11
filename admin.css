@@ -278,3 +278,88 @@ nav {
   margin: 4px 0;
   font-size: 14px;
 }
+
+/* ============================================================
+   レスポンシブ（スマホ対応）
+   ============================================================ */
+@media (max-width: 600px) {
+    /* ナビ縦並び */
+    nav {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.6rem;
+        padding: 0.8rem 4%;
+    }
+
+    .logo {
+        font-size: 1.2rem;
+    }
+
+    /* タブボタンを折り返し */
+    .admin-tabs {
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 0;
+        width: 100%;
+    }
+
+    .tab-btn {
+        flex: 1 1 auto;
+        padding: 8px 10px;
+        font-size: 12px;
+        text-align: center;
+    }
+
+    /* コンテナ上部余白をヘッダー高さに合わせて調整 */
+    .admin-container {
+        padding: 140px 3% 60px;
+    }
+
+    /* 月ラベル */
+    .month-label {
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+    }
+
+    /* カレンダーのマスを小さく */
+    .calendar {
+        gap: 3px;
+        padding: 0.8rem 0.4rem;
+    }
+
+    .day-header {
+        font-size: 0.7rem;
+        padding: 6px 2px;
+    }
+
+    .day {
+        min-height: 48px;
+        padding: 4px 2px;
+        border-radius: 4px;
+    }
+
+    .day .num {
+        font-size: 0.7rem;
+    }
+
+    .day .status {
+        font-size: 0.95rem;
+        margin-top: 2px;
+    }
+
+    /* モーダルを画面幅に収める */
+    .modal-box {
+        min-width: unset;
+        width: 90%;
+        padding: 1.8rem 1.2rem;
+    }
+
+    /* 予約カード */
+    .reservation-card {
+        padding: 12px;
+    }
+
+    .reservation-card p {
+        font-size: 13px;
+    }
+}

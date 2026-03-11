@@ -103,14 +103,41 @@ function update(status) {
 }
 
 function loadData() {
+    const btn = document.getElementById("admin-refresh-btn");
+    const loading = document.getElementById("calendar-loading");
+    const wrap = document.getElementById("calendar-wrap");
+
+    if (btn) btn.disabled = true;
+
+    // 予約一覧タブが表示中なら予約一覧を更新
+    const isReservations = document.getElementById("tab-reservations").style.display !== "none";
+    if (isReservations) {
+        loadReservations();
+        if (btn) btn.disabled = false;
+        return;
+    }
+
+    // カレンダータブの更新
+    if (wrap) wrap.style.display = "none";
+    if (loading) loading.style.display = "flex";
+
     fetch(GAS_URL)
         .then(res => res.json())
         .then(data => {
-            renderCalendar(data);
-            document.getElementById("calendar-loading").style.display = "none";
-            document.getElementById("calendar-wrap").style.display = "block";
+        renderCalendar(data);
+        if (loading) loading.style.display = "none";
+        if (wrap) wrap.style.display = "block";
+        if (btn) btn.disabled = false;
+        })
+        .catch(err => {
+        console.error("読み込みエラー:", err);
+        if (loading) loading.style.display = "none";
+        if (wrap) wrap.style.display = "block";
+        if (btn) btn.disabled = false;
         });
 }
+
+
 
 
 if (document.getElementById("calendar")) loadData();
@@ -128,49 +155,71 @@ function switchTab(tab) {
 }
 
 async function loadReservations() {
-  const container = document.getElementById("reservation-list");
-  if (!container) return;
+    const container = document.getElementById("reservation-list");
+    if (!container) return;
 
-  // ぐるぐる表示
-  container.innerHTML = `
-    <div style="display:flex; justify-content:center; padding:40px;">
-      <div class="spinner"></div>
-    </div>`;
+    container.innerHTML = `
+        <div style="display:flex; justify-content:center; padding:40px;">
+        <div class="spinner"></div>
+        </div>`;
 
-  const res = await fetch(GAS_URL + "?action=getReservations");
-  const data = await res.json();
+    const res = await fetch(GAS_URL + "?action=getReservations");
+    const data = await res.json();
 
-  const grouped = {};
-  data.forEach(row => {
-    const date = row["来店日時"] || "日付不明";
-    if (!grouped[date]) grouped[date] = [];
-    grouped[date].push(row);
-  });
+    // ISO文字列を日本語に変換する関数
+    // 日付フォーマット
+    function formatDate(val) {
+    if (!val) return "";
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return val;
+    // ← UTC+9に補正
+    const jst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+    return `${jst.getUTCFullYear()}年${jst.getUTCMonth() + 1}月${jst.getUTCDate()}日`;
+    }
 
-  container.innerHTML = "";
+    function formatTime(val) {
+    if (!val) return "";
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return val;
+    // ← UTC+9に補正
+    const jst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+    return `${String(jst.getUTCHours()).padStart(2, '0')}:${String(jst.getUTCMinutes()).padStart(2, '0')}`;
+    }
 
-  if (Object.keys(grouped).length === 0) {
-    container.innerHTML = "<p>予約はまだありません。</p>";
-    return;
-  }
 
-  Object.keys(grouped).sort().forEach(date => {
-    const dateEl = document.createElement("div");
-    dateEl.className = "reservation-date";
-    dateEl.textContent = date;
-    container.appendChild(dateEl);
 
-    grouped[date].forEach(r => {
-      const card = document.createElement("div");
-      card.className = "reservation-card";
-      card.innerHTML = `
+    const grouped = {};
+    data.forEach(row => {
+        const date = formatDate(row["来店日時"]) || "日付不明";
+        if (!grouped[date]) grouped[date] = [];
+        grouped[date].push(row);
+    });
+
+    container.innerHTML = "";
+
+    if (Object.keys(grouped).length === 0) {
+        container.innerHTML = "<p>予約はまだありません。</p>";
+        return;
+    }
+
+    Object.keys(grouped).sort().forEach(date => {
+        const dateEl = document.createElement("div");
+        dateEl.className = "reservation-date";
+        dateEl.textContent = date;
+        container.appendChild(dateEl);
+
+        grouped[date].forEach(r => {
+        const card = document.createElement("div");
+        card.className = "reservation-card";
+        card.innerHTML = `
         <p>👤 <strong>${r["お名前"]}</strong> 様</p>
-        <p>🕐 ${r["来店時刻"]}　👥 ${r["来店人数"]}</p>
+        <p>🕐 ${formatTime(r["来店時刻"])}　👥 ${r["来店人数"]}</p>
         <p>🍣 ${r["ご利用プラン"]}</p>
         <p>📞 ${r["電話番号"]}</p>
         <p>⚠️ アレルギー：${r["食品アレルギーの確認　※ない場合は特になしと記入してください"]}</p>
-      `;
-      container.appendChild(card);
+        `;
+
+        container.appendChild(card);
+        });
     });
-  });
 }
