@@ -212,12 +212,16 @@ async function loadReservations() {
         const card = document.createElement("div");
         card.className = "reservation-card";
         card.innerHTML = `
-        <p>👤 <strong>${r["お名前"]}</strong> 様</p>
-        <p>🕐 ${formatTime(r["来店時刻"])}　👥 ${r["来店人数"]}</p>
-        <p>🍣 ${r["ご利用プラン"]}</p>
-        <p>📞 ${r["電話番号"]}</p>
-        <p>⚠️ アレルギー：${r["食品アレルギーの確認　※ない場合は特になしと記入してください"]}</p>
-        `;
+            <p>👤 <strong>${r["お名前"]}</strong> 様</p>
+            <p>🕐 ${formatTime(r["来店時刻"])}　👥 ${r["来店人数"]}</p>
+            <p>🍣 ${r["ご利用プラン"]}</p>
+            <p>📞 ${r["電話番号"]}</p>
+            <p>⚠️ アレルギー：${r["食品アレルギーの確認"] === "あり"
+                ? `あり（${r["アレルギー製品の選択"] || "未選択"}）`
+                : "なし"}
+            </p>
+            `;
+
 
         container.appendChild(card);
         });

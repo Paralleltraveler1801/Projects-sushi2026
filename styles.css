@@ -558,6 +558,14 @@ section {
     margin-top: 2rem;
 }
 
+.contact-grid-single {
+    grid-template-columns: 1fr;
+}
+
+.contact-grid-single .contact-item {
+    text-align: center;
+}
+
 .contact-item {
     padding: 1.5rem;
     background: #f9f7f4;
