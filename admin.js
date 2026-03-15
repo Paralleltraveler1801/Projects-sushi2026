@@ -303,105 +303,82 @@ async function loadReservations() {
         let savedScrollY = 0;
         function openEditModal(r) {
         editingTimestamp = r["タイムスタンプ"];
-        // ... edit-fields を組み立てる処理は今のまま ...
 
-        // モーダル表示
-        const modal = document.getElementById("edit-modal");
-        modal.style.display = "block";
+        const s = "width:100%; padding:10px 8px; margin-top:4px; background:#2a2a2a; color:#fff; border:1px solid #555; border-radius:6px; font-size:1rem; box-sizing:border-box;";
 
-        // 背景スクロールをロック
-        savedScrollY = window.scrollY || window.pageYOffset;
-        document.body.style.position = "fixed";
-        document.body.style.top = `-${savedScrollY}px`;
-        document.body.style.left = "0";
-        document.body.style.right = "0";
-        document.body.style.width = "100%";
-
-        const s = "width:100%; padding:8px; margin-top:4px; background:#222; color:#fff; border:1px solid #555; border-radius:6px;";
-
-        // アレルギー品目の現在値をカンマ分割して配列化
         const currentAllergy = (r["アレルギー製品の選択"] || "").split(",").map(v => v.trim());
+        const fixedItems = ["えび","かに","卵","小麦","そば","乳製品","落花生・くるみ"];
+        const otherItem = currentAllergy.find(v => !fixedItems.includes(v)) || "";
 
-        // その他のテキスト部分を抽出
-        const otherItem = currentAllergy.find(v => !["えび","かに","卵","小麦","そば","乳製品","落花生・くるみ"].includes(v)) || "";
-
-        const allergyItems = ["えび", "かに", "卵", "小麦", "そば", "乳製品", "落花生・くるみ"];
-
-        const checkboxesHTML = allergyItems.map(item => `
-            <label style="display:flex; align-items:center; gap:8px; color:#ddd; margin-bottom:6px; cursor:pointer;">
+        const checkboxesHTML = fixedItems.map(item => `
+            <label style="display:flex; align-items:center; gap:10px; color:#ddd; margin-bottom:10px; cursor:pointer; font-size:1rem;">
             <input type="checkbox" value="${item}" class="allergy-check"
                 ${currentAllergy.includes(item) ? "checked" : ""}
-                style="width:16px; height:16px; accent-color:#c8a882;">
+                style="width:18px; height:18px; accent-color:#c8a882; flex-shrink:0;">
             ${item}
-            </label>
-        `).join("");
+            </label>`).join("");
 
-        const plansHTML = ["フリープラン", "6000円コース", "7000円コース", "8000円コース"].map(p =>
-        `<option value="${p}" ${r["ご利用プラン"] === p ? "selected" : ""}>${p}</option>`
-        ).join("");
-
+        const plansHTML = ["フリープラン","6000円コース","7000円コース","8000円コース"].map(p =>
+            `<option value="${p}" ${r["ご利用プラン"]===p?"selected":""}>${p}</option>`).join("");
 
         document.getElementById("edit-fields").innerHTML = `
-            <label style="display:block;margin-bottom:10px;color:#ddd;">お名前<br>
+            <label style="display:block;margin-bottom:12px;color:#ddd;">お名前<br>
             <input id="e-name" type="text" value="${r["お名前"]||""}" style="${s}"></label>
-
-            <label style="display:block;margin-bottom:10px;color:#ddd;">電話番号<br>
+            <label style="display:block;margin-bottom:12px;color:#ddd;">電話番号<br>
             <input id="e-tel" type="tel" value="${r["電話番号"]||""}" style="${s}"></label>
-
-            <label style="display:block;margin-bottom:10px;color:#ddd;">来店日<br>
+            <label style="display:block;margin-bottom:12px;color:#ddd;">来店日<br>
             <input id="e-date" type="date" value="${parseJapaneseDate(r["来店日時"])}" style="${s}"></label>
-
-            <label style="display:block;margin-bottom:10px;color:#ddd;">来店時刻<br>
+            <label style="display:block;margin-bottom:12px;color:#ddd;">来店時刻<br>
             <input id="e-time" type="time" value="${parseTime(r["来店時刻"])}" style="${s}"></label>
-
-            <label style="display:block;margin-bottom:10px;color:#ddd;">来店人数<br>
+            <label style="display:block;margin-bottom:12px;color:#ddd;">来店人数<br>
             <input id="e-count" type="text" value="${r["来店人数"]||""}" style="${s}"></label>
-
-            <label style="display:block;margin-bottom:10px;color:#ddd;">ご利用プラン<br>
+            <label style="display:block;margin-bottom:12px;color:#ddd;">ご利用プラン<br>
             <select id="e-plan" style="${s}">${plansHTML}</select></label>
-
-            <label style="display:block;margin-bottom:10px;color:#ddd;">アレルギー<br>
+            <label style="display:block;margin-bottom:12px;color:#ddd;">アレルギー<br>
             <select id="e-allergy" style="${s}">
-                <option value="なし" ${r["食品アレルギーの確認"] !== "あり" ? "selected" : ""}>なし</option>
-                <option value="あり" ${r["食品アレルギーの確認"] === "あり" ? "selected" : ""}>あり</option>
+                <option value="なし" ${r["食品アレルギーの確認"]!=="あり"?"selected":""}>なし</option>
+                <option value="あり" ${r["食品アレルギーの確認"]==="あり"?"selected":""}>あり</option>
             </select></label>
-
-            <div id="e-allergy-items-wrap" style="margin-bottom:10px; ${r["食品アレルギーの確認"] !== "あり" ? "display:none;" : ""}">
-            <p style="color:#ddd; margin-bottom:8px;">アレルギー品目</p>
+            <div id="e-allergy-items-wrap" style="${r["食品アレルギーの確認"]!=="あり"?"display:none;":""}margin-bottom:12px;">
+            <p style="color:#ddd;margin-bottom:8px;">アレルギー品目</p>
             ${checkboxesHTML}
-            <label style="display:flex; align-items:center; gap:8px; color:#ddd; cursor:pointer; margin-bottom:6px;">
+            <label style="display:flex; align-items:center; gap:10px; color:#ddd; cursor:pointer; flex-wrap:wrap;">
                 <input type="checkbox" id="allergy-other-check" class="allergy-check" value="__other__"
-                ${otherItem ? "checked" : ""}
-                style="width:16px; height:16px; accent-color:#c8a882;">
+                ${otherItem?"checked":""} style="width:18px;height:18px;accent-color:#c8a882;flex-shrink:0;">
                 その他：
-                <input type="text" id="allergy-other-text" value="${otherItem}"
-                placeholder="自由入力"
-                style="flex:1; padding:4px 8px; background:#222; color:#fff; border:1px solid #555; border-radius:4px;">
+                <input type="text" id="allergy-other-text" value="${otherItem}" placeholder="自由入力"
+                style="flex:1; min-width:100px; padding:6px 8px; background:#2a2a2a; color:#fff; border:1px solid #555; border-radius:4px;">
             </label>
             </div>
         `;
 
-        // アレルギーあり/なし切り替え
         document.getElementById("e-allergy").addEventListener("change", function() {
-            document.getElementById("e-allergy-items-wrap").style.display =
-            this.value === "あり" ? "block" : "none";
+            document.getElementById("e-allergy-items-wrap").style.display = this.value==="あり"?"block":"none";
         });
 
-        document.getElementById("edit-modal").style.display = "flex";
+        // 背景スクロールをロック（iOS Safari対応）
+        savedScrollY = window.scrollY || window.pageYOffset;
+        document.body.style.overflow = "hidden";
+        document.body.style.position = "fixed";
+        document.body.style.top = `-${savedScrollY}px`;
+        document.body.style.width = "100%";
+
+        document.getElementById("edit-overlay").style.display = "block";
+        document.getElementById("edit-modal").style.display = "block";
+
         document.getElementById("edit-save-btn").onclick = saveEdit;
         document.getElementById("edit-close-btn").onclick = closeEditModal;
         }
 
 
         function closeEditModal() {
-        const modal = document.getElementById("edit-modal");
-        modal.style.display = "none";
+        document.getElementById("edit-overlay").style.display = "none";
+        document.getElementById("edit-modal").style.display = "none";
 
         // 背景スクロール解除
+        document.body.style.overflow = "";
         document.body.style.position = "";
         document.body.style.top = "";
-        document.body.style.left = "";
-        document.body.style.right = "";
         document.body.style.width = "";
         window.scrollTo(0, savedScrollY);
 
