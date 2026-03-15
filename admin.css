@@ -416,3 +416,7 @@ nav {
   background: #c8a882;
   color: #111;
 }
+
+#edit-modal {
+  touch-action: pan-y;
+}

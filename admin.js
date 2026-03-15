@@ -300,11 +300,22 @@ async function loadReservations() {
         return val;
         }
 
-
+        let savedScrollY = 0;
         function openEditModal(r) {
-        document.getElementById("edit-modal-overlay").style.display = "block";
-        document.getElementById("edit-modal").style.display = "block";
         editingTimestamp = r["タイムスタンプ"];
+        // ... edit-fields を組み立てる処理は今のまま ...
+
+        // モーダル表示
+        const modal = document.getElementById("edit-modal");
+        modal.style.display = "block";
+
+        // 背景スクロールをロック
+        savedScrollY = window.scrollY || window.pageYOffset;
+        document.body.style.position = "fixed";
+        document.body.style.top = `-${savedScrollY}px`;
+        document.body.style.left = "0";
+        document.body.style.right = "0";
+        document.body.style.width = "100%";
 
         const s = "width:100%; padding:8px; margin-top:4px; background:#222; color:#fff; border:1px solid #555; border-radius:6px;";
 
@@ -383,8 +394,17 @@ async function loadReservations() {
 
 
         function closeEditModal() {
-        document.getElementById("edit-modal-overlay").style.display = "none";
-        document.getElementById("edit-modal").style.display = "none";
+        const modal = document.getElementById("edit-modal");
+        modal.style.display = "none";
+
+        // 背景スクロール解除
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.left = "";
+        document.body.style.right = "";
+        document.body.style.width = "";
+        window.scrollTo(0, savedScrollY);
+
         editingTimestamp = null;
         }
 
