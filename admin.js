@@ -363,6 +363,7 @@ async function loadReservations() {
         document.body.style.top = `-${savedScrollY}px`;
         document.body.style.width = "100%";
 
+        // モーダル表示
         document.getElementById("edit-overlay").style.display = "block";
         document.getElementById("edit-modal").style.display = "block";
 
@@ -375,7 +376,6 @@ async function loadReservations() {
         document.getElementById("edit-overlay").style.display = "none";
         document.getElementById("edit-modal").style.display = "none";
 
-        // 背景スクロール解除
         document.body.style.overflow = "";
         document.body.style.position = "";
         document.body.style.top = "";
