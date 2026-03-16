@@ -41,181 +41,283 @@
 
     <!-- 握り寿司 -->
     <section id="tab-nigiri" class="menu-section">
-      <h2 class="section-heading">握り寿司</h2>
+    <h2 class="section-heading">握り寿司</h2>
 
-      <!-- セットメニュー -->
-      <div class="menu-category-label">セットメニュー</div>
-      <div class="menu-grid">
-
-        <div class="menu-card has-photo">
-            <img src="images/nigiri/omakase.png" alt="おまかせ握り" class="menu-img" onclick="openImgModal('images/nigiri/omakase.png','おまかせ握り')">
-          <div class="menu-card-body">
-            <div class="menu-name">おまかせ握り</div>
-            <div class="menu-desc">大トロ、あわび、大ボタン海老などの贅沢なネタに、旬の握り2貫を加えました。</div>
-            <div class="menu-price">5,000円<span>（税込）</span></div>
-          </div>
-        </div>
-
-        <div class="menu-card has-photo">
-            <img src="images/nigiri/gokujo.png" alt="極上握り" class="menu-img" onclick="openImgModal('images/nigiri/gokujo.png','極上握り')">
-          <div class="menu-card-body">
-            <div class="menu-name">極上握り</div>
-            <div class="menu-desc">大トロ、ウニ、アワビなど、選りすぐりのネタをご用意した全12貫。</div>
-            <div class="menu-price">4,500円<span>（税込）</span></div>
-          </div>
-        </div>
-
-        <div class="menu-card has-photo">
-            <img src="images/nigiri/tokujo.png" alt="特上握り" class="menu-img" onclick="openImgModal('images/nigiri/tokujo.png','特上握り')">
-          <div class="menu-card-body">
-            <div class="menu-name">特上握り</div>
-            <div class="menu-price">4,200円<span>（税込）</span></div>
-          </div>
-        </div>
-
-        <div class="menu-card has-photo">
-            <img src="images/nigiri/jo.png" alt="上握り" class="menu-img" onclick="openImgModal('images/nigiri/jo.png','上握り')">
-          <div class="menu-card-body">
-            <div class="menu-name">上握り</div>
-            <div class="menu-price">3,800円<span>（税込）</span></div>
-          </div>
-        </div>
-
-        <div class="menu-card has-photo">
-            <img src="images/nigiri/ajisai.png" alt="紫陽花握り" class="menu-img" onclick="openImgModal('images/nigiri/ajisai.png','紫陽花握り')">
-          <div class="menu-card-body">
-            <div class="menu-name">紫陽花握り</div>
-            <div class="menu-price">3,200円<span>（税込）</span></div>
-          </div>
-        </div>
-
-        <div class="menu-card has-photo">
-            <img src="images/nigiri/hana.png" alt="花握り" class="menu-img" onclick="openImgModal('images/nigiri/hana.png','花握り')">
-          <div class="menu-card-body">
-            <div class="menu-name">花握り</div>
-            <div class="menu-price">3,200円<span>（税込）</span></div>
-          </div>
-        </div>
-
+    <div class="menu-split">
+      <div>
+        <img src="images/nigiri/omakase.png" alt="おまかせ握り" class="menu-split-img"
+            onclick="openImgModal('images/nigiri-omakase.png','おまかせ握り')">
+        <p class="menu-split-caption">おまかせ握り<br>大トロ、あわび、大ボタン海老などの贅沢なネタに、旬の握り2貫を加えました。</p>
       </div>
-
-      <!-- 単品 -->
-      <div class="menu-category-label" style="margin-top:48px;">単品握り <small>※1個のお値段・入荷のない場合はご容赦願います</small></div>
-      <div class="menu-list">
-        <div class="menu-list-item has-photo">
-          <img src="images/neta/otoro.png" alt="大トロ" class="list-img" onclick="openImgModal('images/neta/otoro.png','大トロ')">
-          <span class="list-name">大トロ</span>
-          <span class="list-price">880円</span>
-        </div>
-        <div class="menu-list-item has-photo">
-          <img src="images/neta/botan.png" alt="大ぼたんエビ" class="list-img" onclick="openImgModal('images/neta/botan.png','大ぼたんエビ')">
-          <span class="list-name">大ぼたんエビ</span>
-          <span class="list-price">880円</span>
-        </div>
-        <div class="menu-list-item has-photo">
-          <img src="images/neta/awabi.png" alt="活あわび" class="list-img" onclick="openImgModal('images/neta/awabi.png','活あわび')">
-          <span class="list-name">活あわび</span>
-          <span class="list-price">880円</span>
-        </div>
-        <div class="menu-list-item has-photo">
-          <img src="images/neta/uni.png" alt="うに" class="list-img" onclick="openImgModal('images/neta/uni.png','うに')">
-          <span class="list-name">うに</span>
-          <span class="list-price">880円</span>
-        </div>
-        <div class="menu-list-item has-photo">
-          <img src="images/neta/chutoro.png" alt="中トロ" class="list-img" onclick="openImgModal('images/neta/chutoro.png','中トロ')">
-          <span class="list-name">中トロ</span>
-          <span class="list-price">660円</span>
-        </div>
-        <div class="menu-list-item has-photo">
-          <img src="images/neta/anago.png" alt="穴子" class="list-img" onclick="openImgModal('images/neta/anago.png','穴子')">
-          <span class="list-name">穴子</span>
-          <span class="list-price">660円</span>
-        </div>
-        <div class="menu-list-item"><span class="list-name">平目</span><span class="list-price">550円</span></div>
-        <div class="menu-list-item"><span class="list-name">こはだ</span><span class="list-price">550円</span></div>
-        <div class="menu-list-item"><span class="list-name">サバ</span><span class="list-price">550円</span></div>
-        <div class="menu-list-item has-photo">
-          <img src="images/neta/tsubu.png" alt="つぶ" class="list-img" onclick="openImgModal('images/neta/tsubu.png','つぶ')">
-          <span class="list-name">つぶ</span>
-          <span class="list-price">550円</span>
-        </div>
-        <div class="menu-list-item has-photo">
-          <img src="images/neta/hotate.png" alt="活ほたて" class="list-img" onclick="openImgModal('images/neta/hotate.png','活ほたて')">
-          <span class="list-name">活ほたて</span>
-          <span class="list-price">440円</span>
-        </div>
-        <div class="menu-list-item has-photo">
-          <img src="images/neta/hokki.png" alt="活ほっき" class="list-img" onclick="openImgModal('images/neta/hokki.png','活ほっき')">
-          <span class="list-name">活ほっき</span>
-          <span class="list-price">440円</span>
-        </div>
-        <div class="menu-list-item has-photo">
-          <img src="images/neta/maguro.png" alt="マグロ赤身" class="list-img" onclick="openImgModal('images/neta/maguro.png','マグロ赤身')">
-          <span class="list-name">マグロ赤身</span>
-          <span class="list-price">440円</span>
-        </div>
-        <div class="menu-list-item has-photo">
-          <img src="images/neta/ikura.png" alt="いくら" class="list-img" onclick="openImgModal('images/neta/ikura.png','いくら')">
-          <span class="list-name">いくら</span>
-          <span class="list-price">440円</span>
-        </div>
-        <div class="menu-list-item has-photo">
-          <img src="images/neta/zuwaigani.png" alt="ずわいがに" class="list-img" onclick="openImgModal('images/neta/zuwaigani.png','ずわいがに')">
-          <span class="list-name">ずわいがに</span>
-          <span class="list-price">440円</span>
-        </div>
-        <div class="menu-list-item"><span class="list-name">中ぼたん</span><span class="list-price">440円</span></div>
-        <div class="menu-list-item has-photo">
-          <img src="images/neta/tamago.png" alt="大たまご" class="list-img" onclick="openImgModal('images/neta/tamago.png','大たまご')">
-          <span class="list-name">大たまご</span>
-          <span class="list-price">330円</span>
-        </div>
-        <div class="menu-list-item has-photo">
-          <img src="images/neta/salmon.png" alt="サーモン" class="list-img" onclick="openImgModal('images/neta/salmon.png','サーモン')">
-          <span class="list-name">サーモン</span>
-          <span class="list-price">330円</span>
-        </div>
-        <div class="menu-list-item"><span class="list-name">甘えび</span><span class="list-price">330円</span></div>
-        <div class="menu-list-item has-photo">
-          <img src="images/neta/tako.png" alt="たこ" class="list-img" onclick="openImgModal('images/neta/tako.png','たこ')">
-          <span class="list-name">たこ</span>
-          <span class="list-price">220円</span>
-        </div>
-        <div class="menu-list-item has-photo">
-          <img src="images/neta/ika.png" alt="いか" class="list-img" onclick="openImgModal('images/neta/ika.png','いか')">
-          <span class="list-name">いか</span>
-          <span class="list-price">220円</span>
-        </div>
-        <div class="menu-list-item"><span class="list-name">とびっこ</span><span class="list-price">220円</span></div>
+      <div class="menu-split-right">
+        <div class="menu-category-label">セットメニュー</div>
+        <div class="menu-row"><span class="menu-row-name">おまかせ握り</span><span class="menu-row-price">5,000円</span></div>
+        <div class="menu-row"><span class="menu-row-name">極上握り<span class="menu-row-sub">大トロ、ウニ、アワビなど全12貫</span></span><span class="menu-row-price">4,500円</span></div>
+        <div class="menu-row"><span class="menu-row-name">特上握り</span><span class="menu-row-price">4,200円</span></div>
+        <div class="menu-row"><span class="menu-row-name">上握り</span><span class="menu-row-price">3,800円</span></div>
+        <div class="menu-row"><span class="menu-row-name">紫陽花握り</span><span class="menu-row-price">3,200円</span></div>
+        <div class="menu-row"><span class="menu-row-name">花握り</span><span class="menu-row-price">3,200円</span></div>
       </div>
-    </section>
+    </div>
+
+    <div class="menu-category-label" style="margin-top:40px;">単品握り <small>※1個のお値段・入荷のない場合はご容赦願います</small></div>
+    <div class="menu-2col">
+      <div class="menu-2col-block">
+        <div class="menu-row"><span class="menu-row-name">大トロ</span><span class="menu-row-price">880円</span></div>
+        <div class="menu-row"><span class="menu-row-name">大ぼたんエビ</span><span class="menu-row-price">880円</span></div>
+        <div class="menu-row"><span class="menu-row-name">活あわび</span><span class="menu-row-price">880円</span></div>
+        <div class="menu-row"><span class="menu-row-name">うに</span><span class="menu-row-price">880円</span></div>
+        <div class="menu-row"><span class="menu-row-name">中トロ</span><span class="menu-row-price">660円</span></div>
+        <div class="menu-row"><span class="menu-row-name">穴子</span><span class="menu-row-price">660円</span></div>
+        <div class="menu-row"><span class="menu-row-name">平目</span><span class="menu-row-price">550円</span></div>
+        <div class="menu-row"><span class="menu-row-name">こはだ</span><span class="menu-row-price">550円</span></div>
+        <div class="menu-row"><span class="menu-row-name">サバ</span><span class="menu-row-price">550円</span></div>
+        <div class="menu-row"><span class="menu-row-name">つぶ</span><span class="menu-row-price">550円</span></div>
+        <div class="menu-row"><span class="menu-row-name">活ほたて</span><span class="menu-row-price">440円</span></div>
+      </div>
+      <div class="menu-2col-block">
+        <div class="menu-row"><span class="menu-row-name">活ほっき</span><span class="menu-row-price">440円</span></div>
+        <div class="menu-row"><span class="menu-row-name">マグロ赤身</span><span class="menu-row-price">440円</span></div>
+        <div class="menu-row"><span class="menu-row-name">いくら</span><span class="menu-row-price">440円</span></div>
+        <div class="menu-row"><span class="menu-row-name">ずわいがに</span><span class="menu-row-price">440円</span></div>
+        <div class="menu-row"><span class="menu-row-name">中ぼたん</span><span class="menu-row-price">440円</span></div>
+        <div class="menu-row"><span class="menu-row-name">大たまご</span><span class="menu-row-price">330円</span></div>
+        <div class="menu-row"><span class="menu-row-name">サーモン</span><span class="menu-row-price">330円</span></div>
+        <div class="menu-row"><span class="menu-row-name">甘えび</span><span class="menu-row-price">330円</span></div>
+        <div class="menu-row"><span class="menu-row-name">たこ</span><span class="menu-row-price">220円</span></div>
+        <div class="menu-row"><span class="menu-row-name">いか</span><span class="menu-row-price">220円</span></div>
+        <div class="menu-row"><span class="menu-row-name">とびっこ</span><span class="menu-row-price">220円</span></div>
+      </div>
+    </div>
+  </section>
+
 
     <!-- 盛り合わせ・丼 -->
     <section id="tab-moriawase" class="menu-section" style="display:none;">
-      <h2 class="section-heading">お寿司盛り合わせ・ちらし寿司・丼ぶり物</h2>
-      <p class="menu-coming">準備中</p>
-    </section>
+    <h2 class="section-heading">お寿司盛り合わせ・ちらし寿司・丼ぶり物</h2>
+    <p style="color:#666; font-size:0.88rem; margin-bottom:24px;">寿司盛り合わせは、2人前より各種ご用意。宴会や会合など、大人数でのお集まりにも最適です。</p>
+
+    <div class="menu-split">
+      <div>
+        <img src="images/moriawase/mori-ran.png" alt="蘭" class="menu-split-img"
+            onclick="openImgModal('images/moriawase/mori-ran.png','蘭（らん）')">
+        <p class="menu-split-caption">蘭（らん）<br>大トロ、赤身、ウニ、イクラなど当店人気のネタを集めた握りに、旬の刺身を盛り合わせました。</p>
+      </div>
+      <div class="menu-split-right">
+        <div class="menu-category-label">2人前 盛り合わせ</div>
+        <div class="menu-row"><span class="menu-row-name">木蓮（もくれん）</span><span class="menu-row-price">3,600円</span></div>
+        <div class="menu-row"><span class="menu-row-name">銀杏（いちょう）</span><span class="menu-row-price">4,800円</span></div>
+
+        <div class="menu-category-label">3人前 握り刺身セット</div>
+        <div class="menu-row"><span class="menu-row-name">蘭（らん）</span><span class="menu-row-price">19,500円</span></div>
+
+        <div class="menu-category-label">5人前 盛り合わせ</div>
+        <div class="menu-row"><span class="menu-row-name">椿（つばき）</span><span class="menu-row-price">19,900円</span></div>
+        <div class="menu-row"><span class="menu-row-name">牡丹（ぼたん）</span><span class="menu-row-price">17,300円</span></div>
+      </div>
+    </div>
+
+    <div class="menu-2col" style="margin-top:40px;">
+      <div class="menu-2col-block">
+        <div class="menu-category-label">ちらし寿司</div>
+        <div class="menu-row"><span class="menu-row-name">極上ちらし</span><span class="menu-row-price">4,500円</span></div>
+        <div class="menu-row"><span class="menu-row-name">特上ちらし</span><span class="menu-row-price">4,200円</span></div>
+        <div class="menu-row"><span class="menu-row-name">上ちらし</span><span class="menu-row-price">3,800円</span></div>
+        <div class="menu-row"><span class="menu-row-name">花ちらし</span><span class="menu-row-price">3,200円</span></div>
+      </div>
+      <div class="menu-2col-block">
+        <div class="menu-category-label">丼ぶり物</div>
+        <div class="menu-row"><span class="menu-row-name">うに丼</span><span class="menu-row-price">時価</span></div>
+        <div class="menu-row"><span class="menu-row-name">いくら丼</span><span class="menu-row-price">4,000円</span></div>
+        <div class="menu-row"><span class="menu-row-name">かにいくら丼</span><span class="menu-row-price">4,000円</span></div>
+        <div class="menu-row"><span class="menu-row-name">鉄火丼</span><span class="menu-row-price">3,500円</span></div>
+      </div>
+    </div>
+  </section>
+
 
     <!-- お刺身 -->
     <section id="tab-sashimi" class="menu-section" style="display:none;">
-      <h2 class="section-heading">お刺身</h2>
-      <p class="menu-coming">準備中</p>
-    </section>
+    <h2 class="section-heading">お刺身</h2>
+
+    <div class="menu-split">
+      <div>
+        <img src="images/osashimi/sashimi-mori1.png" alt="刺身盛り合わせ" class="menu-split-img"
+            onclick="openImgModal('images/osashimi/sashimi-mori1.png','刺身盛り合わせ')">
+        <p class="menu-split-caption">新鮮・獲れたてのネタを使った華やかなお刺身盛り合わせのほか、各種単品もご用意しております。</p>
+      </div>
+      <div class="menu-split-right">
+        <div class="menu-category-label">盛り合わせ</div>
+        <div class="menu-row">
+          <span class="menu-row-name">盛り合わせ 8点盛<span class="menu-row-sub">その時期一番美味しいものを集めた贅沢な一皿（5〜6人前）</span></span>
+          <span class="menu-row-price">2,750円</span>
+        </div>
+        <div class="menu-row">
+          <span class="menu-row-name">盛り合わせ 5点盛<span class="menu-row-sub">お好きなネタ等のリクエストもお気軽にどうぞ</span></span>
+          <span class="menu-row-price">1,980円</span>
+        </div>
+
+        <div class="menu-category-label">単品刺身</div>
+        <div class="menu-row"><span class="menu-row-name">あわび刺</span><span class="menu-row-price">3,850円</span></div>
+        <div class="menu-row"><span class="menu-row-name">トロ刺</span><span class="menu-row-price">3,300円</span></div>
+        <div class="menu-row"><span class="menu-row-name">活ツブ刺</span><span class="menu-row-price">2,500円</span></div>
+      </div>
+    </div>
+  </section>
+
+
 
     <!-- 逸品料理 -->
     <section id="tab-ippin" class="menu-section" style="display:none;">
-      <h2 class="section-heading">逸品料理</h2>
-      <p class="menu-coming">準備中</p>
-    </section>
+    <h2 class="section-heading">逸品料理</h2>
+
+    <div class="menu-split">
+      <div>
+        <img src="images/ippinmono/tempura-mori.png" alt="天婦羅盛り合わせ" class="menu-split-img"
+            onclick="openImgModal('images/ippinmono/tempura-mori.png','天婦羅盛り合わせ')">
+        <p class="menu-split-caption">えび天ぷらや季節ごとの野菜を使った天ぷら盛り合わせ。天つゆのほか岩塩もご用意しております。</p>
+      </div>
+      <div class="menu-split-right">
+        <div class="menu-category-label">揚げ物</div>
+        <div class="menu-row"><span class="menu-row-name">海老天婦羅（エビ4本）</span><span class="menu-row-price">2,200円</span></div>
+        <div class="menu-row"><span class="menu-row-name">天婦羅盛り合わせ</span><span class="menu-row-price">1,650円</span></div>
+        <div class="menu-row"><span class="menu-row-name">ザンギ</span><span class="menu-row-price">1,200円</span></div>
+        <div class="menu-row"><span class="menu-row-name">揚げ出し豆腐</span><span class="menu-row-price">990円</span></div>
+        <div class="menu-row"><span class="menu-row-name">ぷりぷりタコのたこザンギ</span><span class="menu-row-price">990円</span></div>
+        <div class="menu-row"><span class="menu-row-name">ポテト揚げ</span><span class="menu-row-price">770円</span></div>
+
+        <div class="menu-category-label">焼き物</div>
+        <div class="menu-row"><span class="menu-row-name">ホタテ串焼き</span><span class="menu-row-price">1,200円</span></div>
+        <div class="menu-row"><span class="menu-row-name">カマ焼き</span><span class="menu-row-price">1,320円</span></div>
+        <div class="menu-row"><span class="menu-row-name">サーモンのハラス焼き</span><span class="menu-row-price">1,200円</span></div>
+      </div>
+    </div>
+
+    <div class="menu-2col">
+      <div class="menu-2col-block">
+        <div class="menu-category-label">お料理</div>
+        <div class="menu-row"><span class="menu-row-name">玉子焼</span><span class="menu-row-price">900円</span></div>
+        <div class="menu-row"><span class="menu-row-name">海鮮茶碗蒸し</span><span class="menu-row-price">980円</span></div>
+        <div class="menu-row"><span class="menu-row-name">牛スジ煮込み</span><span class="menu-row-price">980円</span></div>
+
+        <div class="menu-category-label">サラダ</div>
+        <div class="menu-row"><span class="menu-row-name">海鮮サラダ</span><span class="menu-row-price">1,200円</span></div>
+        <div class="menu-row"><span class="menu-row-name">ツナサラダ</span><span class="menu-row-price">990円</span></div>
+        <div class="menu-row"><span class="menu-row-name">豆腐サラダ</span><span class="menu-row-price">990円</span></div>
+        <div class="menu-row"><span class="menu-row-name">野菜サラダ</span><span class="menu-row-price">880円</span></div>
+
+        <div class="menu-category-label">旬の献立 <small>冬季限定</small></div>
+        <div class="menu-row"><span class="menu-row-name">たちの昆布焼き</span><span class="menu-row-price">1,320円</span></div>
+        <div class="menu-row"><span class="menu-row-name">真だちの天婦羅</span><span class="menu-row-price">1,320円</span></div>
+        <div class="menu-row"><span class="menu-row-name">たちぽん</span><span class="menu-row-price">1,320円</span></div>
+      </div>
+      <div class="menu-2col-block">
+        <div class="menu-category-label">逸品</div>
+        <div class="menu-row"><span class="menu-row-name">マグロの山掛け</span><span class="menu-row-price">1,200円</span></div>
+        <div class="menu-row"><span class="menu-row-name">イカなっとう</span><span class="menu-row-price">990円</span></div>
+        <div class="menu-row"><span class="menu-row-name">酢の物盛り合わせ</span><span class="menu-row-price">990円</span></div>
+        <div class="menu-row"><span class="menu-row-name">殻付カキ</span><span class="menu-row-price">770円</span></div>
+        <div class="menu-row"><span class="menu-row-name">殻付カキ焼（1個）</span><span class="menu-row-price">770円</span></div>
+        <div class="menu-row"><span class="menu-row-name">自家製しおから</span><span class="menu-row-price">660円</span></div>
+
+        <div class="menu-category-label">おつまみ</div>
+        <div class="menu-row"><span class="menu-row-name">漬物盛り合わせ</span><span class="menu-row-price">990円</span></div>
+        <div class="menu-row"><span class="menu-row-name">枝豆</span><span class="menu-row-price">700円</span></div>
+        <div class="menu-row"><span class="menu-row-name">冷奴</span><span class="menu-row-price">880円</span></div>
+
+        <div class="menu-category-label">鍋 <small>冬季限定・2人前より</small></div>
+        <div class="menu-row"><span class="menu-row-name">ちゃんこ鍋（塩）</span><span class="menu-row-price">2,200円</span></div>
+        <div class="menu-row"><span class="menu-row-name">寄せ鍋（塩）</span><span class="menu-row-price">2,200円</span></div>
+      </div>
+    </div>
+  </section>
+
+
 
     <!-- お飲み物 -->
     <section id="tab-drink" class="menu-section" style="display:none;">
-      <h2 class="section-heading">お飲み物</h2>
-      <p class="menu-coming">準備中</p>
-    </section>
+    <h2 class="section-heading">お飲み物</h2>
+
+    <!-- 上段：写真 + ビール・日本酒・地酒・焼酎 -->
+    <div class="menu-split">
+      <div>
+        <img src="images/drink/drink-main.png" alt="お飲み物" class="menu-split-img"
+            onclick="openImgModal('images/drink/drink-main.png','お飲み物')">
+        <p class="menu-split-caption">全国各地から集めた地酒など、豊富なドリンクをご用意しております。</p>
+      </div>
+
+      <div class="menu-split-right">
+        <div class="menu-category-label">ビール</div>
+        <div class="menu-row"><span class="menu-row-name">生ビール</span><span class="menu-row-price">770円</span></div>
+        <div class="menu-row"><span class="menu-row-name">ノンアルコールビール</span><span class="menu-row-price">660円</span></div>
+        <div class="menu-row"><span class="menu-row-name">瓶ビール 中瓶</span><span class="menu-row-price">770円</span></div>
+
+        <div class="menu-category-label">日本酒</div>
+        <div class="menu-row">
+          <span class="menu-row-name">日本酒<span class="menu-row-sub">冷・常温・ぬる燗・熱燗</span></span>
+          <span class="menu-row-price">一合 600円<br>二合 990円</span>
+        </div>
+
+        <div class="menu-category-label">地酒</div>
+        <div class="menu-row"><span class="menu-row-name">各種</span><span class="menu-row-price">990円〜</span></div>
+
+        <div class="menu-category-label">焼酎</div>
+        <div class="menu-row">
+          <span class="menu-row-name">鏡月・黒霧島・鍛高譚<span class="menu-row-sub">水割り・お湯割り・ロック</span></span>
+          <span class="menu-row-price">各 770円</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 下段：2列グリッド -->
+    <div class="menu-2col">
+
+      <!-- 左列 -->
+      <div class="menu-2col-block">
+        <div class="menu-category-label">本格焼酎（キープボトル）</div>
+        <div class="menu-row"><span class="menu-row-name">甲類焼酎 鏡月</span><span class="menu-row-price">3,300円</span></div>
+        <div class="menu-row"><span class="menu-row-name">麦焼酎 神の河（かんのこ）</span><span class="menu-row-price">4,000円</span></div>
+        <div class="menu-row"><span class="menu-row-name">芋焼酎 黒霧島</span><span class="menu-row-price">4,000円</span></div>
+        <div class="menu-row"><span class="menu-row-name">シソ焼酎 鍛高譚（たんたかたん）</span><span class="menu-row-price">3,800円</span></div>
+
+        <div class="menu-category-label">ワイン</div>
+        <div class="menu-row"><span class="menu-row-name">グラスワイン 赤・白</span><span class="menu-row-price">各 880円</span></div>
+        <div class="menu-row"><span class="menu-row-name">グラスシャンパン</span><span class="menu-row-price">1,320円</span></div>
+
+        <div class="menu-category-label">ウイスキー（キープボトル）</div>
+        <div class="menu-row"><span class="menu-row-name">角サン</span><span class="menu-row-price">770円</span></div>
+      </div>
+
+      <!-- 右列 -->
+      <div class="menu-2col-block">
+        <div class="menu-category-label">酎ハイ</div>
+        <div class="menu-row"><span class="menu-row-name">ウーロンハイ</span><span class="menu-row-price">660円</span></div>
+        <div class="menu-row"><span class="menu-row-name">緑茶ハイ</span><span class="menu-row-price">660円</span></div>
+        <div class="menu-row"><span class="menu-row-name">ジャワハイ</span><span class="menu-row-price">660円</span></div>
+
+        <div class="menu-category-label">サワー</div>
+        <div class="menu-row"><span class="menu-row-name">レモンサワー</span><span class="menu-row-price">660円</span></div>
+        <div class="menu-row"><span class="menu-row-name">うめサワー</span><span class="menu-row-price">660円</span></div>
+        <div class="menu-row"><span class="menu-row-name">みかんサワー</span><span class="menu-row-price">660円</span></div>
+
+        <div class="menu-category-label">ソフトドリンク</div>
+        <div class="menu-row"><span class="menu-row-name">ウーロン茶</span><span class="menu-row-price">380円</span></div>
+        <div class="menu-row"><span class="menu-row-name">ジャワティー</span><span class="menu-row-price">380円</span></div>
+        <div class="menu-row"><span class="menu-row-name">オレンジ</span><span class="menu-row-price">380円</span></div>
+        <div class="menu-row"><span class="menu-row-name">コーラ</span><span class="menu-row-price">380円</span></div>
+        <div class="menu-row"><span class="menu-row-name">サイダー</span><span class="menu-row-price">380円</span></div>
+        <div class="menu-row"><span class="menu-row-name">ジンジャーエール</span><span class="menu-row-price">380円</span></div>
+      </div>
+
+    </div>
+  </section>
+
+
+
+
 
     <div class="menu-bottom-action">
+      <a href="reserve.html" class="reserve-btn menu-home-back">ご予約・お問い合わせ</a>
       <a href="index.html" class="reserve-btn menu-home-back">ホームに戻る</a>
     </div>
 

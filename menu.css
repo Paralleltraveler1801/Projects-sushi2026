@@ -16,6 +16,14 @@
   margin-bottom: 12px;
 }
 
+/* メニュー補足テキスト */
+.menu-note {
+  color: #777;              /* 変更 */
+  font-size: 0.8rem;
+  margin: 6px 0 0 2px;
+  line-height: 1.6;
+}
+
 .menu-subtitle {
   color: #bbb;
   font-size: 0.95rem;
@@ -51,19 +59,19 @@
   border-color: #c8a882;
 }
 
-/* セクション見出し */
+/* section見出し */
 .section-heading {
-  color: #c8a882;
+  color: #5a3e28;           /* 変更 */
   font-size: 1.3rem;
   letter-spacing: 0.1em;
   margin-bottom: 24px;
   padding-bottom: 10px;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid #ddd;  /* 変更 */
 }
 
 .menu-category-label {
   font-size: 0.85rem;
-  color: #c8a882;
+  color: #5a3e28;           /* 変更 */
   letter-spacing: 0.1em;
   margin-bottom: 16px;
   padding: 4px 12px;
@@ -146,24 +154,27 @@
   gap: 12px;
 }
 
+/* 既存の .menu-list-item を以下に丸ごと差し替え */
 .menu-list-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
   background: #1a1a1a;
   border: 1px solid #2a2a2a;
   border-radius: 8px;
-  padding: 10px 14px;
+  padding: 12px 16px;
   transition: border-color 0.2s;
+  min-height: 60px;
 }
 
 .menu-list-item:hover {
   border-color: #c8a882;
 }
 
+/* サムネイルあり */
 .list-img {
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   object-fit: cover;
   border-radius: 6px;
   cursor: pointer;
@@ -175,74 +186,169 @@
   opacity: 0.8;
 }
 
+/* 名前 */
 .list-name {
   flex: 1;
   color: #ddd;
   font-size: 0.95rem;
+  line-height: 1.4;
 }
 
+/* 値段 */
 .list-price {
   color: #c8a882;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: bold;
   white-space: nowrap;
+  margin-left: auto;
 }
 
-.menu-coming {
-  color: #666;
-  text-align: center;
-  padding: 60px 0;
-  font-size: 0.95rem;
-}
-
-.menu-bottom-action {
+/* 写真なしカード（セット等で写真がない場合） */
+.menu-card:not(.has-photo) {
   display: flex;
-  justify-content: center;
-  margin-top: 64px;
+  align-items: center;
+  min-height: 90px;
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 20px;
 }
 
-.menu-home-back {
-  display: inline-block;
-  text-decoration: none;
-  border-radius: 999px;
-  letter-spacing: 0.08em;
+.menu-card:not(.has-photo) .menu-card-body {
+  padding: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.menu-home-back:hover {
-  color: #fff;
+.menu-card:not(.has-photo) .menu-name {
+  font-size: 1rem;
+  margin-bottom: 0;
 }
 
 /* スマホ */
 @media (max-width: 600px) {
-  .menu-tabs {
-    gap: 6px;
-  }
-
-  .menu-tab {
-    padding: 6px 14px;
-    font-size: 0.82rem;
-  }
-
-  .menu-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-
-  .menu-img {
-    height: 130px;
-  }
-
   .menu-list {
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    grid-template-columns: 1fr;
+  }
+
+  .menu-list-item {
+    min-height: 52px;
   }
 
   .list-img {
-    width: 36px;
-    height: 36px;
-  }
-
-  .menu-bottom-action {
-    margin-top: 48px;
+    width: 44px;
+    height: 44px;
   }
 }
+
+/* 写真＋メニューリストの2カラムレイアウト */
+.menu-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  margin-bottom: 48px;
+  align-items: start;
+}
+
+.menu-split-img {
+  width: 100%;
+  border-radius: 8px;
+  object-fit: cover;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  display: block;
+}
+
+.menu-split-img:hover {
+  opacity: 0.85;
+}
+
+/* キャプション */
+.menu-split-caption {
+  color: #666;              /* 変更 */
+  font-size: 0.82rem;
+  text-align: center;
+  margin-top: 8px;
+  line-height: 1.6;
+}
+
+.menu-split-right {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* 2カラム内のカテゴリラベル */
+.menu-split-right .menu-category-label {
+  margin-top: 24px;
+  margin-bottom: 10px;
+}
+
+.menu-split-right .menu-category-label:first-child {
+  margin-top: 0;
+}
+
+/* 2カラム内のリスト行（シンプル版） */
+.menu-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 1px dotted #333;
+  gap: 16px;
+}
+
+.menu-row:last-child {
+  border-bottom: none;
+}
+
+.menu-row-name {
+  color: #333;              /* 変更 */
+  font-size: 0.95rem;
+  flex: 1;
+  line-height: 1.4;
+}
+
+.menu-row-sub {
+  color: #777;              /* 変更 */
+  font-size: 0.8rem;
+  display: block;
+  margin-top: 2px;
+}
+
+.menu-row-price {
+  color: #8b5e3c;           /* 変更：茶色系で見やすく */
+  font-size: 0.95rem;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+/* 写真下の2列グリッド */
+.menu-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 40px;
+  margin-top: 32px;
+}
+
+.menu-2col-block {
+  /* 各カテゴリブロック */
+}
+
+.menu-2col .menu-category-label {
+  margin-top: 24px;
+  margin-bottom: 8px;
+}
+
+.menu-2col .menu-category-label:first-child {
+  margin-top: 0;
+}
+
+@media (max-width: 700px) {
+  .menu-2col {
+    grid-template-columns: 1fr;
+  }
+}
+
