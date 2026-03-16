@@ -511,4 +511,16 @@
   .menu-split-right {
     width: 100%;
   }
+  .menu-bottom-action {
+    flex-direction: column;
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .menu-bottom-action .reserve-btn {
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box;
+  }
 }
