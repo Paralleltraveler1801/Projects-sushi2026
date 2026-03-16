@@ -81,11 +81,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function goTo(index) {
       if (isTransitioning) return;
-      isTransitioning = true;
-      current = index;
-      track.style.transition = 'transform 0.5s ease';
-      track.style.transform  = `translateX(-${current * 100}%)`;
-      updateDots();
+  isTransitioning = true;
+  current = index;
+  track.style.transition = 'transform 0.5s ease';
+  track.style.transform = `translateX(-${current * 100}%)`;
+  updateDots();
+
+  setTimeout(() => {         // ← この3行を追加するだけ
+    isTransitioning = false;
+  }, 600);
     }
 
     // transitionEnd：端のクローンに来たら瞬間ジャンプ
@@ -128,3 +132,20 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+document.addEventListener('DOMContentLoaded', () => {
+  const hamburger = document.getElementById('hamburger');
+  const navLinks  = document.getElementById('nav-links');
+
+  hamburger.addEventListener('click', () => {
+    hamburger.classList.toggle('open');
+    navLinks.classList.toggle('open');
+  });
+
+  // リンクをタップしたらメニューを閉じる
+  navLinks.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      hamburger.classList.remove('open');
+      navLinks.classList.remove('open');
+    });
+  });
+});

@@ -12,14 +12,19 @@
     <div class="header-inner">
       <nav>
         <div class="logo">鮨処ひし田</div>
-        <ul class="nav-links">
-          <li><a href="index.html#about">お店紹介</a></li>
-          <li><a href="menu.html" class="active">お品書き</a></li>
-          <li><a href="index.html#interior">店内紹介</a></li>
-          <li><a href="index.html#news">お知らせ</a></li>
-          <li><a href="index.html#shops">アクセス</a></li>
-          <li><a href="reserve.html" class="nav-reserve">ご予約</a></li>
-        </ul>
+        <ul class="nav-links" id="nav-links">
+                <li><a href="#about">お店紹介</a></li>
+                <li><a href="menu.html">お品書き</a></li>
+                <li><a href="#interior">店内紹介</a></li>
+                <li><a href="#shops">アクセス</a></li>
+                <li><a href="#news">お知らせ</a></li>
+                <li><a href="reserve.html" class="nav-reserve">ご予約</a></li>
+            </ul>
+            <button class="hamburger" id="hamburger" aria-label="メニュー">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
       </nav>
     </div>
   </header>
@@ -400,23 +405,13 @@
 
     <!-- 上段：写真 + ビール・日本酒・地酒・焼酎 -->
     <div class="menu-split">
-      <div class="menu-carousel">
-      <div class="menu-carousel-inner">
-        <button class="menu-carousel-btn prev">&#8592;</button>
-        <button class="menu-carousel-btn next">&#8594;</button>
-        <div class="menu-carousel-track">
-
-          <div class="menu-carousel-slide" onclick="openImgModal('images/drink/drink-main.png','お飲み物')">
-            <img src="images/drink/drink-main.png" alt="お飲み物">
-            <div class="menu-carousel-caption">
-              <div class="menu-carousel-name">豊富なドリンク</div>
-              <div class="menu-carousel-desc">全国各地から集めた地酒など、豊富なドリンクをご用意しております。</div>
-            </div>
-          </div>
-
-        </div>
+      <div class="menu-single-img" onclick="openImgModal('images/drink/drink-main.png','お飲み物')">
+      <img src="images/drink/drink-main.png" alt="お飲み物">
+      <div class="menu-carousel-caption">
+        <div class="menu-carousel-name">豊富なドリンク</div>
+        <div class="menu-carousel-desc">全国各地から集めた地酒など、豊富なドリンクをご用意しております。</div>
       </div>
-      <div class="menu-carousel-dots"></div>
+    </div>
     </div>
 
 
