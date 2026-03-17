@@ -1,11 +1,11 @@
-const newsList = document.getElementById('news-list');
+const newsListE1 = document.getElementById('news-list');
 
-if (newsList) {
+if (newsListE1) {
     fetch('./news.json')
         .then(res => res.json())
         .then(data => {
             if (data.length === 0) {
-                newsList.innerHTML = '<li class="news-empty">現在お知らせはありません。</li>';
+                newsListE1.innerHTML = '<li class="news-empty">現在お知らせはありません。</li>';
                 return;
             }
 
@@ -28,10 +28,10 @@ if (newsList) {
                     li.innerHTML = `<div class="news-link">${inner}</div>`;
                 }
 
-                newsList.appendChild(li);
+                newsListE1.appendChild(li);
             });
         })
         .catch(() => {
-            newsList.innerHTML = '<li class="news-empty">現在お知らせはありません。</li>';
+            newsListE1.innerHTML = '<li class="news-empty">現在お知らせはありません。</li>';
         });
 }
