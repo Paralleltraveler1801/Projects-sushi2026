@@ -388,7 +388,7 @@ section {
     background: white;
     border-bottom: 1px solid #e8e0d8;
     transition: background 0.25s, padding-left 0.25s;
-    cursor: default;
+    cursor: pointer;
 }
 
 .news-item:hover {
@@ -429,6 +429,12 @@ section {
     color: #aaa;
     font-size: 0.95rem;
     text-align: center;
+}
+
+.news-link {
+    display: contents;
+    text-decoration: none;
+    color: inherit;
 }
 
 /* 予約ページ用スタイル */

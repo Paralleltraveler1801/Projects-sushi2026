@@ -9,12 +9,21 @@ if (newsList) {
             data.forEach(item => {
                 const li = document.createElement('li');
                 li.className = 'news-item';
+
+                // urlがあればリンク、なければdiv
+                const wrapper = item.url
+                    ? `<a href="${item.url}" class="news-link">`
+                    : `<div class="news-link">`;
+                const wrapperClose = item.url ? `</a>` : `</div>`;
+
                 li.innerHTML = `
-                    <time class="news-date">${item.date}</time>
-                    <div class="news-body">
-                        <p class="news-title">${item.title}</p>
-                        <p class="news-text">${item.content}</p>
-                    </div>`;
+                    ${wrapper}
+                        <time class="news-date">${item.date}</time>
+                        <div class="news-body">
+                            <p class="news-title">${item.title}</p>
+                            <p class="news-text">${item.content}</p>
+                        </div>
+                    ${wrapperClose}`;
                 newsList.appendChild(li);
             });
         })
@@ -22,6 +31,7 @@ if (newsList) {
             newsList.innerHTML = '<li class="news-empty">現在お知らせはありません。</li>';
         });
 }
+
 
 // ============================================================
 // ハンバーガーメニュー
