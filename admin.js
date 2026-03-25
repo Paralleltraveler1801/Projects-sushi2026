@@ -422,6 +422,22 @@ async function loadReservations() {
         const d = new Date(dateVal + "T00:00:00+09:00");
         const formattedDate = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
 
+        const fields = [
+            { label: "お名前",     old: originalReservation["お名前"],     now: document.getElementById("e-name").value },
+            { label: "電話番号",   old: originalReservation["電話番号"],   now: document.getElementById("e-tel").value },
+            { label: "来店日",     old: parseJapaneseDate(originalReservation["来店日時"]), now: dateVal },
+            { label: "来店時刻",   old: originalReservation["来店時刻"],   now: document.getElementById("e-time").value },
+            { label: "来店人数",   old: originalReservation["来店人数"],   now: document.getElementById("e-count").value },
+            { label: "プラン",     old: originalReservation["ご利用プラン"], now: document.getElementById("e-plan").value },
+        ];
+        const diffs = fields
+            .filter(f => String(f.old).trim() !== String(f.now).trim())
+            .map(f => `${f.label}: ${f.old}→${f.now}`);
+
+        const manualMemo = document.getElementById("editMemo").value.trim();
+        const autoLog = diffs.length > 0 ? diffs.join("、") : "内容変更なし";
+        const editMemo = manualMemo ? `${autoLog}（${manualMemo}）` : autoLog;
+        
         // チェックされた品目を収集
         const checked = [...document.querySelectorAll(".allergy-check:checked")]
             .map(cb => {
@@ -435,7 +451,7 @@ async function loadReservations() {
         const payload = {
             action: "updateReservation",
             timestamp: editingTimestamp,
-            editMemo: document.getElementById("editMemo").value.trim(),
+            editMemo: editMemo,
             "お名前": document.getElementById("e-name").value,
             "電話番号": document.getElementById("e-tel").value,
             "来店日時": formattedDate,
