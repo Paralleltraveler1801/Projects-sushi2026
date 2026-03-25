@@ -285,18 +285,31 @@ async function loadReservations() {
         }
 
         function parseTime(val) {
-        if (!val) return "";
+        if (!val) return "未選択";
+        
+        // 👇 新形式「17時00分」「17時15分」対応
+        const timeMatch = val.match(/(\d{1,2})時(\d{2})分/);
+        if (timeMatch) {
+            return `${String(timeMatch[1]).padStart(2,'0')}:${timeMatch[2]}`;
+        }
+        
         // すでに HH:mm 形式ならそのまま
         if (/^\d{2}:\d{2}$/.test(val)) return val;
-        // ISO・Date文字列の場合
+        
+        // "17 時" → "17:00"
+        if (/^\d{1,2}\s*時$/.test(val)) {
+            const hour = val.match(/(\d{1,2})/)?.[1];
+            return hour ? `${String(hour).padStart(2,'0')}:00` : val;
+        }
+        
+        // ISO・Date文字列
         const d = new Date(val);
         if (!isNaN(d.getTime())) {
             const jst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
             return `${String(jst.getUTCHours()).padStart(2,'0')}:${String(jst.getUTCMinutes()).padStart(2,'0')}`;
         }
-        // "19時01分" 形式の場合
-        const m = val.match(/(\d{1,2})時(\d{2})分/);
-        if (m) return `${String(m[1]).padStart(2,'0')}:${m[2]}`;
+        
+        console.log("parseTime未対応:", val);
         return val;
         }
 
