@@ -177,14 +177,13 @@ async function loadReservations() {
     return `${jst.getUTCFullYear()}年${jst.getUTCMonth() + 1}月${jst.getUTCDate()}日`;
     }
 
-    function formatTime(val) {
-    if (!val) return "";
-    const d = new Date(val);
-    if (isNaN(d.getTime())) return val;
-    // ← UTC+9に補正
-    const jst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
-    return `${String(jst.getUTCHours()).padStart(2, '0')}:${String(jst.getUTCMinutes()).padStart(2, '0')}`;
-    }
+        function formatTime(val) {
+        if (!val) return "";
+        const d = new Date(val);
+        if (isNaN(d.getTime())) return val;
+        const jst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+        return `${String(jst.getUTCHours()).padStart(2, '0')}:${String(jst.getUTCMinutes()).padStart(2, '0')}`;
+        }
 
 
 
