@@ -342,21 +342,23 @@ async function loadReservations() {
             <label style="display:block;margin-bottom:12px;color:#ddd;">来店日<br>
             <input id="e-date" type="date" value="${parseJapaneseDate(r["来店日時"])}" style="${s}"></label>
             <label style="display:block;margin-bottom:12px;color:#ddd;">来店時刻<br>
-            ${(() => {
-            const timeOptions = ['17時00分','17時15分','17時30分','17時45分',
-    '18時00分','18時15分','18時30分','18時45分',
-    '19時00分','19時15分','19時30分','19時45分',
-    '20時00分'];
-            const currentTime = parseTime(r["来店時刻"]);  
-            return `<select id="e-time" style="${s}">
+                <select id="e-time" style="${s}">
                 <option value="">時刻を選択</option>
-                ${timeOptions.map(t => {
-                const value = t.replace(/[時分]/g, m => m==='時'?'':':').replace(/(\d{2}):(\d{2})/, '$1:$2');
-                return `<option value="${value}" ${currentTime===value?"selected":""}>${t}</option>`;
-                }).join('')}
-            </select>`;
-            })()}
-            </label>
+                <option value="17時00分" ${r["来店時刻"] === "17時00分" ? "selected" : ""}>17時00分</option>
+                <option value="17時15分" ${r["来店時刻"] === "17時15分" ? "selected" : ""}>17時15分</option>
+                <option value="17時30分" ${r["来店時刻"] === "17時30分" ? "selected" : ""}>17時30分</option>
+                <option value="17時45分" ${r["来店時刻"] === "17時45分" ? "selected" : ""}>17時45分</option>
+                <option value="18時00分" ${r["来店時刻"] === "18時00分" ? "selected" : ""}>18時00分</option>
+                <option value="18時15分" ${r["来店時刻"] === "18時15分" ? "selected" : ""}>18時15分</option>
+                <option value="18時30分" ${r["来店時刻"] === "18時30分" ? "selected" : ""}>18時30分</option>
+                <option value="18時45分" ${r["来店時刻"] === "18時45分" ? "selected" : ""}>18時45分</option>
+                <option value="19時00分" ${r["来店時刻"] === "19時00分" ? "selected" : ""}>19時00分</option>
+                <option value="19時15分" ${r["来店時刻"] === "19時15分" ? "selected" : ""}>19時15分</option>
+                <option value="19時30分" ${r["来店時刻"] === "19時30分" ? "selected" : ""}>19時30分</option>
+                <option value="19時45分" ${r["来店時刻"] === "19時45分" ? "selected" : ""}>19時45分</option>
+                <option value="20時00分" ${r["来店時刻"] === "20時00分" ? "selected" : ""}>20時00分</option>
+                </select>
+                </label>
             <label style="display:block;margin-bottom:12px;color:#ddd;">来店人数<br>
             <input id="e-count" type="text" value="${r["来店人数"]||""}" style="${s}"></label>
             <label style="display:block;margin-bottom:12px;color:#ddd;">ご利用プラン<br>
