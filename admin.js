@@ -342,12 +342,16 @@ async function loadReservations() {
             <div id="e-allergy-items-wrap" style="${r["食品アレルギーの確認"]!=="あり"?"display:none;":""}margin-bottom:12px;">
             <p style="color:#ddd;margin-bottom:8px;">アレルギー品目</p>
             ${checkboxesHTML}
-            <label style="display:flex; align-items:center; gap:10px; color:#ddd; cursor:pointer; flex-wrap:wrap;">
+            <labe style="display:flex; align-items:center; gap:10px; color:#ddd; cursor:pointer; flex-wrap:wrap;">
                 <input type="checkbox" id="allergy-other-check" class="allergy-check" value="__other__"
                 ${otherItem?"checked":""} style="width:18px;height:18px;accent-color:#c8a882;flex-shrink:0;">
                 その他：
                 <input type="text" id="allergy-other-text" value="${otherItem}" placeholder="自由入力"
                 style="flex:1; min-width:100px; padding:6px 8px; background:#2a2a2a; color:#fff; border:1px solid #555; border-radius:4px;">
+            </label>
+            <label style="display:block;margin-bottom:12px;color:#ddd;">編集メモ（任意）<br>
+            <textarea id="editMemo" placeholder="例：人数を3名→5名に変更" maxlength="100" 
+            style="width:100%; padding:10px 8px; margin-top:4px; background:#2a2a2a; color:#fff; border:1px solid #555; border-radius:6px; font-size:1rem; box-sizing:border-box; height:60px;"></textarea>
             </label>
             </div>
         `;
@@ -403,6 +407,7 @@ async function loadReservations() {
         const payload = {
             action: "updateReservation",
             timestamp: editingTimestamp,
+            editMemo: document.getElementById("editMemo").value.trim(),
             "お名前": document.getElementById("e-name").value,
             "電話番号": document.getElementById("e-tel").value,
             "来店日時": formattedDate,
