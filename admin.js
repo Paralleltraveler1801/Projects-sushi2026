@@ -221,6 +221,7 @@ async function loadReservations() {
             ? `あり（${r["アレルギー製品の選択"] || "未選択"}）`
             : "なし"}
             </p>
+            ${r["備考"] ? `<p style="color:#aaa;font-size:0.85rem;margin-top:6px;">📝 ${r["備考"].replace(/\n/g, '<br>')}</p>` : ""}
         `;
 
         // ボタンはJSで作ってaddEventListenerをつける
