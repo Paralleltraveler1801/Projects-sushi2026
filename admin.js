@@ -4,7 +4,7 @@
 // ============================================================
 // 管理画面専用
 // ============================================================
-const GAS_URL = "https://script.google.com/macros/s/AKfycby-G5Gh2tPQkcgsPnakXn4MyPQDIEfFE2Dtzb0M4mVvnsHiROSxY7yHbr2Mrn_R2Tbn/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwUfh6gFXK0VB815XkeB1ahYtVQfYpegawLQpnjpB_rNbbQKOHTE1CWfUx5fzE87XSE/exec";
 
 let calendarData = [];
 let selectedDate = null;
