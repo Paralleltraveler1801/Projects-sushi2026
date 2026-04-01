@@ -4,7 +4,7 @@
 // ============================================================
 // 管理画面専用
 // ============================================================
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwUfh6gFXK0VB815XkeB1ahYtVQfYpegawLQpnjpB_rNbbQKOHTE1CWfUx5fzE87XSE/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxI7DGvBG1k1RdEoEyjsYt4Wc8Iec5croDi4e_85vt4QtKBn3-5F07RZgHJzdrngsMMtA/exec";
 
 let calendarData = [];
 let selectedDate = null;
@@ -260,10 +260,7 @@ async function loadReservations() {
                 <p>🕐 ${formatTime(r["来店時刻"])}　👥 ${r["来店人数"]}</p>
                 <p>🍣 ${r["ご利用プラン"]}</p>
                 <p>📞 ${r["電話番号"]}</p>
-                <p>⚠️ アレルギー：${r["食品アレルギーの確認"] === "あり"
-                    ? `あり（${r["アレルギー製品の選択"] || "未選択"}）`
-                    : "なし"}
-                </p>
+                <p>🪑 座席：${r["座席のタイプ"] || "-"}</p>
                 ${r["備考"] ? `<p style="color:#aaa;font-size:0.85rem;margin-top:6px;">📝 ${r["備考"].replace(/\n/g, '<br>')}</p>` : ""}
             `;
 
@@ -314,25 +311,14 @@ function openEditModal(r) {
 
     const s = "width:100%; padding:10px 8px; margin-top:4px; background:#2a2a2a; color:#fff; border:1px solid #555; border-radius:6px; font-size:1rem; box-sizing:border-box;";
 
-    const currentAllergy = (r["アレルギー製品の選択"] || "").split(",").map(v => v.trim());
-    const fixedItems = ["えび","かに","卵","小麦","そば","乳製品","落花生・くるみ"];
-    const otherItem = currentAllergy.find(v => !fixedItems.includes(v)) || "";
-
-    const checkboxesHTML = fixedItems.map(item => `
-        <label style="display:flex; align-items:center; gap:10px; color:#ddd; margin-bottom:10px; cursor:pointer; font-size:1rem;">
-            <input type="checkbox" value="${item}" class="allergy-check"
-                ${currentAllergy.includes(item) ? "checked" : ""}
-                style="width:18px; height:18px; accent-color:#c8a882; flex-shrink:0;">
-            ${item}
-        </label>`).join("");
 
     const plansHTML = ["フリープラン","6000円コース","7000円コース","8000円コース"].map(p =>
         `<option value="${p}" ${r["ご利用プラン"]===p?"selected":""}>${p}</option>`).join("");
 
     const timeOptions = [
-        "17時00分","17時15分","17時30分","17時45分",
-        "18時00分","18時15分","18時30分","18時45分",
-        "19時00分","19時15分","19時30分","19時45分",
+        "17時00分","17時30分",
+        "18時00分","18時30分",
+        "19時00分","19時30分",
         "20時00分"
     ].map(t => `<option value="${t}" ${r["来店時刻"]===t?"selected":""}>${t}</option>`).join("");
 
@@ -353,31 +339,17 @@ function openEditModal(r) {
         <input id="e-count" type="text" value="${r["来店人数"]||""}" style="${s}"></label>
         <label style="display:block;margin-bottom:12px;color:#ddd;">ご利用プラン<br>
         <select id="e-plan" style="${s}">${plansHTML}</select></label>
-        <label style="display:block;margin-bottom:12px;color:#ddd;">アレルギー<br>
-        <select id="e-allergy" style="${s}">
-            <option value="なし" ${r["食品アレルギーの確認"]!=="あり"?"selected":""}>なし</option>
-            <option value="あり" ${r["食品アレルギーの確認"]==="あり"?"selected":""}>あり</option>
+        <label style="display:block;margin-bottom:12px;color:#ddd;">座席タイプ<br>
+        <select id="e-seat" style="${s}">
+            <option value="カウンター" ${r["座席のタイプ"]==="カウンター"?"selected":""}>カウンター</option>
+            <option value="小上がり" ${r["座席のタイプ"]==="小上がり"?"selected":""}>小上がり</option>
+            <option value="個室" ${r["座席のタイプ"]==="個室"?"selected":""}>個室（+800円）</option>
         </select></label>
-        <div id="e-allergy-items-wrap" style="${r["食品アレルギーの確認"]!=="あり"?"display:none;":""}margin-bottom:12px;">
-            <p style="color:#ddd;margin-bottom:8px;">アレルギー品目</p>
-            ${checkboxesHTML}
-            <label style="display:flex;align-items:center;gap:10px;color:#ddd;cursor:pointer;flex-wrap:wrap;">
-                <input type="checkbox" id="allergy-other-check" class="allergy-check" value="__other__"
-                    ${otherItem?"checked":""} style="width:18px;height:18px;accent-color:#c8a882;flex-shrink:0;">
-                その他：
-                <input type="text" id="allergy-other-text" value="${otherItem}" placeholder="自由入力"
-                    style="flex:1;min-width:100px;padding:6px 8px;background:#2a2a2a;color:#fff;border:1px solid #555;border-radius:4px;">
-            </label>
-        </div>
         <label style="display:block;margin-bottom:12px;color:#ddd;">編集メモ（必須）<br>
         <textarea id="editMemo" placeholder="例：人数を3名→5名に変更" maxlength="100"
             style="width:100%;padding:10px 8px;margin-top:4px;background:#2a2a2a;color:#fff;border:1px solid #555;border-radius:6px;font-size:1rem;box-sizing:border-box;height:60px;"></textarea>
         </label>
     `;
-
-    document.getElementById("e-allergy").addEventListener("change", function() {
-        document.getElementById("e-allergy-items-wrap").style.display = this.value==="あり"?"block":"none";
-    });
 
     savedScrollY = window.scrollY || window.pageYOffset;
     document.body.style.overflow = "hidden";
@@ -425,6 +397,7 @@ async function saveEdit() {
         { label: "来店時刻", old: originalReservation["来店時刻"],     now: document.getElementById("e-time").value },
         { label: "来店人数", old: originalReservation["来店人数"],     now: document.getElementById("e-count").value },
         { label: "プラン",   old: originalReservation["ご利用プラン"], now: document.getElementById("e-plan").value },
+        { label: "座席",     old: originalReservation["座席のタイプ"], now: document.getElementById("e-seat").value },
     ];
     const diffs = fields
         .filter(f => String(f.old).trim() !== String(f.now).trim())
@@ -432,15 +405,6 @@ async function saveEdit() {
 
     const autoLog = diffs.length > 0 ? diffs.join("、") : "内容変更なし";
     const editMemo = `${autoLog}（${memo}）`;
-
-    const checked = [...document.querySelectorAll(".allergy-check:checked")]
-        .map(cb => {
-            if (cb.value === "__other__") {
-                return document.getElementById("allergy-other-text").value.trim();
-            }
-            return cb.value;
-        })
-        .filter(v => v !== "");
 
     const payload = {
         action: "updateReservation",
@@ -452,8 +416,7 @@ async function saveEdit() {
         "来店時刻": document.getElementById("e-time").value,
         "来店人数": document.getElementById("e-count").value,
         "ご利用プラン": document.getElementById("e-plan").value,
-        "食品アレルギーの確認": document.getElementById("e-allergy").value,
-        "アレルギー製品の選択": checked.join(", "),
+        "座席のタイプ": document.getElementById("e-seat").value,
     };
 
     const btn = document.getElementById("edit-save-btn");

@@ -5,6 +5,195 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>鮨処ひし田 - ご予約</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        /* ===== 予約フォーム ===== */
+        #inline-form-wrap {
+            display: none;
+            margin-top: 24px;
+        }
+        .reserve-form {
+            background: #fff;
+            border: 1px solid #e0d0b8;
+            border-radius: 8px;
+            padding: 32px 28px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .reserve-form .form-group {
+            margin-bottom: 20px;
+        }
+        .reserve-form label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+            color: #555;
+            font-weight: 600;
+        }
+        .reserve-form label .required {
+            color: #c0392b;
+            margin-left: 4px;
+        }
+        .reserve-form input,
+        .reserve-form select,
+        .reserve-form textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        .reserve-form input:focus,
+        .reserve-form select:focus {
+            outline: none;
+            border-color: #c8a882;
+        }
+        .reserve-form select option:disabled {
+            color: #bbb;
+        }
+        .seat-note {
+            font-size: 0.8rem;
+            color: #c0392b;
+            margin-top: 4px;
+            display: none;
+        }
+        .seat-note.show {
+            display: block;
+        }
+        .form-submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: #c8a882;
+            color: #111;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 0.08em;
+            transition: opacity 0.2s;
+            margin-top: 8px;
+        }
+        .form-submit-btn:hover {
+            opacity: 0.85;
+        }
+        .form-submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .form-open-btn {
+            display: block;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+            padding: 14px;
+            background: #c8a882;
+            color: #111;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 0.08em;
+            text-align: center;
+            transition: opacity 0.2s;
+        }
+        .form-open-btn:hover {
+            opacity: 0.85;
+        }
+        #form-result {
+            margin-top: 16px;
+            padding: 14px;
+            border-radius: 6px;
+            text-align: center;
+            display: none;
+        }
+        #form-result.success {
+            background: #f0f9f0;
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
+        }
+        #form-result.error {
+            background: #fff0f0;
+            color: #c62828;
+            border: 1px solid #ef9a9a;
+        }
+        /* form-containerを縦並びにオーバーライド */
+        .form-container {
+            flex-direction: column;
+            align-items: center;
+        }
+        /* 確認モーダル */
+        #confirm-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        #confirm-modal.show {
+            display: flex;
+        }
+        .confirm-modal-inner {
+            background: #fff;
+            border-radius: 8px;
+            padding: 32px 28px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .confirm-modal-inner h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #333;
+        }
+        .confirm-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 24px;
+            font-size: 0.95rem;
+        }
+        .confirm-table th,
+        .confirm-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #f0e8d8;
+            text-align: left;
+        }
+        .confirm-table th {
+            width: 40%;
+            color: #888;
+            font-weight: 600;
+        }
+        .confirm-modal-btns {
+            display: flex;
+            gap: 12px;
+        }
+        .confirm-modal-btns button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            transition: opacity 0.2s;
+        }
+        .confirm-modal-btns button:hover { opacity: 0.85; }
+        .btn-confirm {
+            background: #c8a882;
+            color: #111;
+        }
+        .btn-back {
+            background: #eee;
+            color: #333;
+        }
+    </style>
 </head>
 <body>
     <!-- ヘッダー -->
@@ -63,23 +252,25 @@
             </div>
         </div>
     </section>
+
     <!-- 予約コンテンツ -->
-        <div class="reserve-content">
-            <!-- ご予約について -->
-            <div class="reserve-intro" id="forminfo-section">
+    <div class="reserve-content">
+        <!-- ご予約について -->
+        <div class="reserve-intro" id="forminfo-section">
             <h2>ご予約について</h2>
-            </div>
-            <div class="contact-info">
-                <div class="contact-grid contact-grid-single">
-                    <div class="contact-item">
-                        <p>・前日の午後8時までにご予約ください<br>
-                           ・予約変更・キャンセルは前日の営業時間内までにお電話にてご連絡ください<br>
-                           ・個室のご利用は別途800円（税別）<br>
-                           ・座席：カウンター7席・小上がり12席・個室6席</p>
-                    </div>
+        </div>
+        <div class="contact-info">
+            <div class="contact-grid contact-grid-single">
+                <div class="contact-item">
+                    <p>・前日の午後8時までにご予約ください<br>
+                       ・予約変更・キャンセルは前日の営業時間内までにお電話にてご連絡ください<br>
+                       ・個室のご利用は別途800円（税別）<br>
+                       ・座席：カウンター7席・小上がり12席・個室6席</p>
                 </div>
             </div>
-            <!-- 予約方法ナビゲーション -->
+        </div>
+
+        <!-- 予約方法ナビゲーション -->
         <div class="reserve-method-section">
             <p class="reserve-method-label">予約方法</p>
             <div class="reserve-method-nav">
@@ -87,34 +278,131 @@
                 <a href="#phone-section" class="reserve-method-btn">電話</a>
             </div>
         </div>
-            <div class="reserve-intro" id="form-section">
-                <h2>ご予約フォーム</h2>
-                <p>ご予約はこちらよりお承りしております。<br>
-                   下記フォームより必要事項をご入力のうえ、送信してください。</p>
-            </div>
 
-            <!-- フォームコンテナ -->
-            <div class="form-container" style="margin-bottom: 80px;">
-                <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSdnVRMyPjivQPLv12ai0jpwR0oxU8Q8eAy10dqprZRp_8TIww/viewform?embedded=true" width="640" height="1859" frameborder="0" marginheight="0" marginwidth="0">読み込んでいます…</iframe>
-            </div>
+        <div class="reserve-intro" id="form-section">
+            <h2>ご予約フォーム</h2>
+            <p>ご予約はこちらよりお承りしております。<br>
+               下記フォームより必要事項をご入力のうえ、送信してください。</p>
+        </div>
 
-            <!-- お問い合わせ情報 -->
-             <div class="reserve-intro" id="phone-section">
-                <h2>お電話・FAXでのご予約・お問い合わせ</h2>
-                <p>お電話でのご予約もお気軽にどうぞ。<br>
-                   ご不明な点はお気軽にお問い合わせください。</p>
-            </div>
-            <div class="contact-info">
-                <div class="contact-grid contact-grid-single">
-                    <div class="contact-item">
-                        <h4>鮨処　ひし田</h4>
-                        <p>TEL: <a href="tel:0118270537">011-827-0537</a><br>
-                           FAX: 011-827-0536<br>
-                           営業時間: 17:00 〜 LAST<br>
-                           電話対応: 17:00 〜 21:00<br>
-                           定休日: 毎週月曜日</p>
+        <!-- フォームコンテナ -->
+        <div class="form-container" style="margin-bottom: 80px;">
+            <!-- フォームを開くボタン -->
+            <button class="form-open-btn" id="form-open-btn" onclick="toggleForm()">
+                フォームで予約する
+            </button>
+
+            <!-- インラインフォーム -->
+            <div id="inline-form-wrap">
+                <form class="reserve-form" id="reserve-form" onsubmit="submitReserveForm(event)">
+                    <div class="form-group">
+                        <label>お名前<span class="required">*</span></label>
+                        <input type="text" id="f-name" required placeholder="山田 太郎">
                     </div>
+                    <div class="form-group">
+                        <label>メールアドレス<span class="required">*</span></label>
+                        <input type="email" id="f-email" required placeholder="example@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label>電話番号<span class="required">*</span></label>
+                        <input type="tel" id="f-tel" required placeholder="090-0000-0000">
+                    </div>
+                    <div class="form-group">
+                        <label>来店日<span class="required">*</span></label>
+                        <input type="date" id="f-date" required onchange="onDateChange(this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>来店時刻<span class="required">*</span></label>
+                        <select id="f-time" required>
+                            <option value="">時刻を選択してください</option>
+                            <option value="17時00分">17時00分</option>
+                            <option value="17時30分">17時30分</option>
+                            <option value="18時00分">18時00分</option>
+                            <option value="18時30分">18時30分</option>
+                            <option value="19時00分">19時00分</option>
+                            <option value="19時30分">19時30分</option>
+                            <option value="20時00分">20時00分</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>来店人数<span class="required">*</span></label>
+                        <select id="f-count" required>
+                            <option value="">人数を選択してください</option>
+                            <option value="1名">1名</option>
+                            <option value="2名">2名</option>
+                            <option value="3名">3名</option>
+                            <option value="4名">4名</option>
+                            <option value="5名">5名</option>
+                            <option value="6名以上">6名以上</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>ご利用プラン<span class="required">*</span></label>
+                        <select id="f-plan" required>
+                            <option value="">プランを選択してください</option>
+                            <option value="フリープラン">フリープラン</option>
+                            <option value="6000円コース">6000円コース</option>
+                            <option value="7000円コース">7000円コース</option>
+                            <option value="8000円コース">8000円コース</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>座席タイプ<span class="required">*</span></label>
+                        <select id="f-seat" required>
+                            <option value="">座席を選択してください</option>
+                            <option value="カウンター">カウンター</option>
+                            <option value="小上がり">小上がり</option>
+                            <option value="個室">個室（+800円）</option>
+                        </select>
+                        <p class="seat-note" id="seat-note">※ 選択された日の個室はすでに満席です</p>
+                    </div>
+
+                    <button type="submit" class="form-submit-btn" id="form-submit-btn">
+                        予約を送信する
+                    </button>
+                </form>
+                <div id="form-result"></div>
+            </div>
+        </div>
+
+        <!-- お問い合わせ情報 -->
+        <div class="reserve-intro" id="phone-section">
+            <h2>お電話・FAXでのご予約・お問い合わせ</h2>
+            <p>お電話でのご予約もお気軽にどうぞ。<br>
+               ご不明な点はお気軽にお問い合わせください。</p>
+        </div>
+        <div class="contact-info">
+            <div class="contact-grid contact-grid-single">
+                <div class="contact-item">
+                    <h4>鮨処　ひし田</h4>
+                    <p>TEL: <a href="tel:0118270537">011-827-0537</a><br>
+                       FAX: 011-827-0536<br>
+                       営業時間: 17:00 〜 LAST<br>
+                       電話対応: 17:00 〜 21:00<br>
+                       定休日: 毎週月曜日</p>
                 </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- 確認モーダル -->
+    <div id="confirm-modal">
+        <div class="confirm-modal-inner">
+            <h3>予約内容のご確認</h3>
+            <table class="confirm-table">
+                <tr><th>お名前</th><td id="c-name"></td></tr>
+                <tr><th>メールアドレス</th><td id="c-email"></td></tr>
+                <tr><th>電話番号</th><td id="c-tel"></td></tr>
+                <tr><th>来店日</th><td id="c-date"></td></tr>
+                <tr><th>来店時刻</th><td id="c-time"></td></tr>
+                <tr><th>来店人数</th><td id="c-count"></td></tr>
+                <tr><th>ご利用プラン</th><td id="c-plan"></td></tr>
+                <tr><th>座席タイプ</th><td id="c-seat"></td></tr>
+            </table>
+            <div class="confirm-modal-btns">
+                <button class="btn-back" onclick="closeConfirmModal()">修正する</button>
+                <button class="btn-confirm" id="btn-confirm-submit" onclick="confirmAndSubmit()">この内容で予約する</button>
             </div>
         </div>
     </div>
@@ -126,6 +414,6 @@
             <p>© 2026 鮨処ひし田. All rights reserved.</p>
         </div>
     </footer>
-    <script src="script.js"></script>
+    <script src="calender.js"></script>
 </body>
 </html>

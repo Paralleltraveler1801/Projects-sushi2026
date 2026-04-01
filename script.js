@@ -19,7 +19,7 @@ if (hamburger && navLinks) {
 // ============================================================
 // 公開カレンダー
 // ============================================================
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwUfh6gFXK0VB815XkeB1ahYtVQfYpegawLQpnjpB_rNbbQKOHTE1CWfUx5fzE87XSE/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxI7DGvBG1k1RdEoEyjsYt4Wc8Iec5croDi4e_85vt4QtKBn3-5F07RZgHJzdrngsMMtA/exec";
 let publicCalendarData = [];
 let currentMonth = new Date().getMonth();
 let currentYear = new Date().getFullYear();
