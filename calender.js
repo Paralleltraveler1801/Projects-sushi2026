@@ -304,7 +304,7 @@ async function confirmAndSubmit() {
         closeConfirmModal();
 
         if (text.trim() === "OK") {
-            result.textContent = "ご予約を受け付けました。確認メールをお送りしましたのでご確認ください。";
+            result.textContent = "ご予約を受け付けました。確認メールをお送りしましたのでご確認ください。（迷惑メールフォルダに入る場合がございますのでご確認ください）";
             result.className = "success";
             result.style.display = "block";
             document.getElementById("reserve-form").reset();
