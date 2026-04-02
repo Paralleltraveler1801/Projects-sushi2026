@@ -426,7 +426,18 @@ async function saveEdit() {
 
     try {
         const url = new URL(GAS_URL);
-        Object.entries(payload).forEach(([k, v]) => url.searchParams.set(k, v));
+        url.searchParams.set("action", "updateReservation");
+        url.searchParams.set("timestamp", editingTimestamp);
+        url.searchParams.set("editMemo", editMemo);
+        url.searchParams.set("data", JSON.stringify({
+            "お名前": payload["お名前"],
+            "電話番号": payload["電話番号"],
+            "来店日時": payload["来店日時"],
+            "来店時刻": payload["来店時刻"],
+            "来店人数": payload["来店人数"],
+            "ご利用プラン": payload["ご利用プラン"],
+            "座席のタイプ": payload["座席のタイプ"],
+        }));
         const res = await fetch(url.toString());
         const text = await res.text();
         if (text.trim() === "OK") {
