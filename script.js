@@ -92,6 +92,12 @@ fetch(GAS_URL)
     const wrap = document.getElementById("calendar-wrap");
     if (loading) loading.style.display = "none";
     if (wrap) wrap.style.display = "block";
+  })
+  .catch(() => {
+    const loading = document.getElementById("calendar-loading");
+    const wrap = document.getElementById("calendar-wrap");
+    if (loading) loading.innerHTML = "<p style='color:#c62828;'>予約状況の読み込みに失敗しました。ページを再読み込みしてください。</p>";
+    if (wrap) wrap.style.display = "none";
   });
 
 async function refreshCalendar() {

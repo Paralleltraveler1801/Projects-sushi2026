@@ -228,8 +228,14 @@ async function loadReservations() {
             <div class="spinner"></div>
         </div>`;
 
-    const res = await fetch(GAS_URL + "?action=getReservations");
-    const data = await res.json();
+    let data;
+    try {
+        const res = await fetch(GAS_URL + "?action=getReservations");
+        data = await res.json();
+    } catch (e) {
+        container.innerHTML = "<p style='color:#c62828;padding:20px;'>予約一覧の読み込みに失敗しました。再度お試しください。</p>";
+        return;
+    }
 
     const grouped = {};
     data.forEach(row => {
