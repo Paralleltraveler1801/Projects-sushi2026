@@ -379,6 +379,7 @@ function closeEditModal() {
 }
 
 async function saveEdit() {
+    console.log("editingTimestamp:", editingTimestamp);
     const memo = document.getElementById("editMemo").value.trim();
     if (!memo) {
         alert("編集メモを入力してください。");
