@@ -16,7 +16,8 @@
             border: 1px solid #e0d0b8;
             border-radius: 8px;
             padding: 32px 28px;
-            max-width: 600px;
+            max-width: 640px;
+            width: 100%;
             margin: 0 auto;
         }
         .reserve-form .form-group {
@@ -48,6 +49,18 @@
         .reserve-form select:focus {
             outline: none;
             border-color: #c8a882;
+        }
+        /* 日付入力をselectと同じ見た目に揃える */
+        .reserve-form input[type="date"] {
+            -webkit-appearance: none;
+            appearance: none;
+            font-family: inherit;
+            color: #333;
+            line-height: 1.5;
+            height: 42px;
+        }
+        .reserve-form select {
+            height: 42px;
         }
         .reserve-form select option:disabled {
             color: #bbb;

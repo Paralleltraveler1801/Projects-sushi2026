@@ -1047,6 +1047,50 @@ footer {
     }
 }
 
+/* ============================================================
+   タブレット・デスクトップ向け予約フォーム調整
+   ============================================================ */
+@media (min-width: 769px) {
+    /* フォームコンテナを幅広に */
+    .form-container {
+        padding: 2.5rem 3rem;
+    }
+
+    /* フォームフィールドをやや大きく */
+    .reserve-form .form-group {
+        margin-bottom: 22px;
+    }
+
+    /* カレンダーセルを大きく */
+    .day {
+        min-height: 72px;
+        padding: 10px 8px;
+    }
+
+    .day .num {
+        font-size: 1rem;
+    }
+
+    .day .status {
+        font-size: 1.3rem;
+    }
+}
+
+@media (min-width: 1200px) {
+    /* 大画面ではさらに余裕のあるレイアウト */
+    .reserve-content {
+        max-width: 1100px;
+    }
+
+    .calendar-wrap {
+        max-width: 960px;
+    }
+
+    .day {
+        min-height: 80px;
+    }
+}
+
 /* ===== プライバシーポリシー ===== */
 .privacy-hero {
   background: #f9f7f4;

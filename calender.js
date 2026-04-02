@@ -230,7 +230,7 @@ async function onDateChange(dateStr) {
 }
 
 // フォーム送信 → 確認モーダルを表示
-function submitReserveForm(e) {
+async function submitReserveForm(e) {
     e.preventDefault();
 
     const result = document.getElementById("form-result");
@@ -248,6 +248,32 @@ function submitReserveForm(e) {
         result.className = "error";
         result.style.display = "block";
         return;
+    }
+
+    // 個室選択の場合、送信前にリアルタイムで空き状況を再確認
+    const seatVal = document.getElementById("f-seat").value;
+    if (seatVal === "個室") {
+        const submitBtn = document.getElementById("form-submit-btn");
+        submitBtn.disabled = true;
+        submitBtn.textContent = "空き状況を確認中...";
+        try {
+            const checkRes = await fetch(`${GAS_URL}?action=checkPrivateRoom&date=${dateVal}`);
+            const checkData = await checkRes.json();
+            if (checkData.booked) {
+                result.textContent = "申し訳ございません。選択された日の個室はすでに満席です。他の座席タイプをお選びください。";
+                result.className = "error";
+                result.style.display = "block";
+                onDateChange(dateVal);
+                submitBtn.disabled = false;
+                submitBtn.textContent = "予約を送信する";
+                return;
+            }
+        } catch (err) {
+            console.error("個室再確認エラー:", err);
+            // 確認できなかった場合はバックエンドで最終確認するため続行
+        }
+        submitBtn.disabled = false;
+        submitBtn.textContent = "予約を送信する";
     }
 
     // 日付を日本語形式に変換
@@ -296,10 +322,21 @@ async function confirmAndSubmit() {
     confirmBtn.textContent = "送信中...";
 
     try {
-        const url = new URL(GAS_URL);
-        Object.entries(payload).forEach(([k, v]) => url.searchParams.set(k, v));
-        const res = await fetch(url.toString());
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+        const params = new URLSearchParams();
+        Object.entries(payload).forEach(([k, v]) => params.append(k, v));
+
+        const res = await fetch(GAS_URL, {
+            method: "POST",
+            body: params,
+            signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
         const text = await res.text();
+        console.log("GAS response:", text);
 
         closeConfirmModal();
 
@@ -314,13 +351,19 @@ async function confirmAndSubmit() {
             result.style.display = "block";
             onDateChange(dateVal);
         } else {
+            console.error("予期しないGASレスポンス:", text);
             result.textContent = "送信に失敗しました。お手数ですがお電話にてご連絡ください。";
             result.className = "error";
             result.style.display = "block";
         }
     } catch (err) {
         closeConfirmModal();
-        result.textContent = "通信エラーが発生しました。お手数ですがお電話にてご連絡ください。";
+        if (err.name === "AbortError") {
+            result.textContent = "送信がタイムアウトしました。お手数ですがお電話にてご連絡ください。";
+        } else {
+            result.textContent = "通信エラーが発生しました。お手数ですがお電話にてご連絡ください。";
+        }
+        console.error("送信エラー:", err);
         result.className = "error";
         result.style.display = "block";
     } finally {
