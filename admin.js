@@ -290,10 +290,10 @@ async function cancelReservation(timestamp, btn) {
     btn.disabled = true;
     btn.textContent = "処理中...";
 
-    const res = await fetch(GAS_URL, {
-        method: "POST",
-        body: JSON.stringify({ action: "cancelReservation", timestamp: timestamp })
-    });
+    const url = new URL(GAS_URL);
+    url.searchParams.set("action", "cancelReservation");
+    url.searchParams.set("timestamp", timestamp);
+    const res = await fetch(url.toString());
 
     const text = await res.text();
     if (text === "OK") {
@@ -424,7 +424,9 @@ async function saveEdit() {
     btn.textContent = "保存中...";
 
     try {
-        const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
+        const url = new URL(GAS_URL);
+        Object.entries(payload).forEach(([k, v]) => url.searchParams.set(k, v));
+        const res = await fetch(url.toString());
         const text = await res.text();
         if (text.trim() === "OK") {
             alert("更新しました！");
