@@ -427,17 +427,15 @@ async function saveEdit() {
     try {
         const url = new URL(GAS_URL);
         url.searchParams.set("action", "updateReservation");
-        url.searchParams.set("timestamp", editingTimestamp);
-        url.searchParams.set("editMemo", editMemo);
-        url.searchParams.set("data", JSON.stringify({
-            "お名前": payload["お名前"],
-            "電話番号": payload["電話番号"],
-            "来店日時": payload["来店日時"],
-            "来店時刻": payload["来店時刻"],
-            "来店人数": payload["来店人数"],
-            "ご利用プラン": payload["ご利用プラン"],
-            "座席のタイプ": payload["座席のタイプ"],
-        }));
+        url.searchParams.set("ts", editingTimestamp);
+        url.searchParams.set("memo", editMemo);
+        url.searchParams.set("name", payload["お名前"]);
+        url.searchParams.set("tel", payload["電話番号"]);
+        url.searchParams.set("date", payload["来店日時"]);
+        url.searchParams.set("time", payload["来店時刻"]);
+        url.searchParams.set("count", payload["来店人数"]);
+        url.searchParams.set("plan", payload["ご利用プラン"]);
+        url.searchParams.set("seat", payload["座席のタイプ"]);
         const res = await fetch(url.toString());
         const text = await res.text();
         if (text.trim() === "OK") {
