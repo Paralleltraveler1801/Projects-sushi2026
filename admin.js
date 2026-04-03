@@ -245,7 +245,11 @@ async function loadReservations() {
         return;
     }
 
-    Object.keys(grouped).sort().forEach(date => {
+    Object.keys(grouped).sort((a, b) => {
+        const da = parseJapaneseDate(a);
+        const db = parseJapaneseDate(b);
+        return da < db ? -1 : da > db ? 1 : 0;
+    }).forEach(date => {
         const dateEl = document.createElement("div");
         dateEl.className = "reservation-date";
         dateEl.textContent = date;
@@ -419,6 +423,28 @@ async function saveEdit() {
         "ご利用プラン": document.getElementById("e-plan").value,
         "座席のタイプ": document.getElementById("e-seat").value,
     };
+
+    // 個室コリジョンチェック
+    const newSeat = document.getElementById("e-seat").value;
+    if (newSeat === "個室") {
+        const origDateStr = parseJapaneseDate(originalReservation["来店日時"]);
+        const origSeat = originalReservation["座席のタイプ"];
+        // 編集中の予約自身がすでに同じ日付の個室予約である場合はスキップ
+        const isSelf = (origSeat === "個室" && origDateStr === dateVal);
+        if (!isSelf) {
+            try {
+                const checkRes = await fetch(`${GAS_URL}?action=checkPrivateRoom&date=${dateVal}`);
+                const checkData = await checkRes.json();
+                if (checkData.booked) {
+                    alert("この日付にはすでに個室の予約があります。他の座席タイプを選択してください。");
+                    return;
+                }
+            } catch (e) {
+                alert("個室の空き確認中にエラーが発生しました。");
+                return;
+            }
+        }
+    }
 
     const btn = document.getElementById("edit-save-btn");
     btn.disabled = true;
