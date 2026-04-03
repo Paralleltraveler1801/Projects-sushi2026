@@ -124,6 +124,19 @@
             flex-direction: column;
             align-items: center;
         }
+        #inline-form-wrap {
+            width: 100%;
+            max-width: 600px;
+        }
+        .reserve-form {
+            width: 100%;
+        }
+        /* 日付入力のはみ出し防止 */
+        .reserve-form input[type="date"] {
+            width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+        }
         /* 確認モーダル */
         #confirm-modal {
             display: none;
