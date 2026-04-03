@@ -57,9 +57,20 @@ function renderPublicCalendar(data, year, month) {
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         const found = data.find(item => item.date.trim() === dateStr);
         const status = found ? found.status : "";
+        const seatStatus = found ? found.seatStatus : null;
         const thisDate = new Date(year, month, d);
         const isPast = thisDate <= today;
         const isOver = thisDate > limit;
+
+        let seatDetailHtml = "";
+        if (!isPast && !isOver && seatStatus && status !== "×") {
+            seatDetailHtml = `
+                <div class="seat-detail">
+                    <div class="seat-item"><span>カウ</span><span class="seat-val-${seatStatus["カウンター"]}">${seatStatus["カウンター"]}</span></div>
+                    <div class="seat-item"><span>小上</span><span class="seat-val-${seatStatus["小上がり"]}">${seatStatus["小上がり"]}</span></div>
+                    <div class="seat-item"><span>個室</span><span class="seat-val-${seatStatus["個室"]}">${seatStatus["個室"]}</span></div>
+                </div>`;
+        }
 
         const div = document.createElement("div");
         div.className = `day${(isPast || isOver) ? " past" : ""}`;
@@ -67,7 +78,8 @@ function renderPublicCalendar(data, year, month) {
             <div class="num">${d}</div>
             <div class="status ${(isPast || isOver) ? "" : "status-" + status}">
                 ${(isPast || isOver) ? "-" : status}
-            </div>`;
+            </div>
+            ${seatDetailHtml}`;
 
         // カレンダーの日付クリックでフォームの日付をセット
         if (!isPast && !isOver) {
@@ -110,7 +122,7 @@ document.getElementById("next-month")?.addEventListener("click", () => {
     renderPublicCalendar(publicCalendarData, currentYear, currentMonth);
 });
 
-fetch(CALENDAR_URL)
+fetch(CALENDAR_URL + "?action=getCalendarWithSeats")
     .then(res => res.json())
     .then(data => {
         publicCalendarData = data;
@@ -130,7 +142,7 @@ async function refreshCalendar() {
     wrap.style.display = "none";
     loading.style.display = "flex";
 
-    const res = await fetch(CALENDAR_URL);
+    const res = await fetch(CALENDAR_URL + "?action=getCalendarWithSeats");
     const data = await res.json();
     publicCalendarData = data;
     renderPublicCalendar(data, currentYear, currentMonth);
@@ -148,7 +160,7 @@ async function checkForUpdates() {
         const res = await fetch(CALENDAR_URL + "?action=getTimestamp");
         const { timestamp } = await res.json();
         if (lastTimestamp !== null && timestamp !== lastTimestamp) {
-            const dataRes = await fetch(CALENDAR_URL);
+            const dataRes = await fetch(CALENDAR_URL + "?action=getCalendarWithSeats");
             const data = await dataRes.json();
             publicCalendarData = data;
             renderPublicCalendar(data, currentYear, currentMonth);

@@ -104,6 +104,56 @@
             </div>
         </div>
 
+        <!-- 個室ブロック管理 -->
+        <div id="private-room-block" style="
+            margin-top: 24px;
+            background: #1a1a1a;
+            border: 1px solid #c8a882;
+            border-radius: 8px;
+            padding: 20px 20px 16px;
+        ">
+            <h3 style="color:#c8a882; margin:0 0 14px; font-size:1rem; letter-spacing:0.05em;">個室の受付管理</h3>
+            <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+                <div>
+                    <label style="color:#ddd; font-size:0.82rem; display:block; margin-bottom:4px;">対象日を選択</label>
+                    <input type="date" id="block-date" style="
+                        padding:9px 10px;
+                        background:#2a2a2a;
+                        color:#fff;
+                        border:1px solid #555;
+                        border-radius:6px;
+                        font-size:0.95rem;
+                        -webkit-appearance:none;
+                        appearance:none;
+                        height:40px;
+                    ">
+                </div>
+                <button onclick="blockPrivateRoom()" style="
+                    background:#8b2020;
+                    color:#fff;
+                    border:none;
+                    padding:0 18px;
+                    height:40px;
+                    border-radius:6px;
+                    cursor:pointer;
+                    font-size:0.88rem;
+                    white-space:nowrap;
+                ">個室を受付不可にする</button>
+                <button onclick="unblockPrivateRoom()" style="
+                    background:#1f5c1f;
+                    color:#fff;
+                    border:none;
+                    padding:0 18px;
+                    height:40px;
+                    border-radius:6px;
+                    cursor:pointer;
+                    font-size:0.88rem;
+                    white-space:nowrap;
+                ">受付不可を解除する</button>
+            </div>
+            <div id="block-result" style="margin-top:12px; font-size:0.85rem; color:#aaa; min-height:1.2em;"></div>
+        </div>
+
         </div>
 
         <!-- 予約一覧 -->

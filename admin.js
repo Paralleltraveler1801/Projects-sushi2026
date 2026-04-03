@@ -480,3 +480,56 @@ async function saveEdit() {
 }
 
 window.openEditModal = openEditModal;
+
+// ============================================================
+// 個室ブロック管理
+// ============================================================
+async function blockPrivateRoom() {
+    const date = document.getElementById("block-date").value;
+    if (!date) { alert("日付を選択してください。"); return; }
+    const result = document.getElementById("block-result");
+    result.style.color = "#aaa";
+    result.textContent = "処理中...";
+    try {
+        const res = await fetch(GAS_URL, {
+            method: "POST",
+            body: JSON.stringify({ action: "blockPrivateRoom", date: date })
+        });
+        const text = await res.text();
+        if (text.trim() === "OK") {
+            result.style.color = "#e88";
+            result.textContent = `${date} の個室を受付不可に設定しました。`;
+        } else {
+            result.style.color = "#f88";
+            result.textContent = "エラー: " + text;
+        }
+    } catch (e) {
+        result.style.color = "#f88";
+        result.textContent = "通信エラーが発生しました。";
+    }
+}
+
+async function unblockPrivateRoom() {
+    const date = document.getElementById("block-date").value;
+    if (!date) { alert("日付を選択してください。"); return; }
+    const result = document.getElementById("block-result");
+    result.style.color = "#aaa";
+    result.textContent = "処理中...";
+    try {
+        const res = await fetch(GAS_URL, {
+            method: "POST",
+            body: JSON.stringify({ action: "unblockPrivateRoom", date: date })
+        });
+        const text = await res.text();
+        if (text.trim() === "OK") {
+            result.style.color = "#8e8";
+            result.textContent = `${date} の個室受付不可を解除しました。`;
+        } else {
+            result.style.color = "#f88";
+            result.textContent = "エラー: " + text;
+        }
+    } catch (e) {
+        result.style.color = "#f88";
+        result.textContent = "通信エラーが発生しました。";
+    }
+}
