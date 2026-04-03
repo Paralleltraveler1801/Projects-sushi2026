@@ -332,7 +332,7 @@ function openEditModal(r) {
         <label style="display:block;margin-bottom:12px;color:#ddd;">電話番号<br>
         <input id="e-tel" type="tel" value="${r["電話番号"]||""}" style="${s}"></label>
         <label style="display:block;margin-bottom:12px;color:#ddd;">来店日<br>
-        <input id="e-date" type="date" value="${parseJapaneseDate(r["来店日時"])}" style="${s}"></label>
+        <input id="e-date" type="date" value="${parseJapaneseDate(r["来店日時"])}" style="${s} -webkit-appearance:none; appearance:none; height:44px; line-height:44px;"></label>
         <label style="display:block;margin-bottom:12px;color:#ddd;">来店時刻<br>
             <select id="e-time" style="${s}">
                 <option value="">時刻を選択</option>
