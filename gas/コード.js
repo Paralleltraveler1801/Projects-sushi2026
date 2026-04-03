@@ -75,7 +75,7 @@ function doGet(e) {
           if (hStr === 'タイムスタンプ') {
             obj[normalizedKey] = val.toISOString();
           } else if (hStr.startsWith('来店時間')) {
-            obj[normalizedKey] = String(val.getHours()).padStart(2,'0') + '時' + String(val.getMinutes()).padStart(2,'0') + '分';
+            obj[normalizedKey] = String(val.getHours()).padStart(2,'00') + '時' + String(val.getMinutes()).padStart(2,'0') + '分';
           } else {
             obj[normalizedKey] = Utilities.formatDate(val, 'Asia/Tokyo', 'yyyy年M月d日');
           }
@@ -96,22 +96,88 @@ function doGet(e) {
     const headers = data[0];
     const dateCol = headers.findIndex(h => String(h).startsWith("来店日時"));
     const seatCol = headers.findIndex(h => String(h) === "座席のタイプ");
-    if (dateCol === -1 || seatCol === -1) {
-      return ContentService.createTextOutput(JSON.stringify({ booked: false }))
-        .setMimeType(ContentService.MimeType.JSON);
+    let booked = false;
+    if (dateCol !== -1 && seatCol !== -1) {
+      booked = data.slice(1).some(row => {
+        const rawDate = row[dateCol];
+        let dateStr = "";
+        if (rawDate && typeof rawDate.getTime === "function") {
+          dateStr = Utilities.formatDate(rawDate, "Asia/Tokyo", "yyyy-MM-dd");
+        } else {
+          const m = String(rawDate).match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+          if (m) dateStr = `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+        }
+        return dateStr === date && String(row[seatCol]).trim() === "個室";
+      });
     }
-    const booked = data.slice(1).some(row => {
-      const rawDate = row[dateCol];
-      let dateStr = "";
-      if (rawDate && typeof rawDate.getTime === "function") {
-        dateStr = Utilities.formatDate(rawDate, "Asia/Tokyo", "yyyy-MM-dd");
+    // 「個室ブロック」シートも確認
+    const blockSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("個室ブロック");
+    let blocked = false;
+    if (blockSheet && blockSheet.getLastRow() > 1) {
+      const blockData = blockSheet.getDataRange().getValues();
+      blocked = blockData.slice(1).some(row => String(row[0]).trim() === date);
+    }
+    return ContentService.createTextOutput(JSON.stringify({ booked: booked || blocked }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (action === "getCalendarWithSeats") {
+    const calSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("calendar");
+    const calData = calSheet.getDataRange().getValues();
+
+    const formSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Form_Responses");
+    const formData = formSheet.getDataRange().getValues();
+    const formHeaders = formData[0];
+    const dateCol = formHeaders.findIndex(h => String(h).startsWith("来店日時"));
+    const seatCol = formHeaders.findIndex(h => String(h) === "座席のタイプ");
+
+    // 日付→予約済み座席タイプのSetを作成
+    const bookedSeats = {};
+    if (dateCol !== -1 && seatCol !== -1) {
+      formData.slice(1).forEach(row => {
+        const rawDate = row[dateCol];
+        let dateStr = "";
+        if (rawDate && typeof rawDate.getTime === "function") {
+          dateStr = Utilities.formatDate(rawDate, "Asia/Tokyo", "yyyy-MM-dd");
+        } else {
+          const m = String(rawDate).match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+          if (m) dateStr = `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+        }
+        if (dateStr) {
+          if (!bookedSeats[dateStr]) bookedSeats[dateStr] = [];
+          bookedSeats[dateStr].push(String(row[seatCol]).trim());
+        }
+      });
+    }
+
+    // 個室ブロック日を取得
+    const blockSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("個室ブロック");
+    const blockedDates = [];
+    if (blockSheet && blockSheet.getLastRow() > 1) {
+      blockSheet.getDataRange().getValues().slice(1).forEach(row => {
+        if (row[0]) blockedDates.push(String(row[0]).trim());
+      });
+    }
+
+    const result = calData.slice(1).map(row => {
+      const dateStr = String(row[0] || "").trim();
+      const status = String(row[1] || "").trim();
+      let seatStatus;
+      if (status === "×") {
+        seatStatus = { "カウンター": "×", "小上がり": "×", "個室": "×" };
       } else {
-        const m = String(rawDate).match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
-        if (m) dateStr = `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+        const seated = bookedSeats[dateStr] || [];
+        const privateUnavailable = blockedDates.includes(dateStr) || seated.includes("個室");
+        seatStatus = {
+          "カウンター": "○",
+          "小上がり": "○",
+          "個室": privateUnavailable ? "×" : "○"
+        };
       }
-      return dateStr === date && String(row[seatCol]).trim() === "個室";
+      return { date: dateStr, status: status, seatStatus: seatStatus };
     });
-    return ContentService.createTextOutput(JSON.stringify({ booked: booked }))
+
+    return ContentService.createTextOutput(JSON.stringify(result))
       .setMimeType(ContentService.MimeType.JSON);
   }
 
@@ -209,7 +275,13 @@ function doGet(e) {
           }
           return dateStr === paramDateStr && String(row[seatCol]).trim() === "個室";
         });
-        if (alreadyBooked) {
+        const blockSheet2 = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("個室ブロック");
+        let isBlocked = false;
+        if (blockSheet2 && blockSheet2.getLastRow() > 1) {
+          const blockData2 = blockSheet2.getDataRange().getValues();
+          isBlocked = blockData2.slice(1).some(row => String(row[0]).trim() === paramDateStr);
+        }
+        if (alreadyBooked || isBlocked) {
           return ContentService.createTextOutput("PRIVATE_ROOM_FULL")
             .setMimeType(ContentService.MimeType.TEXT);
         }
@@ -254,7 +326,42 @@ function doGet(e) {
 // ===== Webアプリ用エンドポイント（POST） =====
 function doPost(e) {
   const params = JSON.parse(e.postData.contents);
-  const calendarSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("calendar");
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  // 個室ブロック設定
+  if (params.action === "blockPrivateRoom") {
+    const date = String(params.date || "").trim();
+    if (!date) return ContentService.createTextOutput("INVALID_DATE");
+    let blockSheet = ss.getSheetByName("個室ブロック");
+    if (!blockSheet) {
+      blockSheet = ss.insertSheet("個室ブロック");
+      blockSheet.getRange(1, 1).setValue("date");
+    }
+    const blockData = blockSheet.getLastRow() > 1 ? blockSheet.getDataRange().getValues() : [["date"]];
+    const exists = blockData.slice(1).some(row => String(row[0]).trim() === date);
+    if (!exists) blockSheet.appendRow([date]);
+    ss.getActiveSheet().getRange("Z1").setValue(new Date().getTime());
+    return ContentService.createTextOutput("OK");
+  }
+
+  // 個室ブロック解除
+  if (params.action === "unblockPrivateRoom") {
+    const date = String(params.date || "").trim();
+    const blockSheet = ss.getSheetByName("個室ブロック");
+    if (blockSheet && blockSheet.getLastRow() > 1) {
+      const blockData = blockSheet.getDataRange().getValues();
+      for (let i = blockData.length - 1; i >= 1; i--) {
+        if (String(blockData[i][0]).trim() === date) {
+          blockSheet.deleteRow(i + 1);
+        }
+      }
+    }
+    ss.getActiveSheet().getRange("Z1").setValue(new Date().getTime());
+    return ContentService.createTextOutput("OK");
+  }
+
+  // カレンダーステータス更新（既存）
+  const calendarSheet = ss.getSheetByName("calendar");
   const calData = calendarSheet.getDataRange().getValues();
   for (let i = 1; i < calData.length; i++) {
     if (calData[i][0] === params.date) {
@@ -262,7 +369,7 @@ function doPost(e) {
       break;
     }
   }
-  SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getRange("Z1").setValue(new Date().getTime());
+  ss.getActiveSheet().getRange("Z1").setValue(new Date().getTime());
   return ContentService.createTextOutput("OK");
 }
 
@@ -295,7 +402,7 @@ function deleteOldReservations() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   for (let i = data.length - 1; i >= 1; i--) {
-    const raw = data[i][3];
+    const raw = data[i][5];
     if (!raw) continue;
     let d;
     if (raw && typeof raw.getTime === 'function') {
