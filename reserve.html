@@ -131,12 +131,15 @@
         .reserve-form {
             width: 100%;
         }
-        /* 日付入力のはみ出し防止・高さ正規化 */
+        /* 日付入力のはみ出し防止・iOS Safari スタイル正規化 */
         .reserve-form input[type="date"] {
             width: 100%;
             min-width: 0;
             box-sizing: border-box;
-            height: 44px;
+            -webkit-appearance: none;
+            appearance: none;
+            background-color: #fff;
+            color: #333;
         }
         /* 確認モーダル */
         #confirm-modal {
