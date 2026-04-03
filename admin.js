@@ -347,7 +347,7 @@ function openEditModal(r) {
         <select id="e-seat" style="${s}">
             <option value="カウンター" ${r["座席のタイプ"]==="カウンター"?"selected":""}>カウンター</option>
             <option value="小上がり" ${r["座席のタイプ"]==="小上がり"?"selected":""}>小上がり</option>
-            <option value="個室" ${r["座席のタイプ"]==="個室"?"selected":""}>個室（+800円）</option>
+            <option value="個室" ${r["座席のタイプ"]==="個室"?"selected":""}>個室（+880円）</option>
         </select></label>
         <label style="display:block;margin-bottom:12px;color:#ddd;">編集メモ（必須）<br>
         <textarea id="editMemo" placeholder="例：人数を3名→5名に変更" maxlength="100"
