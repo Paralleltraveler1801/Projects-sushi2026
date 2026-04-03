@@ -203,7 +203,7 @@ async function onDateChange(dateStr) {
     const privateOption = seatSelect.querySelector('option[value="個室"]');
     if (privateOption) {
         privateOption.disabled = false;
-        privateOption.textContent = "個室（+800円）";
+        privateOption.textContent = "個室（+880円）";
     }
     if (seatNote) seatNote.classList.remove("show");
 

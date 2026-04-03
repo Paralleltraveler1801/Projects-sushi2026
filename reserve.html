@@ -124,6 +124,19 @@
             flex-direction: column;
             align-items: center;
         }
+        #inline-form-wrap {
+            width: 100%;
+            max-width: 600px;
+        }
+        .reserve-form {
+            width: 100%;
+        }
+        /* 日付入力のはみ出し防止 */
+        .reserve-form input[type="date"] {
+            width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+        }
         /* 確認モーダル */
         #confirm-modal {
             display: none;
@@ -264,7 +277,7 @@
                 <div class="contact-item">
                     <p>・前日の午後8時までにご予約ください<br>
                        ・予約変更・キャンセルは前日の営業時間内までにお電話にてご連絡ください<br>
-                       ・個室のご利用は別途800円（税別）<br>
+                       ・個室のご利用は別途880円（税込）<br>
                        ・座席：カウンター7席・小上がり12席・個室6席</p>
                 </div>
             </div>
@@ -352,7 +365,7 @@
                             <option value="">座席を選択してください</option>
                             <option value="カウンター">カウンター</option>
                             <option value="小上がり">小上がり</option>
-                            <option value="個室">個室（+800円）</option>
+                            <option value="個室">個室（+880円）</option>
                         </select>
                         <p class="seat-note" id="seat-note">※ 選択された日の個室はすでに満席です</p>
                     </div>
