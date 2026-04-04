@@ -81,8 +81,8 @@ function renderPublicCalendar(data, year, month) {
             </div>
             ${seatDetailHtml}`;
 
-        // カレンダーの日付クリックでフォームの日付をセット
-        if (!isPast && !isOver) {
+        // カレンダーの日付クリックでフォームの日付をセット（×は除外）
+        if (!isPast && !isOver && status !== "×") {
             div.style.cursor = "pointer";
             div.addEventListener("click", () => {
                 setFormDate(dateStr);
@@ -320,6 +320,10 @@ async function confirmAndSubmit() {
             result.className = "success";
             result.style.display = "block";
             document.getElementById("reserve-form").reset();
+        } else if (text.trim() === "DATE_FULL") {
+            result.textContent = "申し訳ございません。この日は満席のためご予約いただけません。";
+            result.className = "error";
+            result.style.display = "block";
         } else if (text.trim() === "PRIVATE_ROOM_FULL") {
             result.textContent = "申し訳ございません。選択された日の個室はすでに満席です。他の座席タイプをお選びください。";
             result.className = "error";

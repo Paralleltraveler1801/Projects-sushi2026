@@ -257,6 +257,24 @@ function doGet(e) {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Form_Responses");
     const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
 
+    // カレンダーステータスが×の日は受付不可
+    const pmDate = String(date).match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+    if (pmDate) {
+      const submitDateStr = `${pmDate[1]}-${String(pmDate[2]).padStart(2,'0')}-${String(pmDate[3]).padStart(2,'0')}`;
+      const calSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("calendar");
+      const calRows = calSheet.getDataRange().getValues();
+      const calRow = calRows.slice(1).find(row => {
+        const raw = row[0];
+        const rowDateStr = (raw && typeof raw.getTime === "function")
+          ? Utilities.formatDate(raw, "Asia/Tokyo", "yyyy-MM-dd")
+          : String(raw || "").trim();
+        return rowDateStr === submitDateStr;
+      });
+      if (calRow && String(calRow[1]).trim() === "×") {
+        return ContentService.createTextOutput("DATE_FULL").setMimeType(ContentService.MimeType.TEXT);
+      }
+    }
+
     if (seat === "個室") {
       const data = sheet.getDataRange().getValues();
       const dateCol = headers.findIndex(h => String(h).startsWith("来店日時"));
