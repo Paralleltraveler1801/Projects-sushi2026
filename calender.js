@@ -289,6 +289,17 @@ async function confirmAndSubmit() {
     const result = document.getElementById("form-result");
 
     const dateVal = document.getElementById("f-date").value;
+
+    // 満席チェック（ローカルデータで即時判定）
+    const calEntry = publicCalendarData.find(item => item.date.trim() === dateVal);
+    if (calEntry && calEntry.status === "×") {
+        closeConfirmModal();
+        result.textContent = "申し訳ございません。この日は満席のためご予約いただけません。";
+        result.className = "error";
+        result.style.display = "block";
+        return;
+    }
+
     const d = new Date(dateVal + "T00:00:00+09:00");
     const formattedDate = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
 
