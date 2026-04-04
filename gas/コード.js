@@ -131,13 +131,6 @@ function doGet(e) {
     const dateCol = formHeaders.findIndex(h => String(h).startsWith("来店日時"));
     const seatCol = formHeaders.findIndex(h => String(h) === "座席のタイプ");
 
-    // 席タイプ上限
-    const SEAT_LIMITS = {
-      "カウンター": { people: 7,  tables: null },
-      "小上がり":   { people: 12, tables: 3    },
-      "個室":       { people: 6,  tables: 1    },
-    };
-
     // 日付→席タイプ別の予約件数・合計人数を集計
     const countCol = formHeaders.findIndex(h => String(h) === "来店人数");
     const bookings = {}; // { "2026-04-10": { "カウンター": {count:1, people:3}, ... } }
@@ -170,19 +163,26 @@ function doGet(e) {
         : String(rawDate || "").trim();
       const status = String(row[1] || "").trim();
       let seatStatus;
+      const seatCapacity = {};
       if (status === "×") {
         seatStatus = { "カウンター": "×", "小上がり": "×", "個室": "×" };
+        [["カウンター",null],["小上がり",3],["個室",1]].forEach(([s,t]) => {
+          seatCapacity[s] = { remainingPeople: 0, remainingTables: t !== null ? 0 : null };
+        });
       } else {
         seatStatus = {};
-        ["カウンター", "小上がり", "個室"].forEach(seat => {
-          const limit = SEAT_LIMITS[seat];
-          const b = (bookings[dateStr] && bookings[dateStr][seat]) || { count: 0, people: 0 };
-          const peopleFull  = b.people >= limit.people;
-          const tablesFull  = limit.tables !== null && b.count >= limit.tables;
-          seatStatus[seat] = (peopleFull || tablesFull) ? "×" : "○";
+        [["カウンター",7,null],["小上がり",12,3],["個室",6,1]].forEach(([s,p,t]) => {
+          const b = (bookings[dateStr] && bookings[dateStr][s]) || { count: 0, people: 0 };
+          const peopleFull = b.people >= p;
+          const tablesFull = t !== null && b.count >= t;
+          seatStatus[s] = (peopleFull || tablesFull) ? "×" : "○";
+          seatCapacity[s] = {
+            remainingPeople: p - b.people,
+            remainingTables: t !== null ? t - b.count : null
+          };
         });
       }
-      return { date: dateStr, status: status, seatStatus: seatStatus };
+      return { date: dateStr, status: status, seatStatus: seatStatus, seatCapacity: seatCapacity };
     });
 
     return ContentService.createTextOutput(JSON.stringify(result))

@@ -291,6 +291,9 @@ async function confirmAndSubmit() {
     const dateVal = document.getElementById("f-date").value;
 
     // 満席チェック（ローカルデータで即時判定）
+    const seat  = document.getElementById("f-seat").value;
+    const count = document.getElementById("f-count").value;
+    const newPeople = parseInt((count.match(/(\d+)/) || [])[1] || 0);
     const calEntry = publicCalendarData.find(item => item.date.trim() === dateVal);
     if (calEntry && calEntry.status === "×") {
         closeConfirmModal();
@@ -298,6 +301,16 @@ async function confirmAndSubmit() {
         result.className = "error";
         result.style.display = "block";
         return;
+    }
+    if (calEntry && calEntry.seatCapacity && calEntry.seatCapacity[seat]) {
+        const cap = calEntry.seatCapacity[seat];
+        if (cap.remainingPeople < newPeople || cap.remainingTables === 0) {
+            closeConfirmModal();
+            result.textContent = "申し訳ございません。選択された日・座席タイプはご予約が満席です。他の座席タイプまたは日程をお選びください。";
+            result.className = "error";
+            result.style.display = "block";
+            return;
+        }
     }
 
     const d = new Date(dateVal + "T00:00:00+09:00");
@@ -310,9 +323,9 @@ async function confirmAndSubmit() {
         tel:   document.getElementById("f-tel").value,
         date:  formattedDate,
         time:  document.getElementById("f-time").value,
-        count: document.getElementById("f-count").value,
+        count: count,
         plan:  document.getElementById("f-plan").value,
-        seat:  document.getElementById("f-seat").value,
+        seat:  seat,
     };
 
     confirmBtn.disabled = true;
