@@ -186,7 +186,7 @@ function loadData() {
     if (wrap) wrap.style.display = "none";
     if (loading) loading.style.display = "flex";
 
-    fetch(GAS_URL)
+    fetch(GAS_URL + "?action=getCalendarWithSeats")
         .then(res => res.json())
         .then(data => {
             renderCalendar(data);
