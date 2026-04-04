@@ -335,6 +335,10 @@ async function confirmAndSubmit() {
             result.textContent = "申し訳ございません。この日は満席のためご予約いただけません。";
             result.className = "error";
             result.style.display = "block";
+        } else if (text.trim() === "SEAT_FULL") {
+            result.textContent = "申し訳ございません。選択された日・座席タイプはご予約が満席です。他の座席タイプまたは日程をお選びください。";
+            result.className = "error";
+            result.style.display = "block";
         } else if (text.trim() === "PRIVATE_ROOM_FULL") {
             result.textContent = "申し訳ございません。選択された日の個室はすでに満席です。他の座席タイプをお選びください。";
             result.className = "error";

@@ -131,8 +131,16 @@ function doGet(e) {
     const dateCol = formHeaders.findIndex(h => String(h).startsWith("来店日時"));
     const seatCol = formHeaders.findIndex(h => String(h) === "座席のタイプ");
 
-    // 日付→予約済み座席タイプのSetを作成
-    const bookedSeats = {};
+    // 席タイプ上限
+    const SEAT_LIMITS = {
+      "カウンター": { people: 7,  tables: null },
+      "小上がり":   { people: 12, tables: 3    },
+      "個室":       { people: 6,  tables: 1    },
+    };
+
+    // 日付→席タイプ別の予約件数・合計人数を集計
+    const countCol = formHeaders.findIndex(h => String(h) === "来店人数");
+    const bookings = {}; // { "2026-04-10": { "カウンター": {count:1, people:3}, ... } }
     if (dateCol !== -1 && seatCol !== -1) {
       formData.slice(1).forEach(row => {
         const rawDate = row[dateCol];
@@ -143,36 +151,36 @@ function doGet(e) {
           const m = String(rawDate).match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
           if (m) dateStr = `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
         }
-        if (dateStr) {
-          if (!bookedSeats[dateStr]) bookedSeats[dateStr] = [];
-          bookedSeats[dateStr].push(String(row[seatCol]).trim());
-        }
-      });
-    }
-
-    // 個室ブロック日を取得
-    const blockSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("個室ブロック");
-    const blockedDates = [];
-    if (blockSheet && blockSheet.getLastRow() > 1) {
-      blockSheet.getDataRange().getValues().slice(1).forEach(row => {
-        if (row[0]) blockedDates.push(String(row[0]).trim());
+        if (!dateStr) return;
+        const seat = String(row[seatCol]).trim();
+        const peopleStr = countCol !== -1 ? String(row[countCol]).trim() : "";
+        const peopleMatch = peopleStr.match(/(\d+)/);
+        const people = peopleMatch ? parseInt(peopleMatch[1]) : 0;
+        if (!bookings[dateStr]) bookings[dateStr] = {};
+        if (!bookings[dateStr][seat]) bookings[dateStr][seat] = { count: 0, people: 0 };
+        bookings[dateStr][seat].count++;
+        bookings[dateStr][seat].people += people;
       });
     }
 
     const result = calData.slice(1).map(row => {
-      const dateStr = String(row[0] || "").trim();
+      const rawDate = row[0];
+      const dateStr = (rawDate && typeof rawDate.getTime === "function")
+        ? Utilities.formatDate(rawDate, "Asia/Tokyo", "yyyy-MM-dd")
+        : String(rawDate || "").trim();
       const status = String(row[1] || "").trim();
       let seatStatus;
       if (status === "×") {
         seatStatus = { "カウンター": "×", "小上がり": "×", "個室": "×" };
       } else {
-        const seated = bookedSeats[dateStr] || [];
-        const privateUnavailable = blockedDates.includes(dateStr) || seated.includes("個室");
-        seatStatus = {
-          "カウンター": "○",
-          "小上がり": "○",
-          "個室": privateUnavailable ? "×" : "○"
-        };
+        seatStatus = {};
+        ["カウンター", "小上がり", "個室"].forEach(seat => {
+          const limit = SEAT_LIMITS[seat];
+          const b = (bookings[dateStr] && bookings[dateStr][seat]) || { count: 0, people: 0 };
+          const peopleFull  = b.people >= limit.people;
+          const tablesFull  = limit.tables !== null && b.count >= limit.tables;
+          seatStatus[seat] = (peopleFull || tablesFull) ? "×" : "○";
+        });
       }
       return { date: dateStr, status: status, seatStatus: seatStatus };
     });
@@ -275,33 +283,44 @@ function doGet(e) {
       }
     }
 
-    if (seat === "個室") {
-      const data = sheet.getDataRange().getValues();
-      const dateCol = headers.findIndex(h => String(h).startsWith("来店日時"));
-      const seatCol = headers.findIndex(h => String(h) === "座席のタイプ");
-      if (dateCol !== -1 && seatCol !== -1) {
+    // 席タイプ上限チェック
+    {
+      const SEAT_LIMITS = {
+        "カウンター": { people: 7,  tables: null },
+        "小上がり":   { people: 12, tables: 3    },
+        "個室":       { people: 6,  tables: 1    },
+      };
+      const limit = SEAT_LIMITS[seat];
+      if (limit) {
+        const data = sheet.getDataRange().getValues();
+        const dateCol = headers.findIndex(h => String(h).startsWith("来店日時"));
+        const seatCol = headers.findIndex(h => String(h) === "座席のタイプ");
+        const countCol = headers.findIndex(h => String(h) === "来店人数");
         const pm = String(date).match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
-        const paramDateStr = pm ? `${pm[1]}-${String(pm[2]).padStart(2,'0')}-${String(pm[3]).padStart(2,'0')}` : "";
-        const alreadyBooked = data.slice(1).some(row => {
-          const rawDate = row[dateCol];
-          let dateStr = "";
-          if (rawDate && typeof rawDate.getTime === "function") {
-            dateStr = Utilities.formatDate(rawDate, "Asia/Tokyo", "yyyy-MM-dd");
-          } else {
-            const m = String(rawDate).match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
-            if (m) dateStr = `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
-          }
-          return dateStr === paramDateStr && String(row[seatCol]).trim() === "個室";
-        });
-        const blockSheet2 = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("個室ブロック");
-        let isBlocked = false;
-        if (blockSheet2 && blockSheet2.getLastRow() > 1) {
-          const blockData2 = blockSheet2.getDataRange().getValues();
-          isBlocked = blockData2.slice(1).some(row => String(row[0]).trim() === paramDateStr);
+        const submitDateStr = pm ? `${pm[1]}-${String(pm[2]).padStart(2,'0')}-${String(pm[3]).padStart(2,'0')}` : "";
+        let bookedCount = 0, bookedPeople = 0;
+        if (submitDateStr && dateCol !== -1 && seatCol !== -1) {
+          data.slice(1).forEach(row => {
+            const rawDate = row[dateCol];
+            let rowDateStr = "";
+            if (rawDate && typeof rawDate.getTime === "function") {
+              rowDateStr = Utilities.formatDate(rawDate, "Asia/Tokyo", "yyyy-MM-dd");
+            } else {
+              const m = String(rawDate).match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+              if (m) rowDateStr = `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+            }
+            if (rowDateStr === submitDateStr && String(row[seatCol]).trim() === seat) {
+              bookedCount++;
+              const pm2 = String(countCol !== -1 ? row[countCol] : "").match(/(\d+)/);
+              bookedPeople += pm2 ? parseInt(pm2[1]) : 0;
+            }
+          });
         }
-        if (alreadyBooked || isBlocked) {
-          return ContentService.createTextOutput("PRIVATE_ROOM_FULL")
-            .setMimeType(ContentService.MimeType.TEXT);
+        const newPeople = parseInt((String(count).match(/(\d+)/) || [])[1] || 0);
+        const peopleFull = bookedPeople + newPeople > limit.people;
+        const tablesFull = limit.tables !== null && bookedCount >= limit.tables;
+        if (peopleFull || tablesFull) {
+          return ContentService.createTextOutput("SEAT_FULL").setMimeType(ContentService.MimeType.TEXT);
         }
       }
     }
