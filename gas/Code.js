@@ -182,7 +182,18 @@ function doGet(e) {
           };
         });
       }
-      return { date: dateStr, status: status, seatStatus: seatStatus, seatCapacity: seatCapacity };
+      // 全体ステータスを予約状況から自動算出（管理者設定の×は優先）
+      let displayStatus;
+      if (status === "×") {
+        displayStatus = "×";
+      } else {
+        const allFull = Object.values(seatStatus).every(v => v === "×");
+        const hasBooking = ["カウンター", "小上がり"].some(s =>
+          bookings[dateStr] && bookings[dateStr][s] && bookings[dateStr][s].count > 0
+        );
+        displayStatus = allFull ? "×" : hasBooking ? "△" : "○";
+      }
+      return { date: dateStr, status: displayStatus, seatStatus: seatStatus, seatCapacity: seatCapacity };
     });
 
     return ContentService.createTextOutput(JSON.stringify(result))
@@ -264,6 +275,15 @@ function doGet(e) {
 
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Form_Responses");
     const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+
+    // 月曜日（定休日）は受付不可
+    const pmMon = String(date).match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+    if (pmMon) {
+      const d = new Date(`${pmMon[1]}-${String(pmMon[2]).padStart(2,'0')}-${String(pmMon[3]).padStart(2,'0')}T00:00:00+09:00`);
+      if (d.getDay() === 1) {
+        return ContentService.createTextOutput("CLOSED").setMimeType(ContentService.MimeType.TEXT);
+      }
+    }
 
     // カレンダーステータスが×の日は受付不可
     const pmDate = String(date).match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);

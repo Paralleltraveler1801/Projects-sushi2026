@@ -230,6 +230,21 @@ function toggleForm() {
 async function onDateChange(dateStr) {
     if (!dateStr) return;
 
+    // 月曜日（定休日）チェック
+    const dayOfWeek = new Date(dateStr + "T00:00:00+09:00").getDay();
+    const result = document.getElementById("form-result");
+    if (dayOfWeek === 1) {
+        document.getElementById("f-date").value = "";
+        if (result) {
+            result.textContent = "月曜日は定休日のためご予約いただけません。";
+            result.className = "error";
+            result.style.display = "block";
+        }
+        showToast("月曜日は定休日のためご予約いただけません。");
+        return;
+    }
+    if (result) result.style.display = "none";
+
     const seatSelect = document.getElementById("f-seat");
     const seatNote = document.getElementById("seat-note");
     if (!seatSelect) return;
@@ -376,6 +391,10 @@ async function confirmAndSubmit() {
                 .then(r => r.json())
                 .then(d => { publicCalendarData = d; })
                 .catch(() => {});
+        } else if (text.trim() === "CLOSED") {
+            const msg = "月曜日は定休日のためご予約いただけません。";
+            result.textContent = msg; result.className = "error"; result.style.display = "block";
+            showToast(msg);
         } else if (text.trim() === "DATE_FULL") {
             const msg = "申し訳ございません。この日は満席のためご予約いただけません。";
             result.textContent = msg; result.className = "error"; result.style.display = "block";
