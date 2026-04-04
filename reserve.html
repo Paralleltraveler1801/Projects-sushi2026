@@ -241,8 +241,22 @@
     <!-- 予約状況 -->
     <section id="calendar">
         <h2>予約状況</h2>
-        <p class="calendar-sub">○ 予約受付中　△ 残りわずか　× 満席</p>
-        <p class="calendar-sub" style="margin-top:6px; color:#888;">日付をタップすると予約フォームの日付欄に自動で入力されます</p>
+        <div style="display:flex;justify-content:center;margin-bottom:2rem;">
+        <div class="calendar-legend" style="margin-bottom:0;">
+            <div class="calendar-legend-row">
+                <span class="legend-badge legend-o">○</span><span>予約受付中</span>
+                <span class="legend-badge legend-d">△</span><span>残りわずか</span>
+                <span class="legend-badge legend-x">×</span><span>満席</span>
+            </div>
+            <div class="calendar-legend-divider"></div>
+            <div class="calendar-legend-row legend-seats">
+                <span>カウ＝カウンター</span>
+                <span>小上＝小上がり</span>
+                <span>個室＝個室</span>
+            </div>
+            <p class="calendar-legend-hint">日付をタップすると予約フォームに自動入力されます</p>
+        </div>
+        </div>
         <div class="calendar-section-inner">
             <div id="calendar-loading">
                 <div class="spinner"></div>

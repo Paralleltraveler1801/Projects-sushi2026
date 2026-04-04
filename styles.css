@@ -823,6 +823,10 @@ footer {
     margin-bottom: 0.5rem;
 }
 
+#calendar > .calendar-legend {
+    display: inline-block;
+}
+
 /* 凡例テキスト（○△×の説明） */
 .calendar-sub {
     text-align: center;
@@ -830,6 +834,45 @@ footer {
     color: #999;
     letter-spacing: 0.05em;
     margin-bottom: 2rem;
+}
+.calendar-legend {
+    display: block;
+    width: fit-content;
+    background: #f9f7f4;
+    border: 1px solid #e8e0d8;
+    border-radius: 6px;
+    padding: 12px 20px;
+    margin: 0 auto 2rem;
+    font-size: 0.85rem;
+    color: #666;
+    text-align: left;
+}
+.calendar-legend-row {
+    display: flex;
+    align-items: center;
+    gap: 6px 16px;
+    flex-wrap: wrap;
+}
+.legend-seats {
+    gap: 4px 20px;
+    color: #888;
+}
+.legend-badge {
+    font-weight: bold;
+    font-size: 1rem;
+}
+.legend-o { color: #2a9d2a; }
+.legend-d { color: #d4820a; }
+.legend-x { color: #cc0000; }
+.calendar-legend-divider {
+    border-top: 1px solid #e8e0d8;
+    margin: 8px 0;
+}
+.calendar-legend-hint {
+    margin-top: 8px;
+    font-size: 0.78rem;
+    color: #aaa;
+    text-align: center;
 }
 
 /* カレンダーラッパー */
