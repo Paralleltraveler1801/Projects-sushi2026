@@ -19,7 +19,7 @@ if (hamburger && navLinks) {
 // ============================================================
 // 公開カレンダー
 // ============================================================
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxI7DGvBG1k1RdEoEyjsYt4Wc8Iec5croDi4e_85vt4QtKBn3-5F07RZgHJzdrngsMMtA/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzZdvg1RYMFYOcq2EonTxLZdzEJ7SrVbrpuiJ_7zXOHZI50pqhpUPI1PG7LxN7Fejb6Ng/exec";
 const CALENDAR_URL = GAS_URL;
 let publicCalendarData = [];
 let currentMonth = new Date().getMonth();
@@ -302,7 +302,7 @@ async function confirmAndSubmit() {
         result.style.display = "block";
         return;
     }
-    if (calEntry && calEntry.seatCapacity && calEntry.seatCapacity[seat]) {
+if (calEntry && calEntry.seatCapacity && calEntry.seatCapacity[seat]) {
         const cap = calEntry.seatCapacity[seat];
         if (cap.remainingPeople < newPeople || cap.remainingTables === 0) {
             closeConfirmModal();

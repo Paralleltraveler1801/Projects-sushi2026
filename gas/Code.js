@@ -1,4 +1,4 @@
-// ===== 設定 =====
+// ===== 設定 v2 =====
 const SHOP_EMAIL = 'sushidokoro.hishita@gmail.com';
 const SHOP_NAME  = '鮨処ひし田';
 const SHOP_TEL   = '011-827-0537';
