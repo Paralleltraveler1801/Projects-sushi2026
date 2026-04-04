@@ -310,6 +310,22 @@ function doGet(e) {
     });
     sheet.getRange(newRowNum, 1, 1, newRow.length).setValues([newRow]);
 
+    // 個室予約が入ったらカレンダーを△に（×は上書きしない）
+    if (seat === "個室") {
+      const pm2 = String(date).match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+      if (pm2) {
+        const dateStr2 = `${pm2[1]}-${String(pm2[2]).padStart(2,'0')}-${String(pm2[3]).padStart(2,'0')}`;
+        const calSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("calendar");
+        const calRows = calSheet.getDataRange().getValues();
+        for (let i = 1; i < calRows.length; i++) {
+          if (String(calRows[i][0]).trim() === dateStr2 && calRows[i][1] !== "×") {
+            calSheet.getRange(i + 1, 2).setValue("△");
+            break;
+          }
+        }
+      }
+    }
+
     const nowStr = Utilities.formatDate(now, "Asia/Tokyo", "yyyy年M月d日 HH:mm");
     try { sendToCustomer(email, name, date, time, count, plan, seat); } catch(err) { Logger.log("顧客メールエラー: " + err.message); }
     try { sendToShop(name, email, tel, date, time, count, plan, seat, nowStr); } catch(err) { Logger.log("店舗メールエラー: " + err.message); }
