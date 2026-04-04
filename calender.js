@@ -344,6 +344,11 @@ if (calEntry && calEntry.seatCapacity && calEntry.seatCapacity[seat]) {
             result.className = "success";
             result.style.display = "block";
             document.getElementById("reserve-form").reset();
+            // 残席情報を最新化
+            fetch(GAS_URL + "?action=getCalendarWithSeats")
+                .then(r => r.json())
+                .then(d => { publicCalendarData = d; })
+                .catch(() => {});
         } else if (text.trim() === "DATE_FULL") {
             result.textContent = "申し訳ございません。この日は満席のためご予約いただけません。";
             result.className = "error";
