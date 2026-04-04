@@ -340,7 +340,10 @@ function openEditModal(r) {
             </select>
         </label>
         <label style="display:block;margin-bottom:12px;color:#ddd;">来店人数<br>
-        <input id="e-count" type="text" value="${r["来店人数"]||""}" style="${s}"></label>
+        <select id="e-count" style="${s}">
+            <option value="">人数を選択してください</option>
+            ${[1,2,3,4,5,6,7,8,9,10,11,12].map(n => `<option value="${n}名" ${r["来店人数"]===n+"名"?"selected":""}>${n}名</option>`).join("")}
+        </select></label>
         <label style="display:block;margin-bottom:12px;color:#ddd;">ご利用プラン<br>
         <select id="e-plan" style="${s}">${plansHTML}</select></label>
         <label style="display:block;margin-bottom:12px;color:#ddd;">座席タイプ<br>
