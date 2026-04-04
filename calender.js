@@ -17,6 +17,29 @@ if (hamburger && navLinks) {
 }
 
 // ============================================================
+// トースト通知
+// ============================================================
+function showToast(message) {
+    let container = document.getElementById("toast-container");
+    if (!container) {
+        container = document.createElement("div");
+        container.id = "toast-container";
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.textContent = message;
+    container.appendChild(toast);
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => { toast.classList.add("show"); });
+    });
+    setTimeout(() => {
+        toast.classList.add("hide");
+        toast.addEventListener("transitionend", () => toast.remove(), { once: true });
+    }, 4000);
+}
+
+// ============================================================
 // 公開カレンダー
 // ============================================================
 const GAS_URL = "https://script.google.com/macros/s/AKfycbzZdvg1RYMFYOcq2EonTxLZdzEJ7SrVbrpuiJ_7zXOHZI50pqhpUPI1PG7LxN7Fejb6Ng/exec";
@@ -297,18 +320,22 @@ async function confirmAndSubmit() {
     const calEntry = publicCalendarData.find(item => item.date.trim() === dateVal);
     if (calEntry && calEntry.status === "×") {
         closeConfirmModal();
-        result.textContent = "申し訳ございません。この日は満席のためご予約いただけません。";
+        const msg = "申し訳ございません。この日は満席のためご予約いただけません。";
+        result.textContent = msg;
         result.className = "error";
         result.style.display = "block";
+        showToast(msg);
         return;
     }
-if (calEntry && calEntry.seatCapacity && calEntry.seatCapacity[seat]) {
+    if (calEntry && calEntry.seatCapacity && calEntry.seatCapacity[seat]) {
         const cap = calEntry.seatCapacity[seat];
         if (cap.remainingPeople < newPeople || cap.remainingTables === 0) {
             closeConfirmModal();
-            result.textContent = "申し訳ございません。選択された日・座席タイプはご予約が満席です。他の座席タイプまたは日程をお選びください。";
+            const msg = "申し訳ございません。選択された日・座席タイプはご予約が満席です。他の座席タイプまたは日程をお選びください。";
+            result.textContent = msg;
             result.className = "error";
             result.style.display = "block";
+            showToast(msg);
             return;
         }
     }
@@ -350,28 +377,28 @@ if (calEntry && calEntry.seatCapacity && calEntry.seatCapacity[seat]) {
                 .then(d => { publicCalendarData = d; })
                 .catch(() => {});
         } else if (text.trim() === "DATE_FULL") {
-            result.textContent = "申し訳ございません。この日は満席のためご予約いただけません。";
-            result.className = "error";
-            result.style.display = "block";
+            const msg = "申し訳ございません。この日は満席のためご予約いただけません。";
+            result.textContent = msg; result.className = "error"; result.style.display = "block";
+            showToast(msg);
         } else if (text.trim() === "SEAT_FULL") {
-            result.textContent = "申し訳ございません。選択された日・座席タイプはご予約が満席です。他の座席タイプまたは日程をお選びください。";
-            result.className = "error";
-            result.style.display = "block";
+            const msg = "申し訳ございません。選択された日・座席タイプはご予約が満席です。他の座席タイプまたは日程をお選びください。";
+            result.textContent = msg; result.className = "error"; result.style.display = "block";
+            showToast(msg);
         } else if (text.trim() === "PRIVATE_ROOM_FULL") {
-            result.textContent = "申し訳ございません。選択された日の個室はすでに満席です。他の座席タイプをお選びください。";
-            result.className = "error";
-            result.style.display = "block";
+            const msg = "申し訳ございません。選択された日の個室はすでに満席です。他の座席タイプをお選びください。";
+            result.textContent = msg; result.className = "error"; result.style.display = "block";
+            showToast(msg);
             onDateChange(dateVal);
         } else {
-            result.textContent = "送信に失敗しました。お手数ですがお電話にてご連絡ください。";
-            result.className = "error";
-            result.style.display = "block";
+            const msg = "送信に失敗しました。お手数ですがお電話にてご連絡ください。";
+            result.textContent = msg; result.className = "error"; result.style.display = "block";
+            showToast(msg);
         }
     } catch (err) {
         closeConfirmModal();
-        result.textContent = "通信エラーが発生しました。お手数ですがお電話にてご連絡ください。";
-        result.className = "error";
-        result.style.display = "block";
+        const msg = "通信エラーが発生しました。お手数ですがお電話にてご連絡ください。";
+        result.textContent = msg; result.className = "error"; result.style.display = "block";
+        showToast(msg);
     } finally {
         confirmBtn.disabled = false;
         confirmBtn.textContent = "この内容で予約する";
