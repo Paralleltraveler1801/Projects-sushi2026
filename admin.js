@@ -646,6 +646,9 @@ async function updateDemaeStatus(orderNum, status, clickedBtn) {
     const badge = card ? card.querySelector(".demae-status-badge") : null;
     if (badge) prevStatus = badge.textContent;
 
+    // 音も即時再生（UIと同タイミング）
+    playUpdateSound();
+
     if (status === "キャンセル") {
         // キャンセルはすぐフェードアウト
         if (card) {
@@ -676,7 +679,6 @@ async function updateDemaeStatus(orderNum, status, clickedBtn) {
         const text = await res.text();
 
         if (text.trim() === "OK") {
-            playUpdateSound();
             if (status === "キャンセル" && card) {
                 card.style.opacity = "0";
                 setTimeout(() => card.remove(), 300);
@@ -716,41 +718,49 @@ let _lastDeliveryTimestamp = null;
 let _titleBlinkInterval    = null;
 const ORIGINAL_TITLE       = document.title;
 
-// ===== 音声（alert.wav）=====
+// ===== 音声（alert.wav）iOS対応 =====
 let _audioCtx    = null;
 let _alertBuffer = null;
-let _rawArrayBuf = null; // フェッチ済みの生データ
+let _rawArrayBuf = null;
 
-// WAVファイルはユーザー操作不要でフェッチだけ先に済ませる
+// WAVは先にフェッチ（ユーザー操作不要）
 fetch("alert.wav")
     .then(r => r.arrayBuffer())
-    .then(buf => { _rawArrayBuf = buf; })
+    .then(buf => {
+        _rawArrayBuf = buf;
+        // AudioContextが既にアンロック済みならすぐデコード
+        if (_audioCtx) _decodeAudio();
+    })
     .catch(e => console.warn("alert.wav fetch error:", e));
 
-async function ensureAudio() {
-    // AudioContext 生成（ユーザー操作後のみ成功する）
-    if (!_audioCtx) {
-        const AudioCtx = window.AudioContext || /** @type {any} */(window).webkitAudioContext;
-        if (!AudioCtx) return false;
-        _audioCtx = new AudioCtx();
-    }
-    if (_audioCtx.state === "suspended") await _audioCtx.resume();
-
-    // フェッチ済みデータがあればデコード（1回だけ）
-    if (!_alertBuffer && _rawArrayBuf) {
-        try {
-            _alertBuffer = await _audioCtx.decodeAudioData(_rawArrayBuf.slice(0));
-        } catch(e) {
-            console.warn("decodeAudioData error:", e);
-            return false;
-        }
-    }
-    return !!_alertBuffer;
+// コールバック式decodeAudioData（iOS互換）
+function _decodeAudio() {
+    if (!_audioCtx || !_rawArrayBuf || _alertBuffer) return;
+    _audioCtx.decodeAudioData(
+        _rawArrayBuf.slice(0),
+        function(buf) { _alertBuffer = buf; },
+        function(err) { console.warn("decodeAudioData error:", err); }
+    );
 }
 
+// 最初のユーザー操作でAudioContextをアンロック（iOS必須）
+function _unlockAudio() {
+    if (_audioCtx) return;
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    _audioCtx = new AudioCtx();
+    if (_audioCtx.state === "suspended") _audioCtx.resume();
+    _decodeAudio();
+}
+document.addEventListener("touchstart", _unlockAudio, { once: true, passive: true });
+document.addEventListener("click",      _unlockAudio, { once: true });
+
 async function playWav() {
-    const ready = await ensureAudio();
-    if (!ready) return;
+    if (!_audioCtx) return; // まだアンロックされていない
+    if (_audioCtx.state === "suspended") {
+        try { await _audioCtx.resume(); } catch(e) {}
+    }
+    if (!_alertBuffer) return;
     try {
         const src = _audioCtx.createBufferSource();
         src.buffer = _alertBuffer;
