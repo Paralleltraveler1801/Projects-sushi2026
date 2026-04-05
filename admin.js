@@ -515,10 +515,15 @@ async function loadDemaeOrders() {
             return;
         }
 
-        // 新しい順に表示
-        const sorted = data.slice().sort((a, b) => {
-            return new Date(b["タイムスタンプ"]) - new Date(a["タイムスタンプ"]);
-        });
+        // キャンセル済みを除外して新しい順に表示
+        const sorted = data
+            .filter(o => o["ステータス"] !== "キャンセル")
+            .sort((a, b) => new Date(b["タイムスタンプ"]) - new Date(a["タイムスタンプ"]));
+
+        if (!sorted.length) {
+            container.innerHTML = "<p style='padding:20px;color:#aaa;'>出前注文はまだありません。</p>";
+            return;
+        }
 
         sorted.forEach(order => {
             const card = document.createElement("div");
@@ -526,18 +531,34 @@ async function loadDemaeOrders() {
             card.style.borderLeft = "4px solid #c8a882";
             card.style.marginBottom = "16px";
 
+            // タイムスタンプ
             const ts = order["タイムスタンプ"] ? new Date(order["タイムスタンプ"]) : null;
-            const tsStr = ts ? ts.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }) : "-";
+            const tsStr = ts && !isNaN(ts) ? ts.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }) : "-";
 
-            let itemLines = "";
+            // お届け希望日（YYYY-MM-DD → YYYY年M月D日）
+            const deliveryDateRaw = order["お届け希望日"] || "";
+            let deliveryDateStr = deliveryDateRaw;
+            const dm = deliveryDateRaw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (dm) deliveryDateStr = `${dm[1]}年${parseInt(dm[2])}月${parseInt(dm[3])}日`;
+
+            // 注文内容（JSONパース。失敗時は"－"）
+            let itemLines = "－";
             try {
                 const items = JSON.parse(order["注文内容"] || "[]");
-                itemLines = items.map(i =>
-                    `<span style="display:inline-block;margin-right:12px;">${i.name} ×${i.qty}</span>`
-                ).join("");
-            } catch(e) {
-                itemLines = order["注文内容"] || "-";
-            }
+                if (Array.isArray(items) && items.length) {
+                    itemLines = items.map(i =>
+                        `<span style="display:inline-block;margin-right:12px;">${i.name} ×${i.qty}</span>`
+                    ).join("");
+                }
+            } catch(e) { /* JSONでなければ非表示 */ }
+
+            // 金額（数値に変換できない場合は"－"）
+            const subtotal = isNaN(Number(order["小計"]))    ? null : Number(order["小計"]);
+            const delFee   = isNaN(Number(order["配送料"]))  ? 550  : Number(order["配送料"]);
+            const total    = isNaN(Number(order["合計金額"])) ? null : Number(order["合計金額"]);
+            const priceStr = subtotal !== null && total !== null
+                ? `小計 ${subtotal.toLocaleString()}円 ＋ 配送料 ${delFee.toLocaleString()}円 ＝ <strong>合計 ${total.toLocaleString()}円</strong>`
+                : "";
 
             const statusColor = {
                 "未対応": "#e53935",
@@ -557,8 +578,9 @@ async function loadDemaeOrders() {
                 <p>👤 <strong>${order["氏名"] || "-"}</strong> 様</p>
                 <p>📞 ${order["電話番号"] || "-"}</p>
                 <p>📍 ${order["住所"] || "-"}</p>
+                ${deliveryDateStr ? `<p>📅 お届け希望日：${deliveryDateStr}</p>` : ""}
                 <p style="margin-top:6px;">🍣 ${itemLines}</p>
-                <p>小計 ${Number(order["小計"] || 0).toLocaleString()}円 ＋ 配送料 ${Number(order["配送料"] || 550).toLocaleString()}円 ＝ <strong>合計 ${Number(order["合計金額"] || 0).toLocaleString()}円</strong></p>
+                ${priceStr ? `<p>${priceStr}</p>` : ""}
                 ${order["備考"] ? `<p style="color:#aaa;font-size:0.85rem;">📝 ${order["備考"]}</p>` : ""}
                 <div style="margin-top:10px;display:flex;align-items:center;gap:8px;">
                     <label style="color:#ddd;font-size:0.85rem;">ステータス変更：</label>
