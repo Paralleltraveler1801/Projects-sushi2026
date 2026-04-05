@@ -617,6 +617,8 @@ async function loadDemaeOrders() {
             if (!btn) return;
             const orderNum = btn.dataset.ordernum;
             const status   = btn.dataset.status;
+            // 音はユーザー操作の同期コンテキストで再生（iOS対策）
+            playUpdateSound();
             updateDemaeStatus(orderNum, status, btn);
         });
 
@@ -645,9 +647,6 @@ async function updateDemaeStatus(orderNum, status, clickedBtn) {
     let prevStatus = null;
     const badge = card ? card.querySelector(".demae-status-badge") : null;
     if (badge) prevStatus = badge.textContent;
-
-    // 音も即時再生（UIと同タイミング）
-    playUpdateSound();
 
     if (status === "キャンセル") {
         // キャンセルはすぐフェードアウト
@@ -719,56 +718,20 @@ let _titleBlinkInterval    = null;
 const ORIGINAL_TITLE       = document.title;
 
 // ===== 音声（alert.wav）iOS対応 =====
-let _audioCtx    = null;
-let _alertBuffer = null;
-let _rawArrayBuf = null;
+// Web Audio APIではなくHTMLAudioElementを使用（iOSで確実に動作）
+const _audio = new Audio("alert.wav");
+_audio.preload = "auto";
 
-// WAVは先にフェッチ（ユーザー操作不要）
-fetch("alert.wav")
-    .then(r => r.arrayBuffer())
-    .then(buf => {
-        _rawArrayBuf = buf;
-        // AudioContextが既にアンロック済みならすぐデコード
-        if (_audioCtx) _decodeAudio();
-    })
-    .catch(e => console.warn("alert.wav fetch error:", e));
-
-// コールバック式decodeAudioData（iOS互換）
-function _decodeAudio() {
-    if (!_audioCtx || !_rawArrayBuf || _alertBuffer) return;
-    _audioCtx.decodeAudioData(
-        _rawArrayBuf.slice(0),
-        function(buf) { _alertBuffer = buf; },
-        function(err) { console.warn("decodeAudioData error:", err); }
-    );
-}
-
-// 最初のユーザー操作でAudioContextをアンロック（iOS必須）
+// iOSは最初のユーザー操作でアンロックが必要
 function _unlockAudio() {
-    if (_audioCtx) return;
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) return;
-    _audioCtx = new AudioCtx();
-    if (_audioCtx.state === "suspended") _audioCtx.resume();
-    _decodeAudio();
+    _audio.play().then(() => { _audio.pause(); _audio.currentTime = 0; }).catch(() => {});
 }
 document.addEventListener("touchstart", _unlockAudio, { once: true, passive: true });
 document.addEventListener("click",      _unlockAudio, { once: true });
 
-async function playWav() {
-    if (!_audioCtx) return; // まだアンロックされていない
-    if (_audioCtx.state === "suspended") {
-        try { await _audioCtx.resume(); } catch(e) {}
-    }
-    if (!_alertBuffer) return;
-    try {
-        const src = _audioCtx.createBufferSource();
-        src.buffer = _alertBuffer;
-        src.connect(_audioCtx.destination);
-        src.start();
-    } catch(e) {
-        console.warn("音声再生エラー:", e);
-    }
+function playWav() {
+    _audio.currentTime = 0;
+    _audio.play().catch(e => console.warn("play error:", e));
 }
 
 // 新着注文・ステータス更新、どちらも同じ音
