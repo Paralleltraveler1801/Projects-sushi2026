@@ -833,3 +833,10 @@ setTimeout(pollDeliveryOrders, 5000);
 
 // ページ読み込み時にブラウザ通知の許可を求める
 requestNotificationPermission();
+
+// サービスワーカー登録（PWA）
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js')
+        .then(reg => console.log('SW registered:', reg.scope))
+        .catch(err => console.warn('SW registration failed:', err));
+}
