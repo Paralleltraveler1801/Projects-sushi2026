@@ -574,7 +574,7 @@ async function loadDemaeOrders() {
             card.innerHTML = `
                 <p style="font-size:0.8rem;color:#aaa;margin-bottom:6px;">${tsStr}</p>
                 <p>📋 <strong>${order["注文番号"] || "-"}</strong>
-                   &nbsp;<span style="background:${statusColor};color:#fff;border-radius:4px;padding:2px 8px;font-size:0.8rem;">${order["ステータス"] || "-"}</span></p>
+                   &nbsp;<span class="demae-status-badge" style="background:${statusColor};color:#fff;border-radius:4px;padding:2px 8px;font-size:0.8rem;">${order["ステータス"] || "-"}</span></p>
                 <p>👤 <strong>${order["氏名"] || "-"}</strong> 様</p>
                 <p>📞 ${order["電話番号"] || "-"}</p>
                 <p>📍 ${order["住所"] || "-"}</p>
@@ -626,13 +626,26 @@ async function updateDemaeStatus(orderNum, status, selectEl) {
         const text = await res.text();
         if (text.trim() === "OK") {
             playUpdateSound();
+            const card = selectEl ? selectEl.closest(".reservation-card") : null;
             if (status === "キャンセル") {
-                const card = selectEl ? selectEl.closest(".reservation-card") : null;
                 if (card) {
                     card.style.transition = "opacity 0.3s";
                     card.style.opacity = "0";
                     setTimeout(() => card.remove(), 300);
                 }
+            } else if (card) {
+                // バッジのテキストと色を即時更新
+                const statusColor = {
+                    "未対応": "#e53935",
+                    "確認中": "#fb8c00",
+                    "完了":   "#43a047",
+                }[status] || "#888";
+                const badge = card.querySelector(".demae-status-badge");
+                if (badge) {
+                    badge.textContent = status;
+                    badge.style.background = statusColor;
+                }
+                if (selectEl) selectEl.disabled = false;
             }
         } else {
             alert("ステータスの更新に失敗しました: " + text);
@@ -653,49 +666,49 @@ let _titleBlinkInterval    = null;
 const ORIGINAL_TITLE       = document.title;
 
 // ===== 音声（alert.wav）=====
-let _audioCtx = null;
+let _audioCtx    = null;
 let _alertBuffer = null;
+let _rawArrayBuf = null; // フェッチ済みの生データ
 
-function getAudioCtx() {
+// WAVファイルはユーザー操作不要でフェッチだけ先に済ませる
+fetch("alert.wav")
+    .then(r => r.arrayBuffer())
+    .then(buf => { _rawArrayBuf = buf; })
+    .catch(e => console.warn("alert.wav fetch error:", e));
+
+async function ensureAudio() {
+    // AudioContext 生成（ユーザー操作後のみ成功する）
     if (!_audioCtx) {
         const AudioCtx = window.AudioContext || /** @type {any} */(window).webkitAudioContext;
-        if (AudioCtx) _audioCtx = new AudioCtx();
+        if (!AudioCtx) return false;
+        _audioCtx = new AudioCtx();
     }
-    if (_audioCtx && _audioCtx.state === "suspended") _audioCtx.resume();
-    return _audioCtx;
+    if (_audioCtx.state === "suspended") await _audioCtx.resume();
+
+    // フェッチ済みデータがあればデコード（1回だけ）
+    if (!_alertBuffer && _rawArrayBuf) {
+        try {
+            _alertBuffer = await _audioCtx.decodeAudioData(_rawArrayBuf.slice(0));
+        } catch(e) {
+            console.warn("decodeAudioData error:", e);
+            return false;
+        }
+    }
+    return !!_alertBuffer;
 }
 
-// WAVファイルを事前にデコードしておく
-async function loadAlertSound() {
+async function playWav() {
+    const ready = await ensureAudio();
+    if (!ready) return;
     try {
-        const ctx = getAudioCtx();
-        if (!ctx) return;
-        const res    = await fetch("alert.wav");
-        const arrBuf = await res.arrayBuffer();
-        _alertBuffer = await ctx.decodeAudioData(arrBuf);
-    } catch(e) {
-        console.warn("alert.wav の読み込みエラー:", e);
-    }
-}
-
-function playWav() {
-    try {
-        const ctx = getAudioCtx();
-        if (!ctx || !_alertBuffer) return;
-        const src = ctx.createBufferSource();
+        const src = _audioCtx.createBufferSource();
         src.buffer = _alertBuffer;
-        src.connect(ctx.destination);
+        src.connect(_audioCtx.destination);
         src.start();
     } catch(e) {
         console.warn("音声再生エラー:", e);
     }
 }
-
-// ページ上の最初のクリックで AudioContext を起動し WAV をロード
-document.addEventListener("click", () => {
-    getAudioCtx();
-    if (!_alertBuffer) loadAlertSound();
-}, { once: false });
 
 // 新着注文・ステータス更新、どちらも同じ音
 function playAlertSound()  { playWav(); }
