@@ -627,9 +627,11 @@ async function loadDemaeOrders() {
 }
 
 // ============================================================
-// 出前ステータス更新
+// 出前ステータス更新（楽観的UI更新）
 // ============================================================
 async function updateDemaeStatus(orderNum, status, clickedBtn) {
+    const colorMap = { "未対応": "#e53935", "確認中": "#fb8c00", "完了": "#43a047", "キャンセル": "#757575" };
+
     // キャンセルは確認ダイアログを挟む
     if (status === "キャンセル") {
         const ok = confirm(`注文 ${orderNum} をキャンセルしますか？\nこの操作は取り消せません。`);
@@ -638,7 +640,31 @@ async function updateDemaeStatus(orderNum, status, clickedBtn) {
 
     const card = clickedBtn ? clickedBtn.closest(".reservation-card") : null;
 
-    // ボタンを全部無効化
+    // --- 楽観的UI更新（即時反映） ---
+    // 現在のステータスを記憶（失敗時のロールバック用）
+    let prevStatus = null;
+    const badge = card ? card.querySelector(".demae-status-badge") : null;
+    if (badge) prevStatus = badge.textContent;
+
+    if (status === "キャンセル") {
+        // キャンセルはすぐフェードアウト
+        if (card) {
+            card.style.transition = "opacity 0.3s";
+            card.style.opacity = "0.4";
+        }
+    } else if (card) {
+        // バッジを即時更新
+        if (badge) { badge.textContent = status; badge.style.background = colorMap[status] || "#888"; }
+        // ボタンを即時切り替え
+        card.querySelectorAll(".demae-status-btn").forEach(b => {
+            const isCurrent = b.dataset.status === status;
+            const c = colorMap[b.dataset.status] || "#888";
+            b.style.background = isCurrent ? c : "transparent";
+            b.style.color      = isCurrent ? "#fff" : c;
+        });
+    }
+
+    // ボタンを一時無効化（二重送信防止）
     if (card) card.querySelectorAll(".demae-status-btn").forEach(b => b.disabled = true);
 
     try {
@@ -648,39 +674,39 @@ async function updateDemaeStatus(orderNum, status, clickedBtn) {
         url.searchParams.set("status", status);
         const res  = await fetch(url.toString());
         const text = await res.text();
+
         if (text.trim() === "OK") {
             playUpdateSound();
-            if (status === "キャンセル") {
-                if (card) {
-                    card.style.transition = "opacity 0.3s";
-                    card.style.opacity = "0";
-                    setTimeout(() => card.remove(), 300);
-                }
+            if (status === "キャンセル" && card) {
+                card.style.opacity = "0";
+                setTimeout(() => card.remove(), 300);
             } else if (card) {
-                // バッジ更新
-                const colorMap = { "未対応": "#e53935", "確認中": "#fb8c00", "完了": "#43a047" };
-                const newColor = colorMap[status] || "#888";
-                const badge = card.querySelector(".demae-status-badge");
-                if (badge) { badge.textContent = status; badge.style.background = newColor; }
-
-                // ボタンの active/inactive を切り替え
-                card.querySelectorAll(".demae-status-btn").forEach(b => {
-                    const isCurrent = b.dataset.status === status;
-                    const c = colorMap[b.dataset.status] || "#888";
-                    b.style.background = isCurrent ? c : "transparent";
-                    b.style.color      = isCurrent ? "#fff" : c;
-                    b.disabled = false;
-                });
+                card.querySelectorAll(".demae-status-btn").forEach(b => b.disabled = false);
             }
         } else {
+            // 失敗 → ロールバック
+            _rollbackStatus(card, badge, prevStatus, colorMap);
             alert("ステータスの更新に失敗しました: " + text);
-            if (card) card.querySelectorAll(".demae-status-btn").forEach(b => b.disabled = false);
         }
     } catch(err) {
+        // 失敗 → ロールバック
+        _rollbackStatus(card, badge, prevStatus, colorMap);
         alert("通信エラーが発生しました。");
         console.error(err);
-        if (card) card.querySelectorAll(".demae-status-btn").forEach(b => b.disabled = false);
     }
+}
+
+function _rollbackStatus(card, badge, prevStatus, colorMap) {
+    if (!card) return;
+    if (badge && prevStatus) { badge.textContent = prevStatus; badge.style.background = colorMap[prevStatus] || "#888"; }
+    card.style.opacity = "1";
+    card.querySelectorAll(".demae-status-btn").forEach(b => {
+        const isCurrent = b.dataset.status === prevStatus;
+        const c = colorMap[b.dataset.status] || "#888";
+        b.style.background = isCurrent ? c : "transparent";
+        b.style.color      = isCurrent ? "#fff" : c;
+        b.disabled = false;
+    });
 }
 
 // ============================================================
@@ -738,6 +764,27 @@ async function playWav() {
 // 新着注文・ステータス更新、どちらも同じ音
 function playAlertSound()  { playWav(); }
 function playUpdateSound() { playWav(); }
+
+// トースト通知
+function showToast(message, duration = 6000) {
+    let container = document.getElementById("toast-container");
+    if (!container) {
+        container = document.createElement("div");
+        container.id = "toast-container";
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.textContent = message;
+    container.appendChild(toast);
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => { toast.classList.add("show"); });
+    });
+    setTimeout(() => {
+        toast.classList.add("hide");
+        setTimeout(() => toast.remove(), 400);
+    }, duration);
+}
 
 function startTitleBlink() {
     if (_titleBlinkInterval) return;
@@ -813,6 +860,7 @@ async function pollDeliveryOrders() {
         if (ts !== _lastDeliveryTimestamp && new Date(ts) > new Date(_lastDeliveryTimestamp)) {
             _lastDeliveryTimestamp = ts;
             playAlertSound();
+            showToast("🍣 新しい出前注文が入りました！出前タブを確認してください。");
             showDeliveryBanner();
             startTitleBlink();
             showBrowserNotification("🍣 新しい出前注文が入りました", "クリックして確認する");

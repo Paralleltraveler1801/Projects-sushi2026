@@ -667,6 +667,38 @@ function deleteOldReservations() {
   }
 }
 
+function deleteOldDemaeOrders() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("出前");
+  if (!sheet || sheet.getLastRow() <= 1) return;
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+  const dateCol = headers.findIndex(function(h) { return String(h) === "お届け希望日"; });
+  if (dateCol === -1) return;
+
+  const todayJst = new Date(Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy-MM-dd") + "T00:00:00+09:00");
+
+  for (let i = data.length - 1; i >= 1; i--) {
+    const raw = data[i][dateCol];
+    if (!raw) continue;
+    let d;
+    if (raw && typeof raw.getTime === 'function') {
+      // Date型の場合はJSTで解釈
+      d = new Date(Utilities.formatDate(raw, "Asia/Tokyo", "yyyy-MM-dd") + "T00:00:00+09:00");
+    } else {
+      const m = String(raw).trim().match(/(\d{4})[年\/\-](\d{1,2})[月\/\-](\d{1,2})/);
+      if (!m) continue;
+      d = new Date(m[1] + "-" + String(m[2]).padStart(2,"0") + "-" + String(m[3]).padStart(2,"0") + "T00:00:00+09:00");
+    }
+    if (d < todayJst) sheet.deleteRow(i + 1);
+  }
+}
+
+// 予約・出前注文の古いデータをまとめて削除（タイマートリガーから呼ぶ）
+function deleteOldData() {
+  deleteOldReservations();
+  deleteOldDemaeOrders();
+}
+
 function testEmail() {
   MailApp.sendEmail({
     to: "syun18hkd@gmail.com",
