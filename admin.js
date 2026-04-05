@@ -588,13 +588,22 @@ async function updateDemaeStatus(orderNum, status, selectEl) {
         url.searchParams.set("status", status);
         const res  = await fetch(url.toString());
         const text = await res.text();
-        if (text.trim() !== "OK") {
+        if (text.trim() === "OK") {
+            if (status === "キャンセル") {
+                const card = selectEl ? selectEl.closest(".reservation-card") : null;
+                if (card) {
+                    card.style.transition = "opacity 0.3s";
+                    card.style.opacity = "0";
+                    setTimeout(() => card.remove(), 300);
+                }
+            }
+        } else {
             alert("ステータスの更新に失敗しました: " + text);
+            if (selectEl) selectEl.disabled = false;
         }
     } catch(err) {
         alert("通信エラーが発生しました。");
         console.error(err);
-    } finally {
         if (selectEl) selectEl.disabled = false;
     }
 }
