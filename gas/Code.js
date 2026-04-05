@@ -95,11 +95,17 @@ function doGet(e) {
     const result = data.slice(1).map(function(row) {
       const obj = {};
       headers.forEach(function(h, i) {
+        const key = String(h);
         const val = row[i];
         if (val instanceof Date) {
-          obj[String(h)] = val.toISOString();
+          // お届け希望日はJSTの日付文字列（YYYY-MM-DD）で返す
+          if (key === "お届け希望日") {
+            obj[key] = Utilities.formatDate(val, "Asia/Tokyo", "yyyy-MM-dd");
+          } else {
+            obj[key] = val.toISOString();
+          }
         } else {
-          obj[String(h)] = String(val === null || val === undefined ? '' : val);
+          obj[key] = String(val === null || val === undefined ? '' : val);
         }
       });
       return obj;
@@ -553,10 +559,12 @@ function doPost(e) {
     const newRow = sheetHeaders.map(function(h) { return dataMap[h] !== undefined ? dataMap[h] : ""; });
     demaeSheet.appendRow(newRow);
 
-    // 電話番号列を文字列フォーマットに設定（先頭の0を保持）
-    const telColIdx = sheetHeaders.indexOf("電話番号");
-    const lastRow   = demaeSheet.getLastRow();
-    if (telColIdx !== -1) demaeSheet.getRange(lastRow, telColIdx + 1).setNumberFormat('@');
+    // 電話番号・お届け希望日 列を文字列フォーマットに固定（自動Date変換を防ぐ）
+    const lastRow      = demaeSheet.getLastRow();
+    const telColIdx    = sheetHeaders.indexOf("電話番号");
+    const dateColIdx   = sheetHeaders.indexOf("お届け希望日");
+    if (telColIdx  !== -1) demaeSheet.getRange(lastRow, telColIdx  + 1).setNumberFormat('@');
+    if (dateColIdx !== -1) demaeSheet.getRange(lastRow, dateColIdx + 1).setNumberFormat('@');
 
     // 通知メール送信
     try {

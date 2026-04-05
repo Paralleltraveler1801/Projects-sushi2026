@@ -567,9 +567,31 @@ async function loadDemaeOrders() {
                 "キャンセル": "#757575"
             }[order["ステータス"]] || "#888";
 
-            const selectOpts = DEMAE_STATUSES.map(s =>
-                `<option value="${s}" ${order["ステータス"] === s ? "selected" : ""}>${s}</option>`
-            ).join("");
+            const statusButtons = DEMAE_STATUSES.map(s => {
+                const btnColor = {
+                    "未対応":   "#e53935",
+                    "確認中":   "#fb8c00",
+                    "完了":     "#43a047",
+                    "キャンセル": "#757575"
+                }[s] || "#888";
+                const isCurrent = order["ステータス"] === s;
+                return `<button
+                    class="demae-status-btn"
+                    data-status="${s}"
+                    data-ordernum="${order["注文番号"]}"
+                    style="
+                        padding:6px 12px;
+                        border:2px solid ${btnColor};
+                        border-radius:6px;
+                        font-size:0.85rem;
+                        font-weight:700;
+                        cursor:pointer;
+                        background:${isCurrent ? btnColor : 'transparent'};
+                        color:${isCurrent ? '#fff' : btnColor};
+                        transition:background 0.15s, color 0.15s;
+                    "
+                >${s}</button>`;
+            }).join("");
 
             card.innerHTML = `
                 <p style="font-size:0.8rem;color:#aaa;margin-bottom:6px;">${tsStr}</p>
@@ -582,16 +604,22 @@ async function loadDemaeOrders() {
                 <p style="margin-top:6px;">🍣 ${itemLines}</p>
                 ${priceStr ? `<p>${priceStr}</p>` : ""}
                 ${order["備考"] ? `<p style="color:#aaa;font-size:0.85rem;">📝 ${order["備考"]}</p>` : ""}
-                <div style="margin-top:10px;display:flex;align-items:center;gap:8px;">
-                    <label style="color:#ddd;font-size:0.85rem;">ステータス変更：</label>
-                    <select style="background:#2a2a2a;color:#fff;border:1px solid #555;border-radius:6px;padding:6px 10px;font-size:0.9rem;"
-                        onchange="updateDemaeStatus('${order["注文番号"]}', this.value, this)">
-                        ${selectOpts}
-                    </select>
+                <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;">
+                    ${statusButtons}
                 </div>
             `;
             container.appendChild(card);
         });
+
+        // ステータスボタンのクリックをまとめて処理
+        container.addEventListener("click", e => {
+            const btn = e.target.closest(".demae-status-btn");
+            if (!btn) return;
+            const orderNum = btn.dataset.ordernum;
+            const status   = btn.dataset.status;
+            updateDemaeStatus(orderNum, status, btn);
+        });
+
     } catch(err) {
         container.innerHTML = "<p style='color:#e57373;padding:20px;'>読み込みエラーが発生しました。</p>";
         console.error("出前注文読み込みエラー:", err);
@@ -601,22 +629,18 @@ async function loadDemaeOrders() {
 // ============================================================
 // 出前ステータス更新
 // ============================================================
-async function updateDemaeStatus(orderNum, status, selectEl) {
+async function updateDemaeStatus(orderNum, status, clickedBtn) {
     // キャンセルは確認ダイアログを挟む
     if (status === "キャンセル") {
         const ok = confirm(`注文 ${orderNum} をキャンセルしますか？\nこの操作は取り消せません。`);
-        if (!ok) {
-            // 選択を元に戻す
-            if (selectEl) {
-                const prev = Array.from(selectEl.options).find(o => o.value !== "キャンセル" && o.defaultSelected)
-                    || Array.from(selectEl.options).find(o => o.value !== "キャンセル");
-                selectEl.value = prev ? prev.value : "未対応";
-            }
-            return;
-        }
+        if (!ok) return;
     }
 
-    if (selectEl) selectEl.disabled = true;
+    const card = clickedBtn ? clickedBtn.closest(".reservation-card") : null;
+
+    // ボタンを全部無効化
+    if (card) card.querySelectorAll(".demae-status-btn").forEach(b => b.disabled = true);
+
     try {
         const url = new URL(GAS_URL);
         url.searchParams.set("action", "updateDemaeStatus");
@@ -626,7 +650,6 @@ async function updateDemaeStatus(orderNum, status, selectEl) {
         const text = await res.text();
         if (text.trim() === "OK") {
             playUpdateSound();
-            const card = selectEl ? selectEl.closest(".reservation-card") : null;
             if (status === "キャンセル") {
                 if (card) {
                     card.style.transition = "opacity 0.3s";
@@ -634,27 +657,29 @@ async function updateDemaeStatus(orderNum, status, selectEl) {
                     setTimeout(() => card.remove(), 300);
                 }
             } else if (card) {
-                // バッジのテキストと色を即時更新
-                const statusColor = {
-                    "未対応": "#e53935",
-                    "確認中": "#fb8c00",
-                    "完了":   "#43a047",
-                }[status] || "#888";
+                // バッジ更新
+                const colorMap = { "未対応": "#e53935", "確認中": "#fb8c00", "完了": "#43a047" };
+                const newColor = colorMap[status] || "#888";
                 const badge = card.querySelector(".demae-status-badge");
-                if (badge) {
-                    badge.textContent = status;
-                    badge.style.background = statusColor;
-                }
-                if (selectEl) selectEl.disabled = false;
+                if (badge) { badge.textContent = status; badge.style.background = newColor; }
+
+                // ボタンの active/inactive を切り替え
+                card.querySelectorAll(".demae-status-btn").forEach(b => {
+                    const isCurrent = b.dataset.status === status;
+                    const c = colorMap[b.dataset.status] || "#888";
+                    b.style.background = isCurrent ? c : "transparent";
+                    b.style.color      = isCurrent ? "#fff" : c;
+                    b.disabled = false;
+                });
             }
         } else {
             alert("ステータスの更新に失敗しました: " + text);
-            if (selectEl) selectEl.disabled = false;
+            if (card) card.querySelectorAll(".demae-status-btn").forEach(b => b.disabled = false);
         }
     } catch(err) {
         alert("通信エラーが発生しました。");
         console.error(err);
-        if (selectEl) selectEl.disabled = false;
+        if (card) card.querySelectorAll(".demae-status-btn").forEach(b => b.disabled = false);
     }
 }
 
