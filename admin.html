@@ -74,6 +74,7 @@
             <div class="admin-tabs">
             <button class="tab-btn active" onclick="switchTab('calendar')">予約カレンダー管理</button>
             <button class="tab-btn" onclick="switchTab('reservations')">予約一覧</button>
+            <button class="tab-btn" onclick="switchTab('demae')">出前注文 <span id="demae-badge" style="display:none;background:#e53935;color:#fff;border-radius:10px;padding:1px 7px;font-size:0.75rem;margin-left:4px;">新着</span></button>
             <button class="tab-btn" id="admin-refresh-btn" onclick="loadData()">更新</button>
 </div>
         </nav>
@@ -112,7 +113,32 @@
             <div id="reservation-list">読み込み中...</div>
         </div>
 
+        <!-- 出前注文一覧 -->
+        <div id="tab-demae" style="display:none;">
+            <h2>出前注文一覧</h2>
+            <div id="demae-list">読み込み中...</div>
+        </div>
+
 </main>
+
+<!-- 新着出前通知バナー -->
+<div id="demae-banner" style="
+    display:none;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    background:#e53935;
+    color:#fff;
+    text-align:center;
+    padding:14px;
+    font-size:1rem;
+    font-weight:700;
+    z-index:20000;
+    cursor:pointer;
+" onclick="dismissDeliveryBanner()">
+    新しい出前注文が入りました ― クリックして確認する
+</div>
 
 
     <!-- ステータス変更モーダル -->

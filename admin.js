@@ -208,12 +208,18 @@ if (document.getElementById("calendar")) loadData();
 // タブ切り替え
 // ============================================================
 function switchTab(tab) {
-    document.getElementById("tab-calendar").style.display = tab === "calendar" ? "block" : "none";
+    document.getElementById("tab-calendar").style.display    = tab === "calendar"     ? "block" : "none";
     document.getElementById("tab-reservations").style.display = tab === "reservations" ? "block" : "none";
+    document.getElementById("tab-demae").style.display       = tab === "demae"        ? "block" : "none";
     document.querySelectorAll(".tab-btn").forEach((btn, i) => {
-        btn.classList.toggle("active", (i === 0 && tab === "calendar") || (i === 1 && tab === "reservations"));
+        btn.classList.toggle("active",
+            (i === 0 && tab === "calendar") ||
+            (i === 1 && tab === "reservations") ||
+            (i === 2 && tab === "demae")
+        );
     });
     if (tab === "reservations") loadReservations();
+    if (tab === "demae") loadDemaeOrders();
 }
 
 // ============================================================
@@ -483,3 +489,207 @@ async function saveEdit() {
 }
 
 window.openEditModal = openEditModal;
+
+// ============================================================
+// 出前注文一覧
+// ============================================================
+const DEMAE_STATUSES = ["未対応", "確認中", "完了", "キャンセル"];
+
+async function loadDemaeOrders() {
+    const container = document.getElementById("demae-list");
+    if (!container) return;
+
+    container.innerHTML = `
+        <div style="display:flex; justify-content:center; padding:40px;">
+            <div class="spinner"></div>
+        </div>`;
+
+    try {
+        const res  = await fetch(GAS_URL + "?action=getDeliveryOrders");
+        const data = await res.json();
+
+        container.innerHTML = "";
+
+        if (!data.length) {
+            container.innerHTML = "<p style='padding:20px;color:#aaa;'>出前注文はまだありません。</p>";
+            return;
+        }
+
+        // 新しい順に表示
+        const sorted = data.slice().sort((a, b) => {
+            return new Date(b["タイムスタンプ"]) - new Date(a["タイムスタンプ"]);
+        });
+
+        sorted.forEach(order => {
+            const card = document.createElement("div");
+            card.className = "reservation-card";
+            card.style.borderLeft = "4px solid #c8a882";
+            card.style.marginBottom = "16px";
+
+            const ts = order["タイムスタンプ"] ? new Date(order["タイムスタンプ"]) : null;
+            const tsStr = ts ? ts.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }) : "-";
+
+            let itemLines = "";
+            try {
+                const items = JSON.parse(order["注文内容"] || "[]");
+                itemLines = items.map(i =>
+                    `<span style="display:inline-block;margin-right:12px;">${i.name} ×${i.qty}</span>`
+                ).join("");
+            } catch(e) {
+                itemLines = order["注文内容"] || "-";
+            }
+
+            const statusColor = {
+                "未対応": "#e53935",
+                "確認中": "#fb8c00",
+                "完了":   "#43a047",
+                "キャンセル": "#757575"
+            }[order["ステータス"]] || "#888";
+
+            const selectOpts = DEMAE_STATUSES.map(s =>
+                `<option value="${s}" ${order["ステータス"] === s ? "selected" : ""}>${s}</option>`
+            ).join("");
+
+            card.innerHTML = `
+                <p style="font-size:0.8rem;color:#aaa;margin-bottom:6px;">${tsStr}</p>
+                <p>📋 <strong>${order["注文番号"] || "-"}</strong>
+                   &nbsp;<span style="background:${statusColor};color:#fff;border-radius:4px;padding:2px 8px;font-size:0.8rem;">${order["ステータス"] || "-"}</span></p>
+                <p>👤 <strong>${order["氏名"] || "-"}</strong> 様</p>
+                <p>📞 ${order["電話番号"] || "-"}</p>
+                <p>📍 ${order["住所"] || "-"}</p>
+                <p style="margin-top:6px;">🍣 ${itemLines}</p>
+                <p>小計 ${Number(order["小計"] || 0).toLocaleString()}円 ＋ 配送料 ${Number(order["配送料"] || 550).toLocaleString()}円 ＝ <strong>合計 ${Number(order["合計金額"] || 0).toLocaleString()}円</strong></p>
+                ${order["備考"] ? `<p style="color:#aaa;font-size:0.85rem;">📝 ${order["備考"]}</p>` : ""}
+                <div style="margin-top:10px;display:flex;align-items:center;gap:8px;">
+                    <label style="color:#ddd;font-size:0.85rem;">ステータス変更：</label>
+                    <select style="background:#2a2a2a;color:#fff;border:1px solid #555;border-radius:6px;padding:6px 10px;font-size:0.9rem;"
+                        onchange="updateDemaeStatus('${order["注文番号"]}', this.value, this)">
+                        ${selectOpts}
+                    </select>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    } catch(err) {
+        container.innerHTML = "<p style='color:#e57373;padding:20px;'>読み込みエラーが発生しました。</p>";
+        console.error("出前注文読み込みエラー:", err);
+    }
+}
+
+// ============================================================
+// 出前ステータス更新
+// ============================================================
+async function updateDemaeStatus(orderNum, status, selectEl) {
+    if (selectEl) selectEl.disabled = true;
+    try {
+        const url = new URL(GAS_URL);
+        url.searchParams.set("action", "updateDemaeStatus");
+        url.searchParams.set("orderNum", orderNum);
+        url.searchParams.set("status", status);
+        const res  = await fetch(url.toString());
+        const text = await res.text();
+        if (text.trim() !== "OK") {
+            alert("ステータスの更新に失敗しました: " + text);
+        }
+    } catch(err) {
+        alert("通信エラーが発生しました。");
+        console.error(err);
+    } finally {
+        if (selectEl) selectEl.disabled = false;
+    }
+}
+
+// ============================================================
+// ポーリング・新着通知
+// ============================================================
+let _lastDeliveryTimestamp = null;
+let _titleBlinkInterval    = null;
+const ORIGINAL_TITLE       = document.title;
+
+function playAlertSound() {
+    try {
+        const AudioCtx = window.AudioContext || /** @type {any} */(window).webkitAudioContext;
+        const ctx  = new AudioCtx();
+        const gain = ctx.createGain();
+        gain.connect(ctx.destination);
+        // ビープ音を3回
+        [0, 0.35, 0.7].forEach(offset => {
+            const osc = ctx.createOscillator();
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(880, ctx.currentTime + offset);
+            gain.gain.setValueAtTime(0.4, ctx.currentTime + offset);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + offset + 0.3);
+            osc.connect(gain);
+            osc.start(ctx.currentTime + offset);
+            osc.stop(ctx.currentTime + offset + 0.3);
+        });
+    } catch(e) {
+        console.warn("音声再生エラー:", e);
+    }
+}
+
+function startTitleBlink() {
+    if (_titleBlinkInterval) return;
+    let blink = false;
+    _titleBlinkInterval = setInterval(() => {
+        document.title = blink ? "🔔 新着注文あり" : ORIGINAL_TITLE;
+        blink = !blink;
+    }, 1000);
+}
+
+function stopTitleBlink() {
+    if (_titleBlinkInterval) {
+        clearInterval(_titleBlinkInterval);
+        _titleBlinkInterval = null;
+    }
+    document.title = ORIGINAL_TITLE;
+}
+
+function showDeliveryBanner() {
+    const banner = document.getElementById("demae-banner");
+    if (banner) banner.style.display = "block";
+    const badge = document.getElementById("demae-badge");
+    if (badge) badge.style.display = "inline";
+}
+
+function dismissDeliveryBanner() {
+    const banner = document.getElementById("demae-banner");
+    if (banner) banner.style.display = "none";
+    stopTitleBlink();
+    // 出前タブに切り替え
+    switchTab("demae");
+}
+
+async function pollDeliveryOrders() {
+    try {
+        const res  = await fetch(GAS_URL + "?action=getLastDeliveryTimestamp");
+        const data = await res.json();
+        const ts   = data.timestamp;
+
+        if (!ts) return;
+
+        if (_lastDeliveryTimestamp === null) {
+            // 初回ポーリング: 現在の最新タイムスタンプを記録するだけ
+            _lastDeliveryTimestamp = ts;
+            return;
+        }
+
+        if (ts !== _lastDeliveryTimestamp && new Date(ts) > new Date(_lastDeliveryTimestamp)) {
+            _lastDeliveryTimestamp = ts;
+            playAlertSound();
+            showDeliveryBanner();
+            startTitleBlink();
+            // 出前タブが表示中なら即リロード
+            if (document.getElementById("tab-demae").style.display !== "none") {
+                loadDemaeOrders();
+            }
+        }
+    } catch(e) {
+        console.warn("ポーリングエラー:", e);
+    }
+}
+
+// 30秒ごとにポーリング開始
+setInterval(pollDeliveryOrders, 30000);
+// 初回は5秒後（ページロード直後の通信負荷を避ける）
+setTimeout(pollDeliveryOrders, 5000);

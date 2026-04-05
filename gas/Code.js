@@ -48,9 +48,105 @@ function sendToShop(name, email, tel, date, time, count, plan, seat, now) {
   MailApp.sendEmail({ to: SHOP_EMAIL, subject: subject, body: body });
 }
 
+// ===== 出前注文通知メール =====
+function sendDemaeNotification(orderNum, name, tel, address, deliveryDate, itemsJson, subtotal, total, notes) {
+  const shopEmail = 'YOUR_EMAIL_HERE';
+  const subject = `【出前注文】注文番号 ${orderNum}`;
+  let itemsArr = [];
+  try { itemsArr = JSON.parse(itemsJson); } catch(e) {}
+  const itemsText = itemsArr.map(function(item) {
+    return '  ' + item.name + ' × ' + item.qty + '個 = ' + item.subtotal + '円';
+  }).join('\n');
+  const body = `新しい出前注文が届きました。
+
+注文番号：${orderNum}
+━━━━━━━━━━━━━━━━━━
+注文者  ：${name} 様
+電話番号：${tel}
+届け先  ：${address}
+お届け日：${deliveryDate}
+━━━━━━━━━━━━━━━━━━
+注文内容：
+${itemsText}
+
+小計    ：${subtotal}円
+配送料  ：550円
+合計    ：${total}円
+━━━━━━━━━━━━━━━━━━
+備考：${notes || 'なし'}
+`;
+  MailApp.sendEmail({ to: shopEmail, subject: subject, body: body });
+}
+
 // ===== Webアプリ用エンドポイント（GET） =====
 function doGet(e) {
   const action = e.parameter.action;
+
+  // 出前注文一覧取得
+  if (action === "getDeliveryOrders") {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName("出前");
+    if (!sheet || sheet.getLastRow() <= 1) {
+      return ContentService.createTextOutput(JSON.stringify([]))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    const result = data.slice(1).map(function(row) {
+      const obj = {};
+      headers.forEach(function(h, i) {
+        const val = row[i];
+        if (val instanceof Date) {
+          obj[String(h)] = val.toISOString();
+        } else {
+          obj[String(h)] = String(val === null || val === undefined ? '' : val);
+        }
+      });
+      return obj;
+    });
+    return ContentService.createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // 出前注文最新タイムスタンプ（ポーリング用）
+  if (action === "getLastDeliveryTimestamp") {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName("出前");
+    if (!sheet || sheet.getLastRow() <= 1) {
+      return ContentService.createTextOutput(JSON.stringify({ timestamp: null }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    const lastRow = sheet.getLastRow();
+    const tsVal = sheet.getRange(lastRow, 1).getValue();
+    const ts = tsVal instanceof Date ? tsVal.toISOString() : String(tsVal || '');
+    return ContentService.createTextOutput(JSON.stringify({ timestamp: ts }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // 出前ステータス更新
+  if (action === "updateDemaeStatus") {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName("出前");
+    if (!sheet) {
+      return ContentService.createTextOutput("NOT_FOUND").setMimeType(ContentService.MimeType.TEXT);
+    }
+    const orderNum = String(e.parameter.orderNum || "").trim();
+    const status   = String(e.parameter.status   || "").trim();
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    const orderNumCol = headers.findIndex(function(h) { return h === "注文番号"; });
+    const statusCol   = headers.findIndex(function(h) { return h === "ステータス"; });
+    if (orderNumCol === -1 || statusCol === -1) {
+      return ContentService.createTextOutput("COLUMN_NOT_FOUND").setMimeType(ContentService.MimeType.TEXT);
+    }
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][orderNumCol]).trim() === orderNum) {
+        sheet.getRange(i + 1, statusCol + 1).setValue(status);
+        return ContentService.createTextOutput("OK").setMimeType(ContentService.MimeType.TEXT);
+      }
+    }
+    return ContentService.createTextOutput("NOT_FOUND").setMimeType(ContentService.MimeType.TEXT);
+  }
 
   if (action === "getTimestamp") {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
@@ -384,6 +480,67 @@ function doGet(e) {
 function doPost(e) {
   const params = JSON.parse(e.postData.contents);
   const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  // 出前注文
+  if (params.type === "demae") {
+    // 出前シート取得 or 作成
+    let demaeSheet = ss.getSheetByName("出前");
+    const DEMAE_HEADERS = [
+      "タイムスタンプ", "注文番号", "氏名", "電話番号", "住所",
+      "お届け希望日",
+      "注文内容", "小計", "配送料", "合計金額", "ステータス", "備考"
+    ];
+    if (!demaeSheet) {
+      demaeSheet = ss.insertSheet("出前");
+      demaeSheet.getRange(1, 1, 1, DEMAE_HEADERS.length).setValues([DEMAE_HEADERS]);
+    } else if (demaeSheet.getLastRow() === 0) {
+      demaeSheet.getRange(1, 1, 1, DEMAE_HEADERS.length).setValues([DEMAE_HEADERS]);
+    }
+
+    // 注文番号生成（D-YYYYMMDD-001 形式）
+    const now = new Date();
+    const dateStr = Utilities.formatDate(now, "Asia/Tokyo", "yyyyMMdd");
+    let seq = 1;
+    if (demaeSheet.getLastRow() > 1) {
+      const existingData = demaeSheet.getDataRange().getValues();
+      const todayOrders = existingData.slice(1).filter(function(row) {
+        return String(row[1] || "").indexOf(dateStr) !== -1;
+      });
+      seq = todayOrders.length + 1;
+    }
+    const orderNum = "D-" + dateStr + "-" + String(seq).padStart(3, "0");
+
+    // 各フィールド
+    const name         = String(params.name         || "");
+    const tel          = String(params.tel          || "");
+    const address      = String(params.address      || "");
+    const deliveryDate = String(params.deliveryDate || "");
+    const items        = String(params.items        || "[]");
+    const subtotal     = Number(params.subtotal     || 0);
+    const delivery     = 550;
+    const total        = Number(params.total        || subtotal + delivery);
+    const notes        = String(params.notes        || "");
+
+    // 行追加（電話番号の先頭0を保持するため文字列として格納）
+    demaeSheet.appendRow([
+      now, orderNum, name, String(tel), address,
+      deliveryDate,
+      items, subtotal, delivery, total, "未対応", notes
+    ]);
+    // 電話番号列を文字列フォーマットに設定
+    const lastRow = demaeSheet.getLastRow();
+    demaeSheet.getRange(lastRow, 4).setNumberFormat('@');
+
+    // 通知メール送信
+    try {
+      sendDemaeNotification(orderNum, name, tel, address, deliveryDate, items, subtotal, total, notes);
+    } catch(err) {
+      Logger.log("出前通知メールエラー: " + err.message);
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({ success: true, orderNum: orderNum }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
 
   // 個室ブロック設定
   if (params.action === "blockPrivateRoom") {
