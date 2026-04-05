@@ -602,6 +602,20 @@ async function loadDemaeOrders() {
 // 出前ステータス更新
 // ============================================================
 async function updateDemaeStatus(orderNum, status, selectEl) {
+    // キャンセルは確認ダイアログを挟む
+    if (status === "キャンセル") {
+        const ok = confirm(`注文 ${orderNum} をキャンセルしますか？\nこの操作は取り消せません。`);
+        if (!ok) {
+            // 選択を元に戻す
+            if (selectEl) {
+                const prev = Array.from(selectEl.options).find(o => o.value !== "キャンセル" && o.defaultSelected)
+                    || Array.from(selectEl.options).find(o => o.value !== "キャンセル");
+                selectEl.value = prev ? prev.value : "未対応";
+            }
+            return;
+        }
+    }
+
     if (selectEl) selectEl.disabled = true;
     try {
         const url = new URL(GAS_URL);
@@ -637,13 +651,30 @@ let _lastDeliveryTimestamp = null;
 let _titleBlinkInterval    = null;
 const ORIGINAL_TITLE       = document.title;
 
+// AudioContext はユーザー操作後に初期化する（ブラウザの自動再生制限対策）
+let _audioCtx = null;
+
+function getAudioCtx() {
+    if (!_audioCtx) {
+        const AudioCtx = window.AudioContext || /** @type {any} */(window).webkitAudioContext;
+        if (AudioCtx) _audioCtx = new AudioCtx();
+    }
+    if (_audioCtx && _audioCtx.state === "suspended") {
+        _audioCtx.resume();
+    }
+    return _audioCtx;
+}
+
+// ページ上の最初のクリックで AudioContext を起動しておく
+document.addEventListener("click", () => getAudioCtx(), { once: false });
+
 function playAlertSound() {
     try {
-        const AudioCtx = window.AudioContext || /** @type {any} */(window).webkitAudioContext;
-        const ctx  = new AudioCtx();
+        const ctx = getAudioCtx();
+        if (!ctx) return;
         const gain = ctx.createGain();
         gain.connect(ctx.destination);
-        // ビープ音を3回
+        // ビープ音を3回（880Hz）
         [0, 0.35, 0.7].forEach(offset => {
             const osc = ctx.createOscillator();
             osc.type = "sine";
