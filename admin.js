@@ -625,6 +625,7 @@ async function updateDemaeStatus(orderNum, status, selectEl) {
         const res  = await fetch(url.toString());
         const text = await res.text();
         if (text.trim() === "OK") {
+            playUpdateSound();
             if (status === "キャンセル") {
                 const card = selectEl ? selectEl.closest(".reservation-card") : null;
                 if (card) {
@@ -651,44 +652,54 @@ let _lastDeliveryTimestamp = null;
 let _titleBlinkInterval    = null;
 const ORIGINAL_TITLE       = document.title;
 
-// AudioContext はユーザー操作後に初期化する（ブラウザの自動再生制限対策）
+// ===== 音声（alert.wav）=====
 let _audioCtx = null;
+let _alertBuffer = null;
 
 function getAudioCtx() {
     if (!_audioCtx) {
         const AudioCtx = window.AudioContext || /** @type {any} */(window).webkitAudioContext;
         if (AudioCtx) _audioCtx = new AudioCtx();
     }
-    if (_audioCtx && _audioCtx.state === "suspended") {
-        _audioCtx.resume();
-    }
+    if (_audioCtx && _audioCtx.state === "suspended") _audioCtx.resume();
     return _audioCtx;
 }
 
-// ページ上の最初のクリックで AudioContext を起動しておく
-document.addEventListener("click", () => getAudioCtx(), { once: false });
-
-function playAlertSound() {
+// WAVファイルを事前にデコードしておく
+async function loadAlertSound() {
     try {
         const ctx = getAudioCtx();
         if (!ctx) return;
-        const gain = ctx.createGain();
-        gain.connect(ctx.destination);
-        // ビープ音を3回（880Hz）
-        [0, 0.35, 0.7].forEach(offset => {
-            const osc = ctx.createOscillator();
-            osc.type = "sine";
-            osc.frequency.setValueAtTime(880, ctx.currentTime + offset);
-            gain.gain.setValueAtTime(0.4, ctx.currentTime + offset);
-            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + offset + 0.3);
-            osc.connect(gain);
-            osc.start(ctx.currentTime + offset);
-            osc.stop(ctx.currentTime + offset + 0.3);
-        });
+        const res    = await fetch("alert.wav");
+        const arrBuf = await res.arrayBuffer();
+        _alertBuffer = await ctx.decodeAudioData(arrBuf);
+    } catch(e) {
+        console.warn("alert.wav の読み込みエラー:", e);
+    }
+}
+
+function playWav() {
+    try {
+        const ctx = getAudioCtx();
+        if (!ctx || !_alertBuffer) return;
+        const src = ctx.createBufferSource();
+        src.buffer = _alertBuffer;
+        src.connect(ctx.destination);
+        src.start();
     } catch(e) {
         console.warn("音声再生エラー:", e);
     }
 }
+
+// ページ上の最初のクリックで AudioContext を起動し WAV をロード
+document.addEventListener("click", () => {
+    getAudioCtx();
+    if (!_alertBuffer) loadAlertSound();
+}, { once: false });
+
+// 新着注文・ステータス更新、どちらも同じ音
+function playAlertSound()  { playWav(); }
+function playUpdateSound() { playWav(); }
 
 function startTitleBlink() {
     if (_titleBlinkInterval) return;
