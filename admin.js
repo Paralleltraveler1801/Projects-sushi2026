@@ -763,6 +763,31 @@ function showDeliveryBanner() {
     if (badge) badge.style.display = "inline";
 }
 
+// ===== ブラウザ通知 =====
+function requestNotificationPermission() {
+    if (!("Notification" in window)) return;
+    if (Notification.permission === "default") {
+        Notification.requestPermission();
+    }
+}
+
+function showBrowserNotification(title, body) {
+    if (!("Notification" in window)) return;
+    if (Notification.permission === "granted") {
+        const n = new Notification(title, {
+            body: body,
+            icon: "/images/shop01.jpg",
+            tag: "demae-new-order",   // 同じtagは重複しない
+            renotify: true
+        });
+        n.onclick = () => {
+            window.focus();
+            dismissDeliveryBanner();
+            n.close();
+        };
+    }
+}
+
 function dismissDeliveryBanner() {
     const banner = document.getElementById("demae-banner");
     if (banner) banner.style.display = "none";
@@ -790,6 +815,7 @@ async function pollDeliveryOrders() {
             playAlertSound();
             showDeliveryBanner();
             startTitleBlink();
+            showBrowserNotification("🍣 新しい出前注文が入りました", "クリックして確認する");
             // 出前タブが表示中なら即リロード
             if (document.getElementById("tab-demae").style.display !== "none") {
                 loadDemaeOrders();
@@ -804,3 +830,6 @@ async function pollDeliveryOrders() {
 setInterval(pollDeliveryOrders, 30000);
 // 初回は5秒後（ページロード直後の通信負荷を避ける）
 setTimeout(pollDeliveryOrders, 5000);
+
+// ページ読み込み時にブラウザ通知の許可を求める
+requestNotificationPermission();
