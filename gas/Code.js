@@ -50,7 +50,7 @@ function sendToShop(name, email, tel, date, time, count, plan, seat, now) {
 
 // ===== 出前注文通知メール =====
 function sendDemaeNotification(orderNum, name, tel, address, deliveryDate, itemsJson, subtotal, total, notes) {
-  const shopEmail = 'YOUR_EMAIL_HERE';
+  const shopEmail = SHOP_EMAIL;
   const subject = `【出前注文】注文番号 ${orderNum}`;
   let itemsArr = [];
   try { itemsArr = JSON.parse(itemsJson); } catch(e) {}
@@ -490,11 +490,24 @@ function doPost(e) {
       "お届け希望日",
       "注文内容", "小計", "配送料", "合計金額", "ステータス", "備考"
     ];
+
+    // シートがなければ作成
     if (!demaeSheet) {
       demaeSheet = ss.insertSheet("出前");
+    }
+
+    // ヘッダー行がなければ追加、既存ヘッダーに不足列があれば末尾に追記
+    if (demaeSheet.getLastRow() === 0) {
       demaeSheet.getRange(1, 1, 1, DEMAE_HEADERS.length).setValues([DEMAE_HEADERS]);
-    } else if (demaeSheet.getLastRow() === 0) {
-      demaeSheet.getRange(1, 1, 1, DEMAE_HEADERS.length).setValues([DEMAE_HEADERS]);
+    } else {
+      const existingHeaders = demaeSheet.getRange(1, 1, 1, demaeSheet.getLastColumn()).getValues()[0].map(function(h){ return String(h); });
+      DEMAE_HEADERS.forEach(function(h) {
+        if (!existingHeaders.includes(h)) {
+          const newCol = existingHeaders.length + 1;
+          demaeSheet.getRange(1, newCol).setValue(h);
+          existingHeaders.push(h);
+        }
+      });
     }
 
     // 注文番号生成（D-YYYYMMDD-001 形式）
@@ -521,15 +534,29 @@ function doPost(e) {
     const total        = Number(params.total        || subtotal + delivery);
     const notes        = String(params.notes        || "");
 
-    // 行追加（電話番号の先頭0を保持するため文字列として格納）
-    demaeSheet.appendRow([
-      now, orderNum, name, String(tel), address,
-      deliveryDate,
-      items, subtotal, delivery, total, "未対応", notes
-    ]);
-    // 電話番号列を文字列フォーマットに設定
-    const lastRow = demaeSheet.getLastRow();
-    demaeSheet.getRange(lastRow, 4).setNumberFormat('@');
+    // ヘッダー名で列を特定して行データを生成（列順に依存しない）
+    const sheetHeaders = demaeSheet.getRange(1, 1, 1, demaeSheet.getLastColumn()).getValues()[0].map(function(h){ return String(h); });
+    const dataMap = {
+      "タイムスタンプ": now,
+      "注文番号":       orderNum,
+      "氏名":           name,
+      "電話番号":       String(tel),
+      "住所":           address,
+      "お届け希望日":   deliveryDate,
+      "注文内容":       items,
+      "小計":           subtotal,
+      "配送料":         delivery,
+      "合計金額":       total,
+      "ステータス":     "未対応",
+      "備考":           notes
+    };
+    const newRow = sheetHeaders.map(function(h) { return dataMap[h] !== undefined ? dataMap[h] : ""; });
+    demaeSheet.appendRow(newRow);
+
+    // 電話番号列を文字列フォーマットに設定（先頭の0を保持）
+    const telColIdx = sheetHeaders.indexOf("電話番号");
+    const lastRow   = demaeSheet.getLastRow();
+    if (telColIdx !== -1) demaeSheet.getRange(lastRow, telColIdx + 1).setNumberFormat('@');
 
     // 通知メール送信
     try {
