@@ -313,7 +313,6 @@
             .add-item-row > div:last-child { grid-column: 1 / -1; }
             .add-btn { width: 100%; }
             .confirm-modal-inner { padding: 20px 14px; }
-            .demae-info-grid { grid-template-columns: 1fr 1fr; }
         }
 
         /* ===== ご案内カードグリッド ===== */
@@ -362,6 +361,9 @@
         .demae-info-note a {
             color: #8b6914;
             font-weight: 600;
+        }
+        @media (max-width: 540px) {
+            .demae-info-grid { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
