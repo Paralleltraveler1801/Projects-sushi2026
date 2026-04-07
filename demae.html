@@ -360,13 +360,30 @@
                 </div>
             </div>
 
+            <!-- フォームを開くボタン -->
+            <div style="text-align:center; margin: 32px 0 8px;">
+                <button type="button" id="open-form-btn" onclick="openDemaeForm()" style="
+                    display: inline-block;
+                    padding: 14px 40px;
+                    background: #c8a882;
+                    color: #111;
+                    border: none;
+                    border-radius: 6px;
+                    font-size: 1rem;
+                    font-weight: 700;
+                    letter-spacing: 0.08em;
+                    cursor: pointer;
+                    transition: opacity 0.2s;
+                ">フォームで注文する</button>
+            </div>
+
             <!-- 注文フォームタイトル -->
-            <div class="reserve-intro" id="form-section">
+            <div class="reserve-intro" id="form-section" style="display:none;">
                 <h2>注文フォーム</h2>
                 <p>受付はお届け予定日の前日20:00までです。</p>
             </div>
 
-            <div class="form-container" style="margin-bottom: 80px;">
+            <div class="form-container" id="form-container" style="margin-bottom: 80px; display:none;">
                 <form class="demae-form" id="demae-form" onsubmit="handleSubmit(event)">
 
                     <!-- エラー通知 -->
@@ -416,7 +433,18 @@
                         </div>
                         <div>
                             <label>個数</label>
-                            <input type="number" id="inp-qty" value="1" min="1" max="20">
+                            <select id="inp-qty">
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                                <option value="9">9</option>
+                                <option value="10">10</option>
+                            </select>
                         </div>
                         <div style="display:flex;align-items:flex-end;">
                             <button type="button" class="add-btn" onclick="addToCart()">追加</button>
@@ -903,6 +931,14 @@
                 btn.disabled    = false;
                 btn.textContent = 'この内容で注文する';
             }
+        }
+
+        // ===== フォームを開く =====
+        function openDemaeForm() {
+            document.getElementById('form-section').style.display = '';
+            document.getElementById('form-container').style.display = '';
+            document.getElementById('open-form-btn').style.display = 'none';
+            document.getElementById('form-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         // ===== ハンバーガーメニュー =====
