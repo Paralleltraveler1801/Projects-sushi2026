@@ -66,34 +66,42 @@ nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 5%;
+    padding: 0.8rem 4%;
     max-width: 1400px;
     margin: 0 auto;
     gap: 1rem;
 }
 
 .logo {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
     font-weight: bold;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     flex-shrink: 0;
+    white-space: nowrap;
 }
 
+/* PC・タブレット（769px以上）: 横並びナビ */
 .nav-links {
     display: flex;
+    flex-direction: row;
     flex-wrap: nowrap;
-    gap: 1.2rem;
+    gap: 0.8rem;
     list-style: none;
     align-items: center;
+}
+
+.nav-links li {
+    flex-shrink: 0;
 }
 
 .nav-links a {
     text-decoration: none;
     color: #1a1a1a;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 600;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.03em;
     white-space: nowrap;
+    display: inline-block;
     transition: color 0.3s, border-bottom 0.3s;
     padding-bottom: 3px;
     border-bottom: 2px solid transparent;
@@ -684,26 +692,7 @@ footer {
     color: #888;
 }
 
-/* PC（1101px以上）: ハンバーガー非表示、ナビ横並び */
-@media (min-width: 1101px) {
-    .hamburger {
-        display: none !important;
-    }
-
-    .nav-links {
-        display: flex !important;
-        flex-direction: row !important;
-        position: static !important;
-        max-height: none !important;
-        overflow: visible !important;
-        background: none !important;
-        box-shadow: none !important;
-        padding: 0 !important;
-        width: auto !important;
-    }
-}
-
-/* ハンバーガーボタン */
+/* ハンバーガーボタン（デフォルト非表示） */
 .hamburger {
     display: none;
     flex-direction: column;
@@ -733,8 +722,8 @@ footer {
     transform: translateY(-7px) rotate(-45deg);
 }
 
-/* レスポンシブ */
-@media (max-width: 1100px) {
+/* スマホのみ（768px以下）: ハンバーガーメニュー */
+@media (max-width: 768px) {
     .hamburger {
         display: flex;
     }
@@ -745,10 +734,9 @@ footer {
         align-items: center;
         gap: 0;
         position: fixed;
-        top: 66px;
+        top: 60px;
         left: 0;
         width: 100%;
-        transform: none;
         background: rgba(255, 255, 255, 0.98);
         box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
         z-index: 1001;
@@ -760,7 +748,7 @@ footer {
     }
 
     .nav-links.open {
-        max-height: calc(100vh - 66px);
+        max-height: calc(100vh - 60px);
         padding: 0.5rem 0;
     }
 
@@ -774,8 +762,8 @@ footer {
         padding: 1rem 0;
         border-bottom: 1px solid #f0ebe4;
         font-size: 1rem;
+        white-space: normal;
     }
-
 }
 
 @media (max-width: 768px) {
