@@ -92,6 +92,7 @@ nav {
 
 .nav-links li {
     flex-shrink: 0;
+    min-width: max-content;
 }
 
 .nav-links a {
@@ -100,7 +101,7 @@ nav {
     font-size: 0.85rem;
     font-weight: 600;
     letter-spacing: 0.03em;
-    white-space: nowrap;
+    white-space: nowrap !important;
     display: inline-block;
     transition: color 0.3s, border-bottom 0.3s;
     padding-bottom: 3px;
