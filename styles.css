@@ -89,13 +89,18 @@ nav {
 
 .nav-links a {
     text-decoration: none;
-    color: #333;
-    font-size: 0.95rem;
-    transition: color 0.3s;
+    color: #1a1a1a;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    transition: color 0.3s, border-bottom 0.3s;
+    padding-bottom: 4px;
+    border-bottom: 2px solid transparent;
 }
 
 .nav-links a:hover {
     color: #c8a882;
+    border-bottom: 2px solid #c8a882;
 }
 
 .reserve-btn {
