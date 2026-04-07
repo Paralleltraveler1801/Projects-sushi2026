@@ -66,27 +66,26 @@ nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.8rem 4%;
+    padding: 1.5rem 5%;
     max-width: 1400px;
     margin: 0 auto;
-    gap: 1rem;
+    position: relative;
 }
 
 .logo {
-    font-size: 1.3rem;
+    font-size: 1.5rem;
     font-weight: bold;
-    letter-spacing: 0.08em;
-    flex-shrink: 0;
-    white-space: nowrap;
+    letter-spacing: 0.1em;
 }
 
-/* PC・タブレット（769px以上）: 横並びナビ */
 .nav-links {
     display: flex;
-    flex-direction: row;
     flex-wrap: nowrap;
-    gap: 0.8rem;
+    gap: 2rem;
     list-style: none;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
     align-items: center;
 }
 
