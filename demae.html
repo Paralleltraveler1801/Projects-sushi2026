@@ -33,6 +33,7 @@
         .demae-form select,
         .demae-form textarea {
             width: 100%;
+            max-width: 100%;
             padding: 10px 12px;
             border: 1px solid #ccc;
             border-radius: 6px;
@@ -40,6 +41,15 @@
             box-sizing: border-box;
             transition: border-color 0.2s;
             background: #fff;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .demae-form input[type="date"] {
+            display: block;
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
         }
         .demae-form input:focus,
         .demae-form select:focus,
@@ -338,7 +348,7 @@
             <div class="contact-info">
                 <div class="contact-grid contact-grid-single">
                     <div class="contact-item">
-                        <p>・ご注文受付：3日前〜当日21:00まで<br>
+                        <p>・ご注文受付：お届け予定日の1ヶ月前〜前日20:00まで<br>
                            ・お届け時間：営業時間内（17:00〜）のみ<br>
                            ・配達エリア：店舗（豊平区福住1条2丁目）から<strong>半径2.5km圏内</strong><br>
                            ・配送料：550円（税込）<br>
@@ -353,7 +363,7 @@
             <!-- 注文フォームタイトル -->
             <div class="reserve-intro" id="form-section">
                 <h2>注文フォーム</h2>
-                <p>受付時間は17:00〜21:00です。</p>
+                <p>受付はお届け予定日の前日20:00までです。</p>
             </div>
 
             <div class="form-container" style="margin-bottom: 80px;">
@@ -621,22 +631,28 @@
         }
 
         // ===== 日付バリデーション =====
-        // 当日注文 → 21:00まで受付
-        // 翌日〜3日後 → いつでも受付
+        // お届け予定日の1ヶ月前〜前日20:00まで受付
         function validateDate(dateStr) {
-            const now  = new Date();
+            const now    = new Date();
             const nowJst = new Date(now.getTime() + (now.getTimezoneOffset() + 540) * 60000);
-            const todayStr = nowJst.toISOString().split('T')[0];
-            const maxDate  = new Date(nowJst);
-            maxDate.setDate(nowJst.getDate() + 3);
-            const maxStr = maxDate.toISOString().split('T')[0];
+            const toStr  = d => d.toISOString().split('T')[0];
+            const h = nowJst.getHours();
 
-            if (dateStr < todayStr) return '過去の日付は選択できません。';
-            if (dateStr > maxStr)   return '3日後までの日付を選択してください。';
-            if (dateStr === todayStr) {
-                const h = nowJst.getHours(), m = nowJst.getMinutes();
-                if (h > 21 || (h === 21 && m > 0)) return '本日の受付は終了しました（当日注文は21:00まで）。';
+            // 翌日（20時以降なら明後日が最短）
+            const minD = new Date(nowJst);
+            minD.setDate(nowJst.getDate() + (h >= 20 ? 2 : 1));
+            const minStr = toStr(minD);
+
+            // 最大：1ヶ月後
+            const maxD = new Date(nowJst);
+            maxD.setMonth(nowJst.getMonth() + 1);
+            const maxStr = toStr(maxD);
+
+            if (dateStr < minStr) {
+                if (h >= 20) return '20:00を過ぎたため、明後日以降の日付を選択してください。';
+                return '翌日以降の日付を選択してください（前日20:00までに要注文）。';
             }
+            if (dateStr > maxStr) return '1ヶ月先までの日付を選択してください。';
             return null;
         }
 
@@ -645,11 +661,20 @@
             const now    = new Date();
             const nowJst = new Date(now.getTime() + (now.getTimezoneOffset() + 540) * 60000);
             const toStr  = d => d.toISOString().split('T')[0];
-            const maxD   = new Date(nowJst); maxD.setDate(nowJst.getDate() + 3);
-            const input  = document.getElementById('f-date');
-            input.min    = toStr(nowJst);
-            input.max    = toStr(maxD);
-            input.value  = toStr(nowJst);
+            const h = nowJst.getHours();
+
+            // min: 翌日（20時以降なら明後日）
+            const minD = new Date(nowJst);
+            minD.setDate(nowJst.getDate() + (h >= 20 ? 2 : 1));
+
+            // max: 1ヶ月後
+            const maxD = new Date(nowJst);
+            maxD.setMonth(nowJst.getMonth() + 1);
+
+            const input = document.getElementById('f-date');
+            input.min   = toStr(minD);
+            input.max   = toStr(maxD);
+            input.value = toStr(minD);
         })();
 
         // ===== カート =====
