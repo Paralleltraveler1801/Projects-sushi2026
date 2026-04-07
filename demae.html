@@ -313,6 +313,55 @@
             .add-item-row > div:last-child { grid-column: 1 / -1; }
             .add-btn { width: 100%; }
             .confirm-modal-inner { padding: 20px 14px; }
+            .demae-info-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        /* ===== ご案内カードグリッド ===== */
+        .demae-info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            max-width: 860px;
+            margin: 0 auto 24px;
+            padding: 0 5%;
+        }
+        .demae-info-card {
+            background: #fff;
+            border: 1px solid #e0d0b8;
+            border-radius: 10px;
+            padding: 20px 16px;
+            text-align: center;
+        }
+        .demae-info-icon {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+        .demae-info-label {
+            font-size: 0.75rem;
+            color: #8b6914;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+        }
+        .demae-info-value {
+            font-size: 0.9rem;
+            color: #333;
+            line-height: 1.6;
+        }
+        .demae-info-note {
+            max-width: 860px;
+            margin: 0 auto 8px;
+            padding: 14px 20px;
+            background: #fdf6eb;
+            border-left: 4px solid #c8a882;
+            border-radius: 0 6px 6px 0;
+            font-size: 0.88rem;
+            color: #555;
+            line-height: 1.8;
+        }
+        .demae-info-note a {
+            color: #8b6914;
+            font-weight: 600;
         }
     </style>
 </head>
@@ -345,19 +394,41 @@
             <div class="reserve-intro" id="info-section">
                 <h2>出前注文について</h2>
             </div>
-            <div class="contact-info">
-                <div class="contact-grid contact-grid-single">
-                    <div class="contact-item">
-                        <p>・ご注文受付：お届け予定日の1ヶ月前〜前日20:00まで<br>
-                           ・お届け時間：営業時間内（17:00〜）のみ<br>
-                           ・配達エリア：店舗（豊平区福住1条2丁目）から<strong>半径2.5km圏内</strong><br>
-                           ・配送料：550円（税込）<br>
-                           ・お支払い：代金引換のみ<br>
-                           ・価格はすべて出前価格・税込8%表示<br>
-                           ・ご注文後30分以内に店舗より確認のお電話をします<br>
-                           ・連絡がない場合は <a href="tel:0118270537">011-827-0537</a> までお電話ください</p>
-                    </div>
+            <div class="demae-info-grid">
+                <div class="demae-info-card">
+                    <div class="demae-info-icon">🕐</div>
+                    <div class="demae-info-label">ご注文受付</div>
+                    <div class="demae-info-value">お届け予定日の<br>1ヶ月前〜前日20:00まで</div>
                 </div>
+                <div class="demae-info-card">
+                    <div class="demae-info-icon">🛵</div>
+                    <div class="demae-info-label">お届け時間</div>
+                    <div class="demae-info-value">営業時間内<br>（17:00〜）のみ</div>
+                </div>
+                <div class="demae-info-card">
+                    <div class="demae-info-icon">📍</div>
+                    <div class="demae-info-label">配達エリア</div>
+                    <div class="demae-info-value">店舗（豊平区福住1条2丁目）<br>から<strong>半径2.5km圏内</strong></div>
+                </div>
+                <div class="demae-info-card">
+                    <div class="demae-info-icon">📦</div>
+                    <div class="demae-info-label">配送料</div>
+                    <div class="demae-info-value">550円（税込）</div>
+                </div>
+                <div class="demae-info-card">
+                    <div class="demae-info-icon">💴</div>
+                    <div class="demae-info-label">お支払い</div>
+                    <div class="demae-info-value">代金引換のみ</div>
+                </div>
+                <div class="demae-info-card">
+                    <div class="demae-info-icon">📋</div>
+                    <div class="demae-info-label">価格表示</div>
+                    <div class="demae-info-value">出前価格・税込8%表示</div>
+                </div>
+            </div>
+            <div class="demae-info-note">
+                ご注文後30分以内に店舗より確認のお電話をします。<br>
+                連絡がない場合は <a href="tel:0118270537">011-827-0537</a> までお電話ください。
             </div>
 
             <!-- フォームを開くボタン -->
