@@ -684,6 +684,25 @@ footer {
     color: #888;
 }
 
+/* PC（1101px以上）: ハンバーガー非表示、ナビ横並び */
+@media (min-width: 1101px) {
+    .hamburger {
+        display: none !important;
+    }
+
+    .nav-links {
+        display: flex !important;
+        flex-direction: row !important;
+        position: static !important;
+        max-height: none !important;
+        overflow: visible !important;
+        background: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        width: auto !important;
+    }
+}
+
 /* ハンバーガーボタン */
 .hamburger {
     display: none;
@@ -715,7 +734,7 @@ footer {
 }
 
 /* レスポンシブ */
-@media (max-width: 768px) {
+@media (max-width: 1100px) {
     .hamburger {
         display: flex;
     }
@@ -726,7 +745,7 @@ footer {
         align-items: center;
         gap: 0;
         position: fixed;
-        top: 70px;
+        top: 66px;
         left: 0;
         width: 100%;
         transform: none;
@@ -734,13 +753,14 @@ footer {
         box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
         z-index: 1001;
         max-height: 0;
-        overflow: hidden;
+        overflow-y: auto;
+        overflow-x: hidden;
         padding: 0;
-        transition: max-height 0.5s ease, padding 0.5s ease;
+        transition: max-height 0.4s ease, padding 0.4s ease;
     }
 
     .nav-links.open {
-        max-height: 600px;
+        max-height: calc(100vh - 66px);
         padding: 0.5rem 0;
     }
 
@@ -756,6 +776,9 @@ footer {
         font-size: 1rem;
     }
 
+}
+
+@media (max-width: 768px) {
     .hero h1 {
         font-size: 2rem;
     }
