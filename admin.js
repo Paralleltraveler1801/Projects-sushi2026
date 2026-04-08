@@ -893,6 +893,7 @@ function requestNotificationPermission() {
 
 function showBrowserNotification(title, body) {
     if (!("Notification" in window)) return;
+    if (document.hasFocus()) return; // ページが前面にある時はシステム音が被るので出さない
     if (Notification.permission === "granted") {
         const n = new Notification(title, {
             body: body,
