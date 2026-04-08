@@ -785,13 +785,17 @@ _alertAudio.addEventListener("ended", () => {
     }
 });
 
-// iOSアンロック（初回タップで無音再生してAudioを有効化）
-const _silentAudio = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=");
+// iOSアンロック（_alertAudio自体をmuted=trueで無音再生してアンロック）
 let _audioUnlocked = false;
 function _unlockAudio() {
     if (_audioUnlocked) return;
     _audioUnlocked = true;
-    _silentAudio.play().catch(() => {});
+    _alertAudio.muted = true;
+    _alertAudio.play().then(() => {
+        _alertAudio.pause();
+        _alertAudio.currentTime = 0;
+        _alertAudio.muted = false;
+    }).catch(() => {});
 }
 document.addEventListener("touchstart", _unlockAudio, { once: true, passive: true });
 document.addEventListener("click",      _unlockAudio, { once: true });
