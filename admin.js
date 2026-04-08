@@ -787,9 +787,11 @@ _alertAudio.addEventListener("ended", () => {
 
 // iOSアンロック（初回タップで無音再生してAudioを有効化）
 const _silentAudio = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=");
+let _audioUnlocked = false;
 function _unlockAudio() {
+    if (_audioUnlocked) return;
+    _audioUnlocked = true;
     _silentAudio.play().catch(() => {});
-    _alertAudio.load(); // バッファをプリロード
 }
 document.addEventListener("touchstart", _unlockAudio, { once: true, passive: true });
 document.addEventListener("click",      _unlockAudio, { once: true });
