@@ -774,6 +774,8 @@ const ORIGINAL_TITLE       = document.title;
 
 // ===== 音声（iOS対応・単一インスタンス方式）=====
 // アンロック用に無音の短いDataURIを使い、メイン音源を一切触らない
+const _alertAudio  = new Audio("NSF-279-14.wav");
+_alertAudio.preload = "auto";
 const _silentAudio = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=");
 let _audioUnlocked = false;
 function _unlockAudio() {
