@@ -495,6 +495,24 @@ window.openEditModal = openEditModal;
 // ============================================================
 const DEMAE_STATUSES = ["未対応", "確認中", "完了", "キャンセル"];
 
+// 今日のみトグル
+let _demaeShowTodayOnly = false;
+document.addEventListener("DOMContentLoaded", () => {
+    const toggle    = document.getElementById("demae-today-toggle");
+    const track     = document.getElementById("demae-toggle-track");
+    const thumb     = document.getElementById("demae-toggle-thumb");
+    const label     = document.getElementById("demae-toggle-label");
+    if (!toggle) return;
+    toggle.addEventListener("change", () => {
+        _demaeShowTodayOnly = toggle.checked;
+        track.style.background = toggle.checked ? "#c8a882" : "#555";
+        thumb.style.transform  = toggle.checked ? "translateX(20px)" : "translateX(0)";
+        label.style.color      = toggle.checked ? "#c8a882" : "#aaa";
+        loadDemaeOrders();
+    });
+    track.addEventListener("click", () => { toggle.checked = !toggle.checked; toggle.dispatchEvent(new Event("change")); });
+});
+
 async function loadDemaeOrders() {
     const container = document.getElementById("demae-list");
     if (!container) return;
@@ -519,16 +537,21 @@ async function loadDemaeOrders() {
         const todayJST = new Date(new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }));
         todayJST.setHours(0, 0, 0, 0);
 
+        // 今日の日付文字列（YYYY-MM-DD）
+        const todayStr = `${todayJST.getFullYear()}-${String(todayJST.getMonth()+1).padStart(2,'0')}-${String(todayJST.getDate()).padStart(2,'0')}`;
+
         // キャンセル済み・お届け日翌日以降を除外してお届け希望日順に表示
         const sorted = data
             .filter(o => {
                 if (o["ステータス"] === "キャンセル") return false;
                 const deliveryRaw = o["お届け希望日"] || "";
                 const dm = deliveryRaw.match(/^(\d{4})-(\d{2})-(\d{2})/);
-                if (!dm) return true; // 日付不明なものは表示する
+                if (!dm) return true;
                 const deliveryDate = new Date(Number(dm[1]), Number(dm[2]) - 1, Number(dm[3]));
-                // お届け日の翌日以降なら非表示
-                return deliveryDate >= todayJST;
+                if (deliveryDate < todayJST) return false; // 翌日以降は非表示
+                // 今日のみモード
+                if (_demaeShowTodayOnly) return deliveryRaw.startsWith(todayStr);
+                return true;
             })
             .sort((a, b) => {
                 // お届け希望日順（昇順）、同日はタイムスタンプ昇順
