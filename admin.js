@@ -811,9 +811,11 @@ function playAlertSound() {
 }
 
 // ステータス更新音（alert.wav・単一インスタンス）
+// メインアラートのループ中は鳴らさない
 const _updateAudio = new Audio("alert.wav");
 _updateAudio.preload = "auto";
 function playUpdateSound() {
+    if (!_alertAudio.paused) return; // アラートループ中はスキップ
     _updateAudio.currentTime = 0;
     _updateAudio.play().catch(e => console.warn("play error:", e));
 }
