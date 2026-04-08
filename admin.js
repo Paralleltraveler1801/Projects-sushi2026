@@ -761,7 +761,7 @@ function playAlertSoundRepeat() {
     playWav();
     _alertRepeatTimer = setInterval(() => {
         _alertRepeatCount++;
-        if (_alertRepeatCount >= 4) {
+        if (_alertRepeatCount >= 2) {
             clearInterval(_alertRepeatTimer);
             _alertRepeatTimer = null;
             return;
