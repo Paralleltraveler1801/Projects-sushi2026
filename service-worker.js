@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hishita-admin-v2';
+const CACHE_NAME = 'hishita-admin-v3';
 const CACHE_URLS = ['/admin.html', '/admin.js', '/admin.css', '/NSF-279-14.wav'];
 
 // インストール時にキャッシュ
