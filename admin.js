@@ -772,53 +772,43 @@ let _lastDeliveryTimestamp = null;
 let _titleBlinkInterval    = null;
 const ORIGINAL_TITLE       = document.title;
 
-// ===== 音声（Web Audio API・iOS対応）=====
-let _audioCtx     = null;
-let _alertBuffer  = null;
-let _alertSource  = null;
+// ===== 音声 =====
+const _alertAudio = new Audio("NSF-279-14.wav");
+_alertAudio.preload = "auto";
 let _isAlertPlaying = false;
 
-// ページ読み込み時にバッファをプリフェッチ＆デコード（再生ラグを解消）
-(async function _preloadAlert() {
-    try {
-        _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const res = await fetch("NSF-279-14.wav");
-        const buf = await res.arrayBuffer();
-        _alertBuffer = await _audioCtx.decodeAudioData(buf);
-    } catch(e) { console.warn("Web Audio preload failed:", e); }
-})();
+// endedイベントでループ（iOSでloop=trueが信頼できないため）
+_alertAudio.addEventListener("ended", () => {
+    if (_isAlertPlaying) {
+        _alertAudio.currentTime = 0;
+        _alertAudio.play().catch(() => {});
+    }
+});
 
-// iOSはユーザー操作でAudioContextをresumeする必要がある
+// iOSアンロック（初回タップで無音再生してAudioを有効化）
+const _silentAudio = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=");
 function _unlockAudio() {
-    if (_audioCtx && _audioCtx.state === "suspended") _audioCtx.resume();
+    _silentAudio.play().catch(() => {});
+    _alertAudio.load(); // バッファをプリロード
 }
-document.addEventListener("touchstart", _unlockAudio, { passive: true });
-document.addEventListener("click",      _unlockAudio);
+document.addEventListener("touchstart", _unlockAudio, { once: true, passive: true });
+document.addEventListener("click",      _unlockAudio, { once: true });
 
 function stopAlertRepeat() {
     _isAlertPlaying = false;
-    if (_alertSource) {
-        try { _alertSource.stop(); _alertSource.disconnect(); } catch(e) {}
-        _alertSource = null;
-    }
+    _alertAudio.pause();
+    _alertAudio.currentTime = 0;
 }
 
-// 新着注文: ループ再生（確認ボタンを押すまで鳴り続ける）
+// 新着注文: 確認ボタンを押すまでループ再生
 function playAlertSound() {
     if (_isAlertPlaying) return;
     _isAlertPlaying = true;
-    if (_audioCtx && _alertBuffer) {
-        if (_audioCtx.state === "suspended") _audioCtx.resume();
-        _alertSource = _audioCtx.createBufferSource();
-        _alertSource.buffer = _alertBuffer;
-        _alertSource.loop   = true;
-        _alertSource.connect(_audioCtx.destination);
-        _alertSource.start(0);
-    }
+    _alertAudio.currentTime = 0;
+    _alertAudio.play().catch(e => console.warn("play error:", e));
 }
 
-// ステータス更新音（alert.wav）
-// メインアラートのループ中は鳴らさない
+// ステータス更新音（アラートループ中は鳴らさない）
 const _updateAudio = new Audio("alert.wav");
 _updateAudio.preload = "auto";
 function playUpdateSound() {
