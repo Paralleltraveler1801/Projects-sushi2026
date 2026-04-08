@@ -938,7 +938,6 @@ async function pollDeliveryOrders() {
             showToast("🍣 新しい出前注文が入りました！出前タブを確認してください。");
             showDeliveryBanner();
             startTitleBlink();
-            showBrowserNotification("🍣 新しい出前注文が入りました", "クリックして確認する");
             // 出前タブが表示中なら即リロード
             if (document.getElementById("tab-demae").style.display !== "none") {
                 loadDemaeOrders();
