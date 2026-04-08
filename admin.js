@@ -791,11 +791,18 @@ document.addEventListener("touchstart", _unlockAudio, { once: true, passive: tru
 document.addEventListener("click",      _unlockAudio, { once: true });
 
 function stopAlertRepeat() {
-    try { _alertAudio.pause(); _alertAudio.currentTime = 0; } catch(e) {}
+    try {
+        _alertAudio.loop = false;
+        _alertAudio.pause();
+        _alertAudio.currentTime = 0;
+    } catch(e) {}
 }
 
-// 新着注文: アンロック済みインスタンスを直接再生
+// 新着注文: ループ再生（確認ボタンを押すまで鳴り続ける）
+// すでに再生中なら二重に鳴らさない
 function playAlertSound() {
+    if (!_alertAudio.paused) return; // 再生中はスキップ
+    _alertAudio.loop = true;
     _alertAudio.currentTime = 0;
     _alertAudio.play().catch(e => console.warn("play error:", e));
 }
