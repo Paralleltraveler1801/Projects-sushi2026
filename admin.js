@@ -781,6 +781,8 @@ _alertAudio.preload = "auto";
 let _audioUnlocked = false;
 function _unlockAudio() {
     if (_audioUnlocked) return;
+    // すでにアラートが再生中なら邪魔しない
+    if (!_alertAudio.paused) { _audioUnlocked = true; return; }
     _alertAudio.play().then(() => {
         _alertAudio.pause();
         _alertAudio.currentTime = 0;
@@ -802,6 +804,7 @@ function stopAlertRepeat() {
 // すでに再生中なら二重に鳴らさない
 function playAlertSound() {
     if (!_alertAudio.paused) return; // 再生中はスキップ
+    _audioUnlocked = true; // 再生開始時点でアンロック済みとみなす
     _alertAudio.loop = true;
     _alertAudio.currentTime = 0;
     _alertAudio.play().catch(e => console.warn("play error:", e));
