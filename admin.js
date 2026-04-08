@@ -763,10 +763,12 @@ function playAlertSound() {
     _alertAudio.play().catch(e => console.warn("play error:", e));
 }
 
-// ステータス更新音（軽量・別インスタンス）
+// ステータス更新音（alert.wav・単一インスタンス）
+const _updateAudio = new Audio("alert.wav");
+_updateAudio.preload = "auto";
 function playUpdateSound() {
-    const a = new Audio("NSF-279-14.wav");
-    a.play().catch(e => console.warn("play error:", e));
+    _updateAudio.currentTime = 0;
+    _updateAudio.play().catch(e => console.warn("play error:", e));
 }
 
 // トースト通知
