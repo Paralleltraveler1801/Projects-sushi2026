@@ -736,43 +736,38 @@ let _titleBlinkInterval    = null;
 const ORIGINAL_TITLE       = document.title;
 
 // ===== 音声（alert.wav）iOS対応 =====
-// Web Audio APIではなくHTMLAudioElementを使用（iOSで確実に動作）
-const _audio = new Audio("alert.wav");
-_audio.preload = "auto";
-
 // iOSは最初のユーザー操作でアンロックが必要
+const _primeAudio = new Audio("alert.wav");
+_primeAudio.preload = "auto";
 function _unlockAudio() {
-    _audio.play().then(() => { _audio.pause(); _audio.currentTime = 0; }).catch(() => {});
+    _primeAudio.play().then(() => { _primeAudio.pause(); _primeAudio.currentTime = 0; }).catch(() => {});
 }
 document.addEventListener("touchstart", _unlockAudio, { once: true, passive: true });
 document.addEventListener("click",      _unlockAudio, { once: true });
 
-function playWav() {
-    _audio.currentTime = 0;
-    _audio.play().catch(e => console.warn("play error:", e));
-}
-
-// 新着注文: 連続3回再生（馬鹿でかい通知用）
-let _alertRepeatCount = 0;
-let _alertRepeatTimer = null;
+// 新着注文: ended イベントで即繋ぎ・3回連続再生
+let _alertAudios = [];
 function playAlertSoundRepeat() {
-    _alertRepeatCount = 0;
-    if (_alertRepeatTimer) clearInterval(_alertRepeatTimer);
-    playWav();
-    _alertRepeatTimer = setInterval(() => {
-        _alertRepeatCount++;
-        if (_alertRepeatCount >= 2) {
-            clearInterval(_alertRepeatTimer);
-            _alertRepeatTimer = null;
-            return;
-        }
-        playWav();
-    }, 1200);
+    stopAlertRepeat();
+    let count = 0;
+    function playNext() {
+        if (count >= 3) return;
+        count++;
+        const a = new Audio("alert.wav");
+        _alertAudios.push(a);
+        a.addEventListener("ended", playNext);
+        a.play().catch(e => console.warn("play error:", e));
+    }
+    playNext();
 }
 function stopAlertRepeat() {
-    if (_alertRepeatTimer) { clearInterval(_alertRepeatTimer); _alertRepeatTimer = null; }
-    _audio.pause();
-    _audio.currentTime = 0;
+    _alertAudios.forEach(a => { try { a.pause(); a.src = ""; } catch(e) {} });
+    _alertAudios = [];
+}
+
+function playWav() {
+    const a = new Audio("alert.wav");
+    a.play().catch(e => console.warn("play error:", e));
 }
 
 // 新着注文・ステータス更新、どちらも同じ音
