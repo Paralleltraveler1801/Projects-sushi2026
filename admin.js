@@ -747,21 +747,19 @@ document.addEventListener("click",      _unlockAudio, { once: true });
 
 // 新着注文: ended イベントで即繋ぎ・3回連続再生
 let _alertAudios = [];
+function _playAlertChain(remaining) {
+    if (remaining <= 0) return;
+    const a = new Audio("alert.wav");
+    _alertAudios.push(a);
+    a.onended = function() { _playAlertChain(remaining - 1); };
+    a.play().catch(e => console.warn("play error:", e));
+}
 function playAlertSoundRepeat() {
     stopAlertRepeat();
-    let count = 0;
-    function playNext() {
-        if (count >= 3) return;
-        count++;
-        const a = new Audio("alert.wav");
-        _alertAudios.push(a);
-        a.addEventListener("ended", playNext);
-        a.play().catch(e => console.warn("play error:", e));
-    }
-    playNext();
+    _playAlertChain(3);
 }
 function stopAlertRepeat() {
-    _alertAudios.forEach(a => { try { a.pause(); a.src = ""; } catch(e) {} });
+    _alertAudios.forEach(a => { try { a.pause(); a.currentTime = 0; } catch(e) {} });
     _alertAudios = [];
 }
 
