@@ -515,10 +515,28 @@ async function loadDemaeOrders() {
             return;
         }
 
-        // キャンセル済みを除外して新しい順に表示
+        // 今日の日付（JST、時刻なし）
+        const todayJST = new Date(new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }));
+        todayJST.setHours(0, 0, 0, 0);
+
+        // キャンセル済み・お届け日翌日以降を除外してお届け希望日順に表示
         const sorted = data
-            .filter(o => o["ステータス"] !== "キャンセル")
-            .sort((a, b) => new Date(b["タイムスタンプ"]) - new Date(a["タイムスタンプ"]));
+            .filter(o => {
+                if (o["ステータス"] === "キャンセル") return false;
+                const deliveryRaw = o["お届け希望日"] || "";
+                const dm = deliveryRaw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                if (!dm) return true; // 日付不明なものは表示する
+                const deliveryDate = new Date(Number(dm[1]), Number(dm[2]) - 1, Number(dm[3]));
+                // お届け日の翌日以降なら非表示
+                return deliveryDate >= todayJST;
+            })
+            .sort((a, b) => {
+                // お届け希望日順（昇順）、同日はタイムスタンプ昇順
+                const da = a["お届け希望日"] || "";
+                const db = b["お届け希望日"] || "";
+                if (da !== db) return da < db ? -1 : 1;
+                return new Date(a["タイムスタンプ"]) - new Date(b["タイムスタンプ"]);
+            });
 
         if (!sorted.length) {
             container.innerHTML = "<p style='padding:20px;color:#aaa;'>出前注文はまだありません。</p>";
@@ -718,24 +736,40 @@ let _titleBlinkInterval    = null;
 const ORIGINAL_TITLE       = document.title;
 
 // ===== 音声（alert.wav）iOS対応 =====
-// Web Audio APIではなくHTMLAudioElementを使用（iOSで確実に動作）
-const _audio = new Audio("alert.wav");
-_audio.preload = "auto";
-
 // iOSは最初のユーザー操作でアンロックが必要
+const _primeAudio = new Audio("NSF-279-14.wav");
+_primeAudio.preload = "auto";
 function _unlockAudio() {
-    _audio.play().then(() => { _audio.pause(); _audio.currentTime = 0; }).catch(() => {});
+    _primeAudio.play().then(() => { _primeAudio.pause(); _primeAudio.currentTime = 0; }).catch(() => {});
 }
 document.addEventListener("touchstart", _unlockAudio, { once: true, passive: true });
 document.addEventListener("click",      _unlockAudio, { once: true });
 
+// 新着注文: ended イベントで即繋ぎ・3回連続再生
+let _alertAudios = [];
+function _playAlertChain(remaining) {
+    if (remaining <= 0) return;
+    const a = new Audio("NSF-279-14.wav");
+    _alertAudios.push(a);
+    a.onended = function() { _playAlertChain(remaining - 1); };
+    a.play().catch(e => console.warn("play error:", e));
+}
+function playAlertSoundRepeat() {
+    stopAlertRepeat();
+    _playAlertChain(1);
+}
+function stopAlertRepeat() {
+    _alertAudios.forEach(a => { try { a.pause(); a.currentTime = 0; } catch(e) {} });
+    _alertAudios = [];
+}
+
 function playWav() {
-    _audio.currentTime = 0;
-    _audio.play().catch(e => console.warn("play error:", e));
+    const a = new Audio("NSF-279-14.wav");
+    a.play().catch(e => console.warn("play error:", e));
 }
 
 // 新着注文・ステータス更新、どちらも同じ音
-function playAlertSound()  { playWav(); }
+function playAlertSound()  { playAlertSoundRepeat(); }
 function playUpdateSound() { playWav(); }
 
 // トースト通知
@@ -781,6 +815,25 @@ function showDeliveryBanner() {
     if (banner) banner.style.display = "block";
     const badge = document.getElementById("demae-badge");
     if (badge) badge.style.display = "inline";
+    // 全画面アラートも表示
+    showFullscreenAlert();
+}
+
+function showFullscreenAlert() {
+    const el = document.getElementById("demae-fullscreen-alert");
+    if (el) el.classList.add("show");
+}
+
+function dismissFullscreenAlert() {
+    const el = document.getElementById("demae-fullscreen-alert");
+    if (el) el.classList.remove("show");
+    stopAlertRepeat();
+    stopTitleBlink();
+}
+
+function dismissFullscreenAlertAndSwitch() {
+    dismissFullscreenAlert();
+    dismissDeliveryBanner();
 }
 
 // ===== ブラウザ通知 =====
@@ -811,6 +864,7 @@ function showBrowserNotification(title, body) {
 function dismissDeliveryBanner() {
     const banner = document.getElementById("demae-banner");
     if (banner) banner.style.display = "none";
+    stopAlertRepeat();
     stopTitleBlink();
     // 出前タブに切り替え
     switchTab("demae");
