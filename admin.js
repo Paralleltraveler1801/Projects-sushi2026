@@ -494,15 +494,21 @@ window.openEditModal = openEditModal;
 // 出前注文一覧
 // ============================================================
 const DEMAE_STATUSES = ["未対応", "確認中", "完了", "キャンセル"];
+let _demaeCache = null; // 取得済みデータをキャッシュ
 
 // 今日のみトグル
 let _demaeShowTodayOnly = false;
 function toggleDemaeToday() {
     _demaeShowTodayOnly = !_demaeShowTodayOnly;
-    document.getElementById("demae-toggle-bg").style.background    = _demaeShowTodayOnly ? "#c8a882" : "#555";
-    document.getElementById("demae-toggle-thumb").style.transform  = _demaeShowTodayOnly ? "translateX(20px)" : "translateX(0)";
-    document.getElementById("demae-toggle-label").style.color      = _demaeShowTodayOnly ? "#c8a882" : "#aaa";
-    loadDemaeOrders();
+    document.getElementById("demae-toggle-bg").style.background   = _demaeShowTodayOnly ? "#c8a882" : "#555";
+    document.getElementById("demae-toggle-thumb").style.transform = _demaeShowTodayOnly ? "translateX(20px)" : "translateX(0)";
+    document.getElementById("demae-toggle-label").style.color     = _demaeShowTodayOnly ? "#c8a882" : "#aaa";
+    // キャッシュがあれば再取得せず即反映
+    if (_demaeCache) {
+        renderDemaeOrders(_demaeCache);
+    } else {
+        loadDemaeOrders();
+    }
 }
 
 async function loadDemaeOrders() {
@@ -517,23 +523,34 @@ async function loadDemaeOrders() {
     try {
         const res  = await fetch(GAS_URL + "?action=getDeliveryOrders");
         const data = await res.json();
+        _demaeCache = data; // キャッシュに保存
+        renderDemaeOrders(data);
+    } catch(err) {
+        container.innerHTML = "<p style='color:#e57373;padding:20px;'>読み込みエラーが発生しました。</p>";
+        console.error("出前注文読み込みエラー:", err);
+    }
+}
 
-        container.innerHTML = "";
+function renderDemaeOrders(data) {
+    const container = document.getElementById("demae-list");
+    if (!container) return;
 
-        if (!data.length) {
-            container.innerHTML = "<p style='padding:20px;color:#aaa;'>出前注文はまだありません。</p>";
-            return;
-        }
+    container.innerHTML = "";
 
-        // 今日の日付（JST、時刻なし）
-        const todayJST = new Date(new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }));
-        todayJST.setHours(0, 0, 0, 0);
+    if (!data.length) {
+        container.innerHTML = "<p style='padding:20px;color:#aaa;'>出前注文はまだありません。</p>";
+        return;
+    }
 
-        // 今日の日付文字列（YYYY-MM-DD）
-        const todayStr = `${todayJST.getFullYear()}-${String(todayJST.getMonth()+1).padStart(2,'0')}-${String(todayJST.getDate()).padStart(2,'0')}`;
+    // 今日の日付（JST、時刻なし）
+    const todayJST = new Date(new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }));
+    todayJST.setHours(0, 0, 0, 0);
 
-        // キャンセル済み・お届け日翌日以降を除外してお届け希望日順に表示
-        const sorted = data
+    // 今日の日付文字列（YYYY-MM-DD）
+    const todayStr = `${todayJST.getFullYear()}-${String(todayJST.getMonth()+1).padStart(2,'0')}-${String(todayJST.getDate()).padStart(2,'0')}`;
+
+    // キャンセル済み・お届け日翌日以降を除外してお届け希望日順に表示
+    const sorted = data
             .filter(o => {
                 if (o["ステータス"] === "キャンセル") return false;
                 const deliveryRaw = o["お届け希望日"] || "";
@@ -655,21 +672,15 @@ async function loadDemaeOrders() {
             container.appendChild(card);
         });
 
-        // ステータスボタンのクリックをまとめて処理
-        container.addEventListener("click", e => {
-            const btn = e.target.closest(".demae-status-btn");
-            if (!btn) return;
-            const orderNum = btn.dataset.ordernum;
-            const status   = btn.dataset.status;
-            // 音はユーザー操作の同期コンテキストで再生（iOS対策）
-            playUpdateSound();
-            updateDemaeStatus(orderNum, status, btn);
-        });
-
-    } catch(err) {
-        container.innerHTML = "<p style='color:#e57373;padding:20px;'>読み込みエラーが発生しました。</p>";
-        console.error("出前注文読み込みエラー:", err);
-    }
+    // ステータスボタンのクリックをまとめて処理
+    container.addEventListener("click", e => {
+        const btn = e.target.closest(".demae-status-btn");
+        if (!btn) return;
+        const orderNum = btn.dataset.ordernum;
+        const status   = btn.dataset.status;
+        playUpdateSound();
+        updateDemaeStatus(orderNum, status, btn);
+    });
 }
 
 // ============================================================
