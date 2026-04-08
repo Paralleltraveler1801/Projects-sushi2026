@@ -735,42 +735,39 @@ let _lastDeliveryTimestamp = null;
 let _titleBlinkInterval    = null;
 const ORIGINAL_TITLE       = document.title;
 
-// ===== 音声（alert.wav）iOS対応 =====
-// iOSは最初のユーザー操作でアンロックが必要
-const _primeAudio = new Audio("NSF-279-14.wav");
-_primeAudio.preload = "auto";
+// ===== 音声（iOS対応・単一インスタンス方式）=====
+// iOSはユーザー操作で一度再生しないと非同期での音声再生がブロックされる
+// → 同じAudioインスタンスをアンロック済みのまま使い回す
+const _alertAudio = new Audio("NSF-279-14.wav");
+_alertAudio.preload = "auto";
+
+let _audioUnlocked = false;
 function _unlockAudio() {
-    _primeAudio.play().then(() => { _primeAudio.pause(); _primeAudio.currentTime = 0; }).catch(() => {});
+    if (_audioUnlocked) return;
+    _alertAudio.play().then(() => {
+        _alertAudio.pause();
+        _alertAudio.currentTime = 0;
+        _audioUnlocked = true;
+    }).catch(() => {});
 }
 document.addEventListener("touchstart", _unlockAudio, { once: true, passive: true });
 document.addEventListener("click",      _unlockAudio, { once: true });
 
-// 新着注文: ended イベントで即繋ぎ・3回連続再生
-let _alertAudios = [];
-function _playAlertChain(remaining) {
-    if (remaining <= 0) return;
-    const a = new Audio("NSF-279-14.wav");
-    _alertAudios.push(a);
-    a.onended = function() { _playAlertChain(remaining - 1); };
-    a.play().catch(e => console.warn("play error:", e));
-}
-function playAlertSoundRepeat() {
-    stopAlertRepeat();
-    _playAlertChain(1);
-}
 function stopAlertRepeat() {
-    _alertAudios.forEach(a => { try { a.pause(); a.currentTime = 0; } catch(e) {} });
-    _alertAudios = [];
+    try { _alertAudio.pause(); _alertAudio.currentTime = 0; } catch(e) {}
 }
 
-function playWav() {
+// 新着注文: アンロック済みインスタンスを直接再生
+function playAlertSound() {
+    _alertAudio.currentTime = 0;
+    _alertAudio.play().catch(e => console.warn("play error:", e));
+}
+
+// ステータス更新音（軽量・別インスタンス）
+function playUpdateSound() {
     const a = new Audio("NSF-279-14.wav");
     a.play().catch(e => console.warn("play error:", e));
 }
-
-// 新着注文・ステータス更新、どちらも同じ音
-function playAlertSound()  { playAlertSoundRepeat(); }
-function playUpdateSound() { playWav(); }
 
 // トースト通知
 function showToast(message, duration = 6000) {
