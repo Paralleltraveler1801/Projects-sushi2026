@@ -737,7 +737,7 @@ const ORIGINAL_TITLE       = document.title;
 
 // ===== 音声（alert.wav）iOS対応 =====
 // iOSは最初のユーザー操作でアンロックが必要
-const _primeAudio = new Audio("alert.wav");
+const _primeAudio = new Audio("NSF-279-14.wav");
 _primeAudio.preload = "auto";
 function _unlockAudio() {
     _primeAudio.play().then(() => { _primeAudio.pause(); _primeAudio.currentTime = 0; }).catch(() => {});
@@ -749,7 +749,7 @@ document.addEventListener("click",      _unlockAudio, { once: true });
 let _alertAudios = [];
 function _playAlertChain(remaining) {
     if (remaining <= 0) return;
-    const a = new Audio("alert.wav");
+    const a = new Audio("NSF-279-14.wav");
     _alertAudios.push(a);
     a.onended = function() { _playAlertChain(remaining - 1); };
     a.play().catch(e => console.warn("play error:", e));
@@ -764,7 +764,7 @@ function stopAlertRepeat() {
 }
 
 function playWav() {
-    const a = new Audio("alert.wav");
+    const a = new Audio("NSF-279-14.wav");
     a.play().catch(e => console.warn("play error:", e));
 }
 
