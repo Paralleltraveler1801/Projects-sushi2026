@@ -515,10 +515,28 @@ async function loadDemaeOrders() {
             return;
         }
 
-        // キャンセル済みを除外して新しい順に表示
+        // 今日の日付（JST、時刻なし）
+        const todayJST = new Date(new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }));
+        todayJST.setHours(0, 0, 0, 0);
+
+        // キャンセル済み・お届け日翌日以降を除外してお届け希望日順に表示
         const sorted = data
-            .filter(o => o["ステータス"] !== "キャンセル")
-            .sort((a, b) => new Date(b["タイムスタンプ"]) - new Date(a["タイムスタンプ"]));
+            .filter(o => {
+                if (o["ステータス"] === "キャンセル") return false;
+                const deliveryRaw = o["お届け希望日"] || "";
+                const dm = deliveryRaw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                if (!dm) return true; // 日付不明なものは表示する
+                const deliveryDate = new Date(Number(dm[1]), Number(dm[2]) - 1, Number(dm[3]));
+                // お届け日の翌日以降なら非表示
+                return deliveryDate >= todayJST;
+            })
+            .sort((a, b) => {
+                // お届け希望日順（昇順）、同日はタイムスタンプ昇順
+                const da = a["お届け希望日"] || "";
+                const db = b["お届け希望日"] || "";
+                if (da !== db) return da < db ? -1 : 1;
+                return new Date(a["タイムスタンプ"]) - new Date(b["タイムスタンプ"]);
+            });
 
         if (!sorted.length) {
             container.innerHTML = "<p style='padding:20px;color:#aaa;'>出前注文はまだありません。</p>";
@@ -734,8 +752,31 @@ function playWav() {
     _audio.play().catch(e => console.warn("play error:", e));
 }
 
+// 新着注文: 連続3回再生（馬鹿でかい通知用）
+let _alertRepeatCount = 0;
+let _alertRepeatTimer = null;
+function playAlertSoundRepeat() {
+    _alertRepeatCount = 0;
+    if (_alertRepeatTimer) clearInterval(_alertRepeatTimer);
+    playWav();
+    _alertRepeatTimer = setInterval(() => {
+        _alertRepeatCount++;
+        if (_alertRepeatCount >= 4) {
+            clearInterval(_alertRepeatTimer);
+            _alertRepeatTimer = null;
+            return;
+        }
+        playWav();
+    }, 1200);
+}
+function stopAlertRepeat() {
+    if (_alertRepeatTimer) { clearInterval(_alertRepeatTimer); _alertRepeatTimer = null; }
+    _audio.pause();
+    _audio.currentTime = 0;
+}
+
 // 新着注文・ステータス更新、どちらも同じ音
-function playAlertSound()  { playWav(); }
+function playAlertSound()  { playAlertSoundRepeat(); }
 function playUpdateSound() { playWav(); }
 
 // トースト通知
@@ -781,6 +822,25 @@ function showDeliveryBanner() {
     if (banner) banner.style.display = "block";
     const badge = document.getElementById("demae-badge");
     if (badge) badge.style.display = "inline";
+    // 全画面アラートも表示
+    showFullscreenAlert();
+}
+
+function showFullscreenAlert() {
+    const el = document.getElementById("demae-fullscreen-alert");
+    if (el) el.classList.add("show");
+}
+
+function dismissFullscreenAlert() {
+    const el = document.getElementById("demae-fullscreen-alert");
+    if (el) el.classList.remove("show");
+    stopAlertRepeat();
+    stopTitleBlink();
+}
+
+function dismissFullscreenAlertAndSwitch() {
+    dismissFullscreenAlert();
+    dismissDeliveryBanner();
 }
 
 // ===== ブラウザ通知 =====
@@ -811,6 +871,7 @@ function showBrowserNotification(title, body) {
 function dismissDeliveryBanner() {
     const banner = document.getElementById("demae-banner");
     if (banner) banner.style.display = "none";
+    stopAlertRepeat();
     stopTitleBlink();
     // 出前タブに切り替え
     switchTab("demae");

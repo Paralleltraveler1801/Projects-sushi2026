@@ -127,7 +127,7 @@
 
 </main>
 
-<!-- 新着出前通知バナー -->
+<!-- 新着出前通知バナー（トップ帯） -->
 <div id="demae-banner" style="
     display:none;
     position:fixed;
@@ -144,6 +144,85 @@
     cursor:pointer;
 " onclick="dismissDeliveryBanner()">
     新しい出前注文が入りました ― クリックして確認する
+</div>
+
+<!-- 新着出前 全画面アラート -->
+<style>
+#demae-fullscreen-alert {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: rgba(0,0,0,0.85);
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+#demae-fullscreen-alert.show {
+    display: flex;
+    animation: demae-flash 0.5s infinite alternate;
+}
+@keyframes demae-flash {
+    from { background: rgba(229,57,53,0.92); }
+    to   { background: rgba(0,0,0,0.88); }
+}
+.demae-alert-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 48px 40px 36px;
+    text-align: center;
+    max-width: 380px;
+    width: 90%;
+    box-shadow: 0 0 60px rgba(229,57,53,0.8);
+    animation: demae-pulse 0.6s infinite alternate;
+}
+@keyframes demae-pulse {
+    from { box-shadow: 0 0 40px rgba(229,57,53,0.6); transform: scale(1); }
+    to   { box-shadow: 0 0 80px rgba(229,57,53,1);   transform: scale(1.02); }
+}
+.demae-alert-icon {
+    font-size: 4rem;
+    margin-bottom: 12px;
+    animation: demae-shake 0.4s infinite;
+}
+@keyframes demae-shake {
+    0%,100% { transform: rotate(-8deg); }
+    50%      { transform: rotate(8deg); }
+}
+.demae-alert-title {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #e53935;
+    margin-bottom: 8px;
+    letter-spacing: 0.05em;
+}
+.demae-alert-sub {
+    font-size: 1rem;
+    color: #555;
+    margin-bottom: 28px;
+}
+.demae-alert-btn {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    background: #e53935;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.08em;
+}
+.demae-alert-btn:active { opacity: 0.85; }
+</style>
+<div id="demae-fullscreen-alert" onclick="dismissFullscreenAlert()">
+    <div class="demae-alert-box" onclick="event.stopPropagation()">
+        <div class="demae-alert-icon">🍣</div>
+        <div class="demae-alert-title">新着出前注文！</div>
+        <div class="demae-alert-sub">出前タブを確認してください</div>
+        <button class="demae-alert-btn" onclick="dismissFullscreenAlertAndSwitch()">確認する</button>
+    </div>
 </div>
 
 

@@ -1018,8 +1018,17 @@
         }
 
         // ===== ハンバーガーメニュー =====
-        document.getElementById('hamburger').addEventListener('click', function() {
-            document.querySelector('.nav-links').classList.toggle('open');
+        const _hamburger = document.getElementById('hamburger');
+        const _navLinks  = document.querySelector('.nav-links');
+        _hamburger.addEventListener('click', function() {
+            _hamburger.classList.toggle('open');
+            _navLinks.classList.toggle('open');
+        });
+        _navLinks.querySelectorAll('a').forEach(function(a) {
+            a.addEventListener('click', function() {
+                _hamburger.classList.remove('open');
+                _navLinks.classList.remove('open');
+            });
         });
     </script>
 </body>
