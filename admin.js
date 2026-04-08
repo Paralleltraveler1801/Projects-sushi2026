@@ -679,7 +679,7 @@ document.getElementById("demae-list").addEventListener("click", e => {
     if (!btn) return;
     const orderNum = btn.dataset.ordernum;
     const status   = btn.dataset.status;
-    playUpdateSound();
+    if (status !== "未対応") playUpdateSound();
     updateDemaeStatus(orderNum, status, btn);
 });
 
