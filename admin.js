@@ -543,7 +543,25 @@ async function loadDemaeOrders() {
             return;
         }
 
+        let currentDateKey = null;
+
         sorted.forEach(order => {
+            // お届け希望日（YYYY-MM-DD → YYYY年M月D日）
+            const deliveryDateRaw = order["お届け希望日"] || "";
+            let deliveryDateStr = deliveryDateRaw;
+            const dm = deliveryDateRaw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (dm) deliveryDateStr = `${dm[1]}年${parseInt(dm[2])}月${parseInt(dm[3])}日`;
+
+            // 日付グループヘッダー（日付が変わったら挿入）
+            const dateKey = deliveryDateRaw || "日付不明";
+            if (dateKey !== currentDateKey) {
+                currentDateKey = dateKey;
+                const dateEl = document.createElement("div");
+                dateEl.className = "reservation-date";
+                dateEl.textContent = `📅 お届け日：${deliveryDateStr || "日付不明"}`;
+                container.appendChild(dateEl);
+            }
+
             const card = document.createElement("div");
             card.className = "reservation-card";
             card.style.borderLeft = "4px solid #c8a882";
@@ -552,12 +570,6 @@ async function loadDemaeOrders() {
             // タイムスタンプ
             const ts = order["タイムスタンプ"] ? new Date(order["タイムスタンプ"]) : null;
             const tsStr = ts && !isNaN(ts) ? ts.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }) : "-";
-
-            // お届け希望日（YYYY-MM-DD → YYYY年M月D日）
-            const deliveryDateRaw = order["お届け希望日"] || "";
-            let deliveryDateStr = deliveryDateRaw;
-            const dm = deliveryDateRaw.match(/^(\d{4})-(\d{2})-(\d{2})/);
-            if (dm) deliveryDateStr = `${dm[1]}年${parseInt(dm[2])}月${parseInt(dm[3])}日`;
 
             // 注文内容（JSONパース。失敗時は"－"）
             let itemLines = "－";
@@ -618,7 +630,6 @@ async function loadDemaeOrders() {
                 <p>👤 <strong>${order["氏名"] || "-"}</strong> 様</p>
                 <p>📞 ${order["電話番号"] || "-"}</p>
                 <p>📍 ${order["住所"] || "-"}</p>
-                ${deliveryDateStr ? `<p>📅 お届け希望日：${deliveryDateStr}</p>` : ""}
                 <p style="margin-top:6px;">🍣 ${itemLines}</p>
                 ${priceStr ? `<p>${priceStr}</p>` : ""}
                 ${order["備考"] ? `<p style="color:#aaa;font-size:0.85rem;">📝 ${order["備考"]}</p>` : ""}
