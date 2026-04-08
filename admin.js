@@ -671,17 +671,17 @@ function renderDemaeOrders(data) {
             `;
             container.appendChild(card);
         });
-
-    // ステータスボタンのクリックをまとめて処理
-    container.addEventListener("click", e => {
-        const btn = e.target.closest(".demae-status-btn");
-        if (!btn) return;
-        const orderNum = btn.dataset.ordernum;
-        const status   = btn.dataset.status;
-        playUpdateSound();
-        updateDemaeStatus(orderNum, status, btn);
-    });
 }
+
+// ステータスボタンのクリックを一度だけ登録（累積防止）
+document.getElementById("demae-list").addEventListener("click", e => {
+    const btn = e.target.closest(".demae-status-btn");
+    if (!btn) return;
+    const orderNum = btn.dataset.ordernum;
+    const status   = btn.dataset.status;
+    playUpdateSound();
+    updateDemaeStatus(orderNum, status, btn);
+});
 
 // ============================================================
 // 出前ステータス更新（楽観的UI更新）
@@ -773,21 +773,12 @@ let _titleBlinkInterval    = null;
 const ORIGINAL_TITLE       = document.title;
 
 // ===== 音声（iOS対応・単一インスタンス方式）=====
-// iOSはユーザー操作で一度再生しないと非同期での音声再生がブロックされる
-// → 同じAudioインスタンスをアンロック済みのまま使い回す
-const _alertAudio = new Audio("NSF-279-14.wav");
-_alertAudio.preload = "auto";
-
+// アンロック用に無音の短いDataURIを使い、メイン音源を一切触らない
+const _silentAudio = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=");
 let _audioUnlocked = false;
 function _unlockAudio() {
     if (_audioUnlocked) return;
-    // すでにアラートが再生中なら邪魔しない
-    if (!_alertAudio.paused) { _audioUnlocked = true; return; }
-    _alertAudio.play().then(() => {
-        _alertAudio.pause();
-        _alertAudio.currentTime = 0;
-        _audioUnlocked = true;
-    }).catch(() => {});
+    _silentAudio.play().then(() => { _audioUnlocked = true; }).catch(() => {});
 }
 document.addEventListener("touchstart", _unlockAudio, { once: true, passive: true });
 document.addEventListener("click",      _unlockAudio, { once: true });
