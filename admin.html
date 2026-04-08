@@ -198,9 +198,13 @@
     to   { box-shadow: 0 0 80px rgba(200,168,130,1);   transform: scale(1.02); }
 }
 .demae-alert-icon {
-    font-size: 4rem;
     margin-bottom: 12px;
     animation: demae-shake 0.4s infinite;
+}
+.demae-alert-icon img {
+    width: 72px;
+    height: 72px;
+    filter: invert(60%) sepia(60%) saturate(400%) hue-rotate(5deg) brightness(95%);
 }
 @keyframes demae-shake {
     0%,100% { transform: rotate(-8deg); }
@@ -235,7 +239,7 @@
 </style>
 <div id="demae-fullscreen-alert" onclick="dismissFullscreenAlert()">
     <div class="demae-alert-box" onclick="event.stopPropagation()">
-        <div class="demae-alert-icon">🍣</div>
+        <div class="demae-alert-icon"><img src="images/icon/delivery_dining.svg" alt="出前"></div>
         <div class="demae-alert-title">新着出前注文！</div>
         <div class="demae-alert-sub">出前タブを確認してください</div>
         <button class="demae-alert-btn" onclick="dismissFullscreenAlertAndSwitch()">確認する</button>
