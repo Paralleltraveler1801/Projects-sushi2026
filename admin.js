@@ -756,7 +756,7 @@ function _playAlertChain(remaining) {
 }
 function playAlertSoundRepeat() {
     stopAlertRepeat();
-    _playAlertChain(3);
+    _playAlertChain(1);
 }
 function stopAlertRepeat() {
     _alertAudios.forEach(a => { try { a.pause(); a.currentTime = 0; } catch(e) {} });
