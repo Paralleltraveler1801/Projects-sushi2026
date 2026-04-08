@@ -497,27 +497,13 @@ const DEMAE_STATUSES = ["未対応", "確認中", "完了", "キャンセル"];
 
 // 今日のみトグル
 let _demaeShowTodayOnly = false;
-(function initDemaeToggle() {
-    const toggle = document.getElementById("demae-today-toggle");
-    const track  = document.getElementById("demae-toggle-track");
-    const thumb  = document.getElementById("demae-toggle-thumb");
-    const label  = document.getElementById("demae-toggle-label");
-    if (!toggle) return;
-
-    function applyToggle() {
-        _demaeShowTodayOnly = toggle.checked;
-        track.style.background = toggle.checked ? "#c8a882" : "#555";
-        thumb.style.transform  = toggle.checked ? "translateX(20px)" : "translateX(0)";
-        label.style.color      = toggle.checked ? "#c8a882" : "#aaa";
-        loadDemaeOrders();
-    }
-
-    toggle.addEventListener("change", applyToggle);
-    track.addEventListener("click", () => {
-        toggle.checked = !toggle.checked;
-        applyToggle();
-    });
-})();
+function toggleDemaeToday() {
+    _demaeShowTodayOnly = !_demaeShowTodayOnly;
+    document.getElementById("demae-toggle-bg").style.background    = _demaeShowTodayOnly ? "#c8a882" : "#555";
+    document.getElementById("demae-toggle-thumb").style.transform  = _demaeShowTodayOnly ? "translateX(20px)" : "translateX(0)";
+    document.getElementById("demae-toggle-label").style.color      = _demaeShowTodayOnly ? "#c8a882" : "#aaa";
+    loadDemaeOrders();
+}
 
 async function loadDemaeOrders() {
     const container = document.getElementById("demae-list");
