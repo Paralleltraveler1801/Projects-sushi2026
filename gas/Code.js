@@ -172,7 +172,7 @@ function doGet(e) {
     if (rowIdx === -1) {
       return ContentService.createTextOutput("NOT_FOUND").setMimeType(ContentService.MimeType.TEXT);
     }
-    const fieldMap = { "氏名": "name", "電話番号": "tel", "住所": "address", "お届け希望日": "deliveryDate", "備考": "note" };
+    const fieldMap = { "氏名": "name", "電話番号": "tel", "住所": "address", "お届け希望日": "deliveryDate", "備考": "note", "ステータス": "status" };
     Object.keys(fieldMap).forEach(function(field) {
       const colIdx = headers.findIndex(function(h) { return h === field; });
       const val = e.parameter[fieldMap[field]];
