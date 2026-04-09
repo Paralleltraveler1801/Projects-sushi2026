@@ -448,14 +448,13 @@ function _renderDemaeCard(container, order) {
             class="demae-status-btn"
             data-status="${_nextStatus}"
             data-ordernum="${order["注文番号"]}"
-            style="padding:6px 14px;border:none;border-radius:6px;font-size:0.85rem;font-weight:700;cursor:pointer;background:${_nextBtnColor};color:#fff;"
+            style="padding:8px 18px;border:none;border-radius:6px;font-size:0.85rem;font-weight:700;cursor:pointer;background:${_nextBtnColor};color:#fff;"
           >${_nextStatusLabel[_nextStatus]}</button>`
         : "";
 
     const demaeCancel = `<button
-        class="demae-cancel-btn"
+        class="demae-cancel-btn cancel-btn"
         data-ordernum="${order["注文番号"]}"
-        style="padding:6px 12px;border:2px solid #757575;border-radius:6px;font-size:0.85rem;font-weight:700;cursor:pointer;background:transparent;color:#757575;"
       >キャンセル</button>`;
 
     card.innerHTML = `
