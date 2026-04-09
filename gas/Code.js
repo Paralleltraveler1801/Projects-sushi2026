@@ -154,6 +154,35 @@ function doGet(e) {
     return ContentService.createTextOutput("NOT_FOUND").setMimeType(ContentService.MimeType.TEXT);
   }
 
+  // 出前注文内容更新
+  if (action === "updateDemaeOrder") {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName("出前");
+    if (!sheet) {
+      return ContentService.createTextOutput("NOT_FOUND").setMimeType(ContentService.MimeType.TEXT);
+    }
+    const orderNum = String(e.parameter.orderNum || "").trim();
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    const orderNumCol = headers.findIndex(function(h) { return h === "注文番号"; });
+    if (orderNumCol === -1) {
+      return ContentService.createTextOutput("COLUMN_NOT_FOUND").setMimeType(ContentService.MimeType.TEXT);
+    }
+    const rowIdx = data.slice(1).findIndex(function(row) { return String(row[orderNumCol]).trim() === orderNum; });
+    if (rowIdx === -1) {
+      return ContentService.createTextOutput("NOT_FOUND").setMimeType(ContentService.MimeType.TEXT);
+    }
+    const fieldMap = { "氏名": "name", "電話番号": "tel", "住所": "address", "お届け希望日": "deliveryDate", "備考": "note" };
+    Object.keys(fieldMap).forEach(function(field) {
+      const colIdx = headers.findIndex(function(h) { return h === field; });
+      const val = e.parameter[fieldMap[field]];
+      if (colIdx !== -1 && val !== undefined) {
+        sheet.getRange(rowIdx + 2, colIdx + 1).setValue(val);
+      }
+    });
+    return ContentService.createTextOutput("OK").setMimeType(ContentService.MimeType.TEXT);
+  }
+
   if (action === "getTimestamp") {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
     const timestamp = sheet.getRange("Z1").getValue();

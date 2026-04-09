@@ -469,8 +469,9 @@ function _renderDemaeCard(container, order) {
         <p style="margin-top:6px;"><img src="images/icon/restaurant.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> ご注文内容：${itemLines}</p>
         ${priceStr ? `<p>${priceStr}</p>` : ""}
         ${order["備考"] ? `<p style="color:#aaa;font-size:0.85rem;"><img src="images/icon/description.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 備考：${order["備考"]}</p>` : ""}
-        <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;">${progressBtn}${demaeCancel}</div>
+        <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;">${progressBtn}${demaeCancel}<button class="demae-edit-btn edit-btn">編集</button></div>
     `;
+    card.querySelector(".demae-edit-btn").addEventListener("click", () => openDemaeEditModal(order));
     container.appendChild(card);
 }
 
@@ -672,6 +673,70 @@ async function saveEdit() {
 }
 
 window.openEditModal = openEditModal;
+
+// ============================================================
+// 出前注文 編集モーダル
+// ============================================================
+function openDemaeEditModal(order) {
+    const s = "width:100%; padding:10px 8px; margin-top:4px; background:#2a2a2a; color:#fff; border:1px solid #555; border-radius:6px; font-size:1rem; box-sizing:border-box;";
+    const dateVal = order["お届け希望日"] ? String(order["お届け希望日"]).replace(/^(\d{4}-\d{2}-\d{2}).*/, "$1") : "";
+
+    document.getElementById("edit-fields").innerHTML = `
+        <label style="display:block;margin-bottom:12px;color:#ddd;">お名前<br>
+        <input id="de-name" type="text" value="${order["氏名"] || ""}" style="${s}"></label>
+        <label style="display:block;margin-bottom:12px;color:#ddd;">電話番号<br>
+        <input id="de-tel" type="tel" value="${order["電話番号"] || ""}" style="${s}"></label>
+        <label style="display:block;margin-bottom:12px;color:#ddd;">住所<br>
+        <input id="de-address" type="text" value="${order["住所"] || ""}" style="${s}"></label>
+        <label style="display:block;margin-bottom:12px;color:#ddd;">お届け希望日<br>
+        <input id="de-date" type="date" value="${dateVal}" style="${s} -webkit-appearance:none; appearance:none; height:44px; line-height:44px;"></label>
+        <label style="display:block;margin-bottom:12px;color:#ddd;">備考<br>
+        <textarea id="de-note" style="width:100%;padding:10px 8px;margin-top:4px;background:#2a2a2a;color:#fff;border:1px solid #555;border-radius:6px;font-size:1rem;box-sizing:border-box;height:80px;">${order["備考"] || ""}</textarea></label>
+    `;
+
+    savedScrollY = window.scrollY || window.pageYOffset;
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${savedScrollY}px`;
+    document.body.style.width = "100%";
+
+    document.getElementById("edit-overlay").style.display = "block";
+    document.getElementById("edit-modal").style.display = "block";
+
+    document.getElementById("edit-save-btn").onclick = () => saveDemaeEdit(order["注文番号"]);
+    document.getElementById("edit-close-btn").onclick = closeEditModal;
+}
+
+async function saveDemaeEdit(orderNum) {
+    const btn = document.getElementById("edit-save-btn");
+    btn.disabled = true;
+    btn.textContent = "保存中...";
+
+    try {
+        const url = new URL(GAS_URL);
+        url.searchParams.set("action", "updateDemaeOrder");
+        url.searchParams.set("orderNum", orderNum);
+        url.searchParams.set("name",         document.getElementById("de-name").value);
+        url.searchParams.set("tel",          document.getElementById("de-tel").value);
+        url.searchParams.set("address",      document.getElementById("de-address").value);
+        url.searchParams.set("deliveryDate", document.getElementById("de-date").value);
+        url.searchParams.set("note",         document.getElementById("de-note").value);
+        const res = await fetch(url.toString());
+        const text = await res.text();
+        if (text.trim() === "OK") {
+            alert("更新しました！");
+            closeEditModal();
+            loadReservations();
+        } else {
+            alert("更新失敗: " + text);
+        }
+    } catch(e) {
+        alert("通信エラーが発生しました");
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "保存";
+    }
+}
 
 // ============================================================
 // 出前注文一覧
