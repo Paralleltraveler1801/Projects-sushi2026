@@ -749,8 +749,10 @@ document.getElementById("reservation-list").addEventListener("click", e => {
     const statusBtn = e.target.closest(".demae-status-btn");
     const cancelBtn = e.target.closest(".demae-cancel-btn");
     if (statusBtn) {
+        const nextStatus = statusBtn.dataset.status;
+        if (!confirm(`ステータスを「${nextStatus}」に変更しますか？`)) return;
         playUpdateSound();
-        updateDemaeStatus(statusBtn.dataset.ordernum, statusBtn.dataset.status, statusBtn);
+        updateDemaeStatus(statusBtn.dataset.ordernum, nextStatus, statusBtn);
     } else if (cancelBtn) {
         updateDemaeStatus(cancelBtn.dataset.ordernum, "キャンセル", cancelBtn);
     }
