@@ -2,6 +2,41 @@ html {
     scroll-behavior: smooth;
 }
 
+/* トースト通知 */
+#toast-container {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+.toast {
+    background: rgba(42, 32, 22, 0.93);
+    color: #f5f0ea;
+    border-left: 4px solid #c0392b;
+    padding: 14px 20px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    max-width: 320px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    opacity: 0;
+    transform: translateX(40px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: auto;
+}
+.toast.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+.toast.hide {
+    opacity: 0;
+    transform: translateX(40px);
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -45,22 +80,36 @@ nav {
 
 .nav-links {
     display: flex;
+    flex-wrap: nowrap;
     gap: 2rem;
     list-style: none;
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
+    align-items: center;
+}
+
+.nav-links li {
+    flex-shrink: 0;
+    min-width: max-content;
 }
 
 .nav-links a {
     text-decoration: none;
-    color: #333;
-    font-size: 0.95rem;
-    transition: color 0.3s;
+    color: #1a1a1a;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    white-space: nowrap !important;
+    display: inline-block;
+    transition: color 0.3s, border-bottom 0.3s;
+    padding-bottom: 3px;
+    border-bottom: 2px solid transparent;
 }
 
 .nav-links a:hover {
     color: #c8a882;
+    border-bottom: 2px solid #c8a882;
 }
 
 .reserve-btn {
@@ -643,7 +692,7 @@ footer {
     color: #888;
 }
 
-/* ハンバーガーボタン */
+/* ハンバーガーボタン（デフォルト非表示） */
 .hamburger {
     display: none;
     flex-direction: column;
@@ -673,7 +722,7 @@ footer {
     transform: translateY(-7px) rotate(-45deg);
 }
 
-/* レスポンシブ */
+/* スマホのみ（768px以下）: ハンバーガーメニュー */
 @media (max-width: 768px) {
     .hamburger {
         display: flex;
@@ -685,7 +734,7 @@ footer {
         align-items: center;
         gap: 0;
         position: fixed;
-        top: 70px;
+        top: 60px;
         left: 0;
         width: 100%;
         transform: none;
@@ -693,13 +742,14 @@ footer {
         box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
         z-index: 1001;
         max-height: 0;
-        overflow: hidden;
+        overflow-y: auto;
+        overflow-x: hidden;
         padding: 0;
-        transition: max-height 0.5s ease, padding 0.5s ease;
+        transition: max-height 0.4s ease, padding 0.4s ease;
     }
 
     .nav-links.open {
-        max-height: 400px;
+        max-height: calc(100vh - 60px);
         padding: 0.5rem 0;
     }
 
@@ -713,8 +763,11 @@ footer {
         padding: 1rem 0;
         border-bottom: 1px solid #f0ebe4;
         font-size: 1rem;
+        white-space: normal;
     }
+}
 
+@media (max-width: 768px) {
     .hero h1 {
         font-size: 2rem;
     }
@@ -788,6 +841,10 @@ footer {
     margin-bottom: 0.5rem;
 }
 
+#calendar > .calendar-legend {
+    display: inline-block;
+}
+
 /* 凡例テキスト（○△×の説明） */
 .calendar-sub {
     text-align: center;
@@ -795,6 +852,45 @@ footer {
     color: #999;
     letter-spacing: 0.05em;
     margin-bottom: 2rem;
+}
+.calendar-legend {
+    display: block;
+    width: fit-content;
+    background: #f9f7f4;
+    border: 1px solid #e8e0d8;
+    border-radius: 6px;
+    padding: 12px 20px;
+    margin: 0 auto 2rem;
+    font-size: 0.85rem;
+    color: #666;
+    text-align: left;
+}
+.calendar-legend-row {
+    display: flex;
+    align-items: center;
+    gap: 6px 16px;
+    flex-wrap: wrap;
+}
+.legend-seats {
+    gap: 4px 20px;
+    color: #888;
+}
+.legend-badge {
+    font-weight: bold;
+    font-size: 1rem;
+}
+.legend-o { color: #2a9d2a; }
+.legend-d { color: #d4820a; }
+.legend-x { color: #cc0000; }
+.calendar-legend-divider {
+    border-top: 1px solid #e8e0d8;
+    margin: 8px 0;
+}
+.calendar-legend-hint {
+    margin-top: 8px;
+    font-size: 0.78rem;
+    color: #aaa;
+    text-align: center;
 }
 
 /* カレンダーラッパー */
@@ -849,7 +945,7 @@ footer {
     border-radius: 6px;
     padding: 10px 6px;
     text-align: center;
-    min-height: 64px;
+    min-height: 100px;
     background: #fefefe;
 }
 
@@ -886,6 +982,26 @@ footer {
 .status-○ { color: #2a9d2a; }
 .status-△ { color: #c8a882; }
 .status-× { color: #cc0000; }
+
+/* 座席タイプ別ステータス */
+.seat-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 5px;
+}
+
+.seat-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 2px;
+    font-size: 0.65rem;
+    color: #777;
+    line-height: 1.3;
+}
+
+.seat-val-○ { color: #2a9d2a; font-weight: bold; }
+.seat-val-× { color: #cc0000; font-weight: bold; }
 
 /* 月区切りラベル（今月/来月） */
 .month-separator {
@@ -1027,7 +1143,7 @@ footer {
 
     /* 日付マスを小さく */
     .day {
-        min-height: 46px;
+        min-height: 80px;
         padding: 5px 2px;
         border-radius: 4px;
     }
@@ -1039,6 +1155,10 @@ footer {
     .day .status {
         font-size: 0.9rem;
         margin-top: 2px;
+    }
+
+    .seat-item {
+        font-size: 0.55rem;
     }
 
     /* Googleフォームのiframe高さをスマホ向けに調整 */

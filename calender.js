@@ -17,9 +17,32 @@ if (hamburger && navLinks) {
 }
 
 // ============================================================
+// トースト通知
+// ============================================================
+function showToast(message) {
+    let container = document.getElementById("toast-container");
+    if (!container) {
+        container = document.createElement("div");
+        container.id = "toast-container";
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.textContent = message;
+    container.appendChild(toast);
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => { toast.classList.add("show"); });
+    });
+    setTimeout(() => {
+        toast.classList.add("hide");
+        toast.addEventListener("transitionend", () => toast.remove(), { once: true });
+    }, 4000);
+}
+
+// ============================================================
 // 公開カレンダー
 // ============================================================
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxI7DGvBG1k1RdEoEyjsYt4Wc8Iec5croDi4e_85vt4QtKBn3-5F07RZgHJzdrngsMMtA/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzZdvg1RYMFYOcq2EonTxLZdzEJ7SrVbrpuiJ_7zXOHZI50pqhpUPI1PG7LxN7Fejb6Ng/exec";
 const CALENDAR_URL = GAS_URL;
 let publicCalendarData = [];
 let currentMonth = new Date().getMonth();
@@ -57,9 +80,20 @@ function renderPublicCalendar(data, year, month) {
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         const found = data.find(item => item.date.trim() === dateStr);
         const status = found ? found.status : "";
+        const seatStatus = found ? found.seatStatus : null;
         const thisDate = new Date(year, month, d);
         const isPast = thisDate <= today;
         const isOver = thisDate > limit;
+
+        let seatDetailHtml = "";
+        if (!isPast && !isOver && seatStatus && status !== "×") {
+            seatDetailHtml = `
+                <div class="seat-detail">
+                    <div class="seat-item"><span>カウ</span><span class="seat-val-${seatStatus["カウンター"]}">${seatStatus["カウンター"]}</span></div>
+                    <div class="seat-item"><span>小上</span><span class="seat-val-${seatStatus["小上がり"]}">${seatStatus["小上がり"]}</span></div>
+                    <div class="seat-item"><span>個室</span><span class="seat-val-${seatStatus["個室"]}">${seatStatus["個室"]}</span></div>
+                </div>`;
+        }
 
         const div = document.createElement("div");
         div.className = `day${(isPast || isOver) ? " past" : ""}`;
@@ -67,10 +101,11 @@ function renderPublicCalendar(data, year, month) {
             <div class="num">${d}</div>
             <div class="status ${(isPast || isOver) ? "" : "status-" + status}">
                 ${(isPast || isOver) ? "-" : status}
-            </div>`;
+            </div>
+            ${seatDetailHtml}`;
 
-        // カレンダーの日付クリックでフォームの日付をセット
-        if (!isPast && !isOver) {
+        // カレンダーの日付クリックでフォームの日付をセット（×は除外）
+        if (!isPast && !isOver && status !== "×") {
             div.style.cursor = "pointer";
             div.addEventListener("click", () => {
                 setFormDate(dateStr);
@@ -110,7 +145,7 @@ document.getElementById("next-month")?.addEventListener("click", () => {
     renderPublicCalendar(publicCalendarData, currentYear, currentMonth);
 });
 
-fetch(CALENDAR_URL)
+fetch(CALENDAR_URL + "?action=getCalendarWithSeats")
     .then(res => res.json())
     .then(data => {
         publicCalendarData = data;
@@ -130,7 +165,7 @@ async function refreshCalendar() {
     wrap.style.display = "none";
     loading.style.display = "flex";
 
-    const res = await fetch(CALENDAR_URL);
+    const res = await fetch(CALENDAR_URL + "?action=getCalendarWithSeats");
     const data = await res.json();
     publicCalendarData = data;
     renderPublicCalendar(data, currentYear, currentMonth);
@@ -148,7 +183,7 @@ async function checkForUpdates() {
         const res = await fetch(CALENDAR_URL + "?action=getTimestamp");
         const { timestamp } = await res.json();
         if (lastTimestamp !== null && timestamp !== lastTimestamp) {
-            const dataRes = await fetch(CALENDAR_URL);
+            const dataRes = await fetch(CALENDAR_URL + "?action=getCalendarWithSeats");
             const data = await dataRes.json();
             publicCalendarData = data;
             renderPublicCalendar(data, currentYear, currentMonth);
@@ -195,6 +230,21 @@ function toggleForm() {
 async function onDateChange(dateStr) {
     if (!dateStr) return;
 
+    // 月曜日（定休日）チェック
+    const dayOfWeek = new Date(dateStr + "T00:00:00+09:00").getDay();
+    const result = document.getElementById("form-result");
+    if (dayOfWeek === 1) {
+        document.getElementById("f-date").value = "";
+        if (result) {
+            result.textContent = "月曜日は定休日のためご予約いただけません。";
+            result.className = "error";
+            result.style.display = "block";
+        }
+        showToast("月曜日は定休日のためご予約いただけません。");
+        return;
+    }
+    if (result) result.style.display = "none";
+
     const seatSelect = document.getElementById("f-seat");
     const seatNote = document.getElementById("seat-note");
     if (!seatSelect) return;
@@ -203,7 +253,7 @@ async function onDateChange(dateStr) {
     const privateOption = seatSelect.querySelector('option[value="個室"]');
     if (privateOption) {
         privateOption.disabled = false;
-        privateOption.textContent = "個室（+800円）";
+        privateOption.textContent = "個室（+880円）";
     }
     if (seatNote) seatNote.classList.remove("show");
 
@@ -277,6 +327,34 @@ async function confirmAndSubmit() {
     const result = document.getElementById("form-result");
 
     const dateVal = document.getElementById("f-date").value;
+
+    // 満席チェック（ローカルデータで即時判定）
+    const seat  = document.getElementById("f-seat").value;
+    const count = document.getElementById("f-count").value;
+    const newPeople = parseInt((count.match(/(\d+)/) || [])[1] || 0);
+    const calEntry = publicCalendarData.find(item => item.date.trim() === dateVal);
+    if (calEntry && calEntry.status === "×") {
+        closeConfirmModal();
+        const msg = "申し訳ございません。この日は満席のためご予約いただけません。";
+        result.textContent = msg;
+        result.className = "error";
+        result.style.display = "block";
+        showToast(msg);
+        return;
+    }
+    if (calEntry && calEntry.seatCapacity && calEntry.seatCapacity[seat]) {
+        const cap = calEntry.seatCapacity[seat];
+        if (cap.remainingPeople < newPeople || cap.remainingTables === 0) {
+            closeConfirmModal();
+            const msg = "申し訳ございません。選択された日・座席タイプはご予約が満席です。他の座席タイプまたは日程をお選びください。";
+            result.textContent = msg;
+            result.className = "error";
+            result.style.display = "block";
+            showToast(msg);
+            return;
+        }
+    }
+
     const d = new Date(dateVal + "T00:00:00+09:00");
     const formattedDate = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
 
@@ -287,9 +365,9 @@ async function confirmAndSubmit() {
         tel:   document.getElementById("f-tel").value,
         date:  formattedDate,
         time:  document.getElementById("f-time").value,
-        count: document.getElementById("f-count").value,
+        count: count,
         plan:  document.getElementById("f-plan").value,
-        seat:  document.getElementById("f-seat").value,
+        seat:  seat,
     };
 
     confirmBtn.disabled = true;
@@ -308,21 +386,38 @@ async function confirmAndSubmit() {
             result.className = "success";
             result.style.display = "block";
             document.getElementById("reserve-form").reset();
+            // 残席情報を最新化
+            fetch(GAS_URL + "?action=getCalendarWithSeats")
+                .then(r => r.json())
+                .then(d => { publicCalendarData = d; })
+                .catch(() => {});
+        } else if (text.trim() === "CLOSED") {
+            const msg = "月曜日は定休日のためご予約いただけません。";
+            result.textContent = msg; result.className = "error"; result.style.display = "block";
+            showToast(msg);
+        } else if (text.trim() === "DATE_FULL") {
+            const msg = "申し訳ございません。この日は満席のためご予約いただけません。";
+            result.textContent = msg; result.className = "error"; result.style.display = "block";
+            showToast(msg);
+        } else if (text.trim() === "SEAT_FULL") {
+            const msg = "申し訳ございません。選択された日・座席タイプはご予約が満席です。他の座席タイプまたは日程をお選びください。";
+            result.textContent = msg; result.className = "error"; result.style.display = "block";
+            showToast(msg);
         } else if (text.trim() === "PRIVATE_ROOM_FULL") {
-            result.textContent = "申し訳ございません。選択された日の個室はすでに満席です。他の座席タイプをお選びください。";
-            result.className = "error";
-            result.style.display = "block";
+            const msg = "申し訳ございません。選択された日の個室はすでに満席です。他の座席タイプをお選びください。";
+            result.textContent = msg; result.className = "error"; result.style.display = "block";
+            showToast(msg);
             onDateChange(dateVal);
         } else {
-            result.textContent = "送信に失敗しました。お手数ですがお電話にてご連絡ください。";
-            result.className = "error";
-            result.style.display = "block";
+            const msg = "送信に失敗しました。お手数ですがお電話にてご連絡ください。";
+            result.textContent = msg; result.className = "error"; result.style.display = "block";
+            showToast(msg);
         }
     } catch (err) {
         closeConfirmModal();
-        result.textContent = "通信エラーが発生しました。お手数ですがお電話にてご連絡ください。";
-        result.className = "error";
-        result.style.display = "block";
+        const msg = "通信エラーが発生しました。お手数ですがお電話にてご連絡ください。";
+        result.textContent = msg; result.className = "error"; result.style.display = "block";
+        showToast(msg);
     } finally {
         confirmBtn.disabled = false;
         confirmBtn.textContent = "この内容で予約する";

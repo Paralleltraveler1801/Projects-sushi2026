@@ -124,6 +124,25 @@
             flex-direction: column;
             align-items: center;
         }
+        #inline-form-wrap {
+            width: 100%;
+            max-width: 600px;
+        }
+        .reserve-form {
+            width: 100%;
+        }
+        /* 日付入力のはみ出し防止・iOS Safari スタイル正規化 */
+        .reserve-form input[type="date"] {
+            width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 44px;
+            line-height: 44px;
+            background-color: #fff;
+            color: #333;
+        }
         /* 確認モーダル */
         #confirm-modal {
             display: none;
@@ -193,6 +212,65 @@
             background: #eee;
             color: #333;
         }
+        .demae-info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            max-width: 860px;
+            margin: 0 auto 24px;
+            padding: 0 5%;
+        }
+        .demae-info-card {
+            background: #fff;
+            border: 1px solid #e0d0b8;
+            border-radius: 10px;
+            padding: 20px 16px;
+            text-align: center;
+        }
+        .demae-info-icon {
+            margin-bottom: 8px;
+        }
+        .demae-info-icon img {
+            width: 2.8rem;
+            height: 2.8rem;
+        }
+        .demae-info-label {
+            font-size: 0.75rem;
+            color: #8b6914;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+        }
+        .demae-info-value {
+            font-size: 0.9rem;
+            color: #333;
+            line-height: 1.6;
+        }
+        .demae-info-grid-2col {
+            grid-template-columns: repeat(2, 1fr);
+            max-width: 600px;
+        }
+        .demae-info-grid-flex {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 16px;
+            max-width: 860px;
+            margin: 0 auto 24px;
+            padding: 0 5%;
+        }
+        .demae-info-grid-flex .demae-info-card {
+            flex: 0 0 calc(33.333% - 16px);
+            max-width: calc(33.333% - 16px);
+            box-sizing: border-box;
+        }
+        @media (max-width: 600px) {
+            .demae-info-grid { grid-template-columns: 1fr 1fr; }
+            .demae-info-grid-flex .demae-info-card {
+                flex: 0 0 calc(50% - 8px);
+                max-width: calc(50% - 8px);
+            }
+        }
     </style>
 </head>
 <body>
@@ -222,7 +300,22 @@
     <!-- 予約状況 -->
     <section id="calendar">
         <h2>予約状況</h2>
-        <p class="calendar-sub">○ 予約受付中　△ 残りわずか　× 満席</p>
+        <div style="display:flex;justify-content:center;margin-bottom:2rem;">
+        <div class="calendar-legend" style="margin-bottom:0;">
+            <div class="calendar-legend-row">
+                <span class="legend-badge legend-o">○</span><span>予約受付中</span>
+                <span class="legend-badge legend-d">△</span><span>残りわずか</span>
+                <span class="legend-badge legend-x">×</span><span>満席</span>
+            </div>
+            <div class="calendar-legend-divider"></div>
+            <div class="calendar-legend-row legend-seats">
+                <span>カウ＝カウンター</span>
+                <span>小上＝小上がり</span>
+                <span>個室＝個室</span>
+            </div>
+            <p class="calendar-legend-hint">日付をタップすると予約フォームに自動入力されます</p>
+        </div>
+        </div>
         <div class="calendar-section-inner">
             <div id="calendar-loading">
                 <div class="spinner"></div>
@@ -259,14 +352,26 @@
         <div class="reserve-intro" id="forminfo-section">
             <h2>ご予約について</h2>
         </div>
-        <div class="contact-info">
-            <div class="contact-grid contact-grid-single">
-                <div class="contact-item">
-                    <p>・前日の午後8時までにご予約ください<br>
-                       ・予約変更・キャンセルは前日の営業時間内までにお電話にてご連絡ください<br>
-                       ・個室のご利用は別途800円（税別）<br>
-                       ・座席：カウンター7席・小上がり12席・個室6席</p>
-                </div>
+        <div class="demae-info-grid demae-info-grid-2col">
+            <div class="demae-info-card">
+                <div class="demae-info-icon"><img src="images/icon/schedule.svg" alt="予約受付"></div>
+                <div class="demae-info-label">予約受付</div>
+                <div class="demae-info-value">前日20:00までに<br>お願いします</div>
+            </div>
+            <div class="demae-info-card">
+                <div class="demae-info-icon"><img src="images/icon/event.svg" alt="変更・キャンセル"></div>
+                <div class="demae-info-label">変更・キャンセル</div>
+                <div class="demae-info-value">前日の営業時間内に<br>お電話にてご連絡ください</div>
+            </div>
+            <div class="demae-info-card">
+                <div class="demae-info-icon"><img src="images/icon/meeting_room.svg" alt="個室"></div>
+                <div class="demae-info-label">個室</div>
+                <div class="demae-info-value">別途 880円（税込）</div>
+            </div>
+            <div class="demae-info-card">
+                <div class="demae-info-icon"><img src="images/icon/event_seat.svg" alt="座席"></div>
+                <div class="demae-info-label">座席</div>
+                <div class="demae-info-value">カウンター 7席<br>小上がり 12席<br>個室 6席</div>
             </div>
         </div>
 
@@ -333,7 +438,13 @@
                             <option value="3名">3名</option>
                             <option value="4名">4名</option>
                             <option value="5名">5名</option>
-                            <option value="6名以上">6名以上</option>
+                            <option value="6名">6名</option>
+                            <option value="7名">7名</option>
+                            <option value="8名">8名</option>
+                            <option value="9名">9名</option>
+                            <option value="10名">10名</option>
+                            <option value="11名">11名</option>
+                            <option value="12名">12名</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -352,7 +463,7 @@
                             <option value="">座席を選択してください</option>
                             <option value="カウンター">カウンター</option>
                             <option value="小上がり">小上がり</option>
-                            <option value="個室">個室（+800円）</option>
+                            <option value="個室">個室（+880円）</option>
                         </select>
                         <p class="seat-note" id="seat-note">※ 選択された日の個室はすでに満席です</p>
                     </div>
@@ -371,16 +482,31 @@
             <p>お電話でのご予約もお気軽にどうぞ。<br>
                ご不明な点はお気軽にお問い合わせください。</p>
         </div>
-        <div class="contact-info">
-            <div class="contact-grid contact-grid-single">
-                <div class="contact-item">
-                    <h4>鮨処　ひし田</h4>
-                    <p>TEL: <a href="tel:0118270537">011-827-0537</a><br>
-                       FAX: 011-827-0536<br>
-                       営業時間: 17:00 〜 LAST<br>
-                       電話対応: 17:00 〜 21:00<br>
-                       定休日: 毎週月曜日</p>
-                </div>
+        <div class="demae-info-grid-flex">
+            <div class="demae-info-card">
+                <div class="demae-info-icon"><img src="images/icon/phone.svg" alt="電話番号"></div>
+                <div class="demae-info-label">電話番号</div>
+                <div class="demae-info-value"><a href="tel:0118270537" style="color:#8b6914;font-weight:700;">011-827-0537</a></div>
+            </div>
+            <div class="demae-info-card">
+                <div class="demae-info-icon"><img src="images/icon/print.svg" alt="FAX"></div>
+                <div class="demae-info-label">FAX</div>
+                <div class="demae-info-value">011-827-0536</div>
+            </div>
+            <div class="demae-info-card">
+                <div class="demae-info-icon"><img src="images/icon/schedule.svg" alt="営業時間"></div>
+                <div class="demae-info-label">営業時間</div>
+                <div class="demae-info-value">17:00 〜 LAST</div>
+            </div>
+            <div class="demae-info-card">
+                <div class="demae-info-icon"><img src="images/icon/smartphone.svg" alt="電話受付"></div>
+                <div class="demae-info-label">電話受付</div>
+                <div class="demae-info-value">17:00 〜 21:00</div>
+            </div>
+            <div class="demae-info-card">
+                <div class="demae-info-icon"><img src="images/icon/today.svg" alt="定休日"></div>
+                <div class="demae-info-label">定休日</div>
+                <div class="demae-info-value">毎週月曜日</div>
             </div>
         </div>
     </div>

@@ -1,0 +1,19 @@
+{
+  "name": "鮨処ひし田 管理画面",
+  "short_name": "ひし田管理",
+  "description": "出前注文・予約管理",
+  "start_url": "/admin.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a1a1a",
+  "theme_color": "#c8a882",
+  "icons": [
+    {
+      "src": "/images/shop01.jpg",
+      "sizes": "any",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}
