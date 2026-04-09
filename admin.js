@@ -680,13 +680,7 @@ function openDemaeEditModal(order) {
     const s = "width:100%; padding:10px 8px; margin-top:4px; background:#2a2a2a; color:#fff; border:1px solid #555; border-radius:6px; font-size:1rem; box-sizing:border-box;";
     const dateVal = order["お届け希望日"] ? String(order["お届け希望日"]).replace(/^(\d{4}-\d{2}-\d{2}).*/, "$1") : "";
 
-    const statusOptions = ["未対応", "確認中", "配達中", "完了"]
-        .map(s => `<option value="${s}" ${order["ステータス"] === s ? "selected" : ""}>${s}</option>`)
-        .join("");
-
     document.getElementById("edit-fields").innerHTML = `
-        <label style="display:block;margin-bottom:12px;color:#ddd;">ステータス（修正用）<br>
-        <select id="de-status" style="${s}">${statusOptions}</select></label>
         <label style="display:block;margin-bottom:12px;color:#ddd;">お名前<br>
         <input id="de-name" type="text" value="${order["氏名"] || ""}" style="${s}"></label>
         <label style="display:block;margin-bottom:12px;color:#ddd;">電話番号<br>
@@ -721,7 +715,6 @@ async function saveDemaeEdit(orderNum) {
         const url = new URL(GAS_URL);
         url.searchParams.set("action", "updateDemaeOrder");
         url.searchParams.set("orderNum", orderNum);
-        url.searchParams.set("status",       document.getElementById("de-status").value);
         url.searchParams.set("name",         document.getElementById("de-name").value);
         url.searchParams.set("tel",          document.getElementById("de-tel").value);
         url.searchParams.set("address",      document.getElementById("de-address").value);
