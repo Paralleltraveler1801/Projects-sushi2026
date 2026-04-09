@@ -5,370 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>鮨処ひし田 - 出前注文</title>
     <link rel="stylesheet" href="styles.css">
-    <style>
-        /* ===== 出前注文フォーム ===== */
-        .demae-form {
-            background: #fff;
-            border: 1px solid #e0d0b8;
-            border-radius: 8px;
-            padding: 32px 28px;
-            max-width: 680px;
-            margin: 0 auto;
-        }
-        .demae-form .form-group {
-            margin-bottom: 20px;
-        }
-        .demae-form label {
-            display: block;
-            margin-bottom: 6px;
-            font-size: 0.9rem;
-            color: #555;
-            font-weight: 600;
-        }
-        .demae-form label .required {
-            color: #c0392b;
-            margin-left: 4px;
-        }
-        .demae-form input,
-        .demae-form select,
-        .demae-form textarea {
-            width: 100%;
-            max-width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 1rem;
-            box-sizing: border-box;
-            transition: border-color 0.2s;
-            background: #fff;
-            -webkit-appearance: none;
-            appearance: none;
-        }
-        .demae-form input[type="date"] {
-            display: block;
-            width: 100%;
-            max-width: 100%;
-            min-width: 0;
-            box-sizing: border-box;
-        }
-        .demae-form input:focus,
-        .demae-form select:focus,
-        .demae-form textarea:focus {
-            outline: none;
-            border-color: #c8a882;
-        }
-        .form-submit-btn {
-            width: 100%;
-            padding: 14px;
-            background: #c8a882;
-            color: #111;
-            border: none;
-            border-radius: 6px;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            letter-spacing: 0.08em;
-            transition: opacity 0.2s;
-            margin-top: 8px;
-        }
-        .form-submit-btn:hover { opacity: 0.85; }
-        .form-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        #form-result {
-            margin-top: 16px;
-            padding: 14px;
-            border-radius: 6px;
-            text-align: center;
-            display: none;
-        }
-        #form-result.success {
-            background: #f0f9f0;
-            color: #2e7d32;
-            border: 1px solid #a5d6a7;
-        }
-        #form-result.error {
-            background: #fff0f0;
-            color: #c62828;
-            border: 1px solid #ef9a9a;
-        }
-
-        /* ===== セクションタイトル ===== */
-        .section-title {
-            font-size: 1rem;
-            font-weight: 700;
-            color: #8b6914;
-            background: #fdf6eb;
-            border-left: 4px solid #c8a882;
-            padding: 8px 12px;
-            margin: 24px 0 16px;
-            border-radius: 0 4px 4px 0;
-        }
-
-        /* ===== 品目追加エリア ===== */
-        .add-item-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr 80px auto;
-            gap: 8px;
-            align-items: end;
-            margin-bottom: 8px;
-        }
-        .add-item-row label {
-            font-size: 0.82rem;
-            color: #888;
-            margin-bottom: 4px;
-            font-weight: 600;
-        }
-        .add-item-row select,
-        .add-item-row input[type="number"] {
-            width: 100%;
-            padding: 9px 10px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 0.95rem;
-            box-sizing: border-box;
-            background: #fff;
-        }
-        .add-item-row select:focus,
-        .add-item-row input[type="number"]:focus {
-            outline: none;
-            border-color: #c8a882;
-        }
-        .add-btn {
-            padding: 9px 14px;
-            background: #c8a882;
-            color: #111;
-            border: none;
-            border-radius: 6px;
-            font-size: 0.95rem;
-            font-weight: 700;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: opacity 0.2s;
-            height: 40px;
-        }
-        .add-btn:hover { opacity: 0.85; }
-
-        /* ===== 注文リスト ===== */
-        #order-list {
-            margin-top: 12px;
-            border: 1px solid #e0d0b8;
-            border-radius: 6px;
-            overflow: hidden;
-        }
-        .order-list-empty {
-            padding: 16px;
-            text-align: center;
-            color: #aaa;
-            font-size: 0.9rem;
-        }
-        .order-list-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px 14px;
-            border-bottom: 1px solid #f0e8d8;
-            font-size: 0.92rem;
-        }
-        .order-list-item:last-child { border-bottom: none; }
-        .order-item-name { flex: 1; color: #333; }
-        .order-item-qty  { width: 60px; text-align: center; color: #666; }
-        .order-item-price { width: 80px; text-align: right; color: #8b6914; font-weight: 600; }
-        .order-item-del {
-            width: 32px;
-            text-align: center;
-            color: #bbb;
-            cursor: pointer;
-            font-size: 1.1rem;
-            margin-left: 8px;
-            transition: color 0.15s;
-        }
-        .order-item-del:hover { color: #c0392b; }
-
-        /* ===== 小計バー ===== */
-        .subtotal-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 14px;
-            background: #fdf6eb;
-            border: 1px solid #e0d0b8;
-            border-radius: 6px;
-            margin-top: 10px;
-        }
-        .subtotal-label  { font-size: 0.9rem; color: #555; font-weight: 600; }
-        .subtotal-amount { font-size: 1.1rem; font-weight: 700; color: #8b6914; }
-
-        /* ===== 確認モーダル ===== */
-        #confirm-modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-        #confirm-modal.show { display: flex; }
-        .confirm-modal-inner {
-            background: #fff;
-            border-radius: 8px;
-            padding: 32px 28px;
-            max-width: 520px;
-            width: 92%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        .confirm-modal-inner h3 {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin-bottom: 20px;
-            text-align: center;
-            color: #333;
-        }
-        .confirm-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 12px;
-            font-size: 0.92rem;
-        }
-        .confirm-table th,
-        .confirm-table td {
-            padding: 8px 10px;
-            border-bottom: 1px solid #f0e8d8;
-            text-align: left;
-            vertical-align: top;
-        }
-        .confirm-table th {
-            width: 38%;
-            color: #888;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        .confirm-total-row th,
-        .confirm-total-row td {
-            font-weight: 700;
-            color: #8b6914;
-            font-size: 1rem;
-            border-top: 2px solid #e0d0b8;
-        }
-        .confirm-notice {
-            font-size: 0.82rem;
-            color: #888;
-            background: #fdf6eb;
-            border: 1px solid #e0d0b8;
-            border-radius: 6px;
-            padding: 10px 12px;
-            margin-bottom: 20px;
-            line-height: 1.6;
-        }
-        .confirm-modal-btns {
-            display: flex;
-            gap: 12px;
-        }
-        .confirm-modal-btns button {
-            flex: 1;
-            padding: 12px;
-            border-radius: 6px;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            border: none;
-            transition: opacity 0.2s;
-        }
-        .confirm-modal-btns button:hover { opacity: 0.85; }
-        .btn-confirm { background: #c8a882; color: #111; }
-        .btn-back    { background: #eee;    color: #333; }
-        .confirm-items { font-size: 0.88rem; line-height: 1.8; }
-        .confirm-item-line { display: flex; justify-content: space-between; }
-
-        /* ===== 時間外通知 ===== */
-        .hours-notice {
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            border-radius: 6px;
-            padding: 12px 16px;
-            margin-bottom: 20px;
-            font-size: 0.9rem;
-            color: #856404;
-            display: none;
-        }
-        .hours-notice.show { display: block; }
-
-        .form-container {
-            flex-direction: column;
-            align-items: center;
-        }
-        .form-container > .demae-form,
-        .form-container > #form-result {
-            width: 100%;
-            max-width: 680px;
-        }
-
-        @media (max-width: 540px) {
-            .demae-form { padding: 20px 14px; }
-            .add-item-row {
-                grid-template-columns: 1fr 1fr;
-                grid-template-rows: auto auto;
-            }
-            .add-item-row > div:last-child { grid-column: 1 / -1; }
-            .add-btn { width: 100%; }
-            .confirm-modal-inner { padding: 20px 14px; }
-        }
-
-        /* ===== ご案内カードグリッド ===== */
-        .demae-info-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
-            max-width: 860px;
-            margin: 0 auto 24px;
-            padding: 0 5%;
-        }
-        .demae-info-card {
-            background: #fff;
-            border: 1px solid #e0d0b8;
-            border-radius: 10px;
-            padding: 20px 16px;
-            text-align: center;
-        }
-        .demae-info-icon {
-            margin-bottom: 8px;
-        }
-        .demae-info-icon img {
-            width: 2.8rem;
-            height: 2.8rem;
-        }
-        .demae-info-label {
-            font-size: 0.75rem;
-            color: #8b6914;
-            font-weight: 700;
-            letter-spacing: 0.05em;
-            margin-bottom: 6px;
-        }
-        .demae-info-value {
-            font-size: 0.9rem;
-            color: #333;
-            line-height: 1.6;
-        }
-        .demae-info-note {
-            max-width: 860px;
-            margin: 0 auto 8px;
-            padding: 14px 20px;
-            background: #fdf6eb;
-            border-left: 4px solid #c8a882;
-            border-radius: 0 6px 6px 0;
-            font-size: 0.88rem;
-            color: #555;
-            line-height: 1.8;
-        }
-        .demae-info-note a {
-            color: #8b6914;
-            font-weight: 600;
-        }
-        @media (max-width: 540px) {
-            .demae-info-grid { grid-template-columns: 1fr 1fr; }
-        }
-    </style>
+    <link rel="stylesheet" href="demae.css">
 </head>
 <body>
     <!-- ヘッダー -->
@@ -437,36 +74,24 @@
             </div>
 
             <!-- フォームを開くボタン -->
-            <div style="text-align:center; margin: 32px 0 8px;">
-                <button type="button" id="open-form-btn" onclick="openDemaeForm()" style="
-                    display: inline-block;
-                    padding: 14px 40px;
-                    background: #c8a882;
-                    color: #111;
-                    border: none;
-                    border-radius: 6px;
-                    font-size: 1rem;
-                    font-weight: 700;
-                    letter-spacing: 0.08em;
-                    cursor: pointer;
-                    transition: opacity 0.2s;
-                ">フォームで注文する</button>
+            <div class="demae-open-wrap">
+                <button type="button" id="open-form-btn" class="demae-open-btn">フォームで注文する</button>
             </div>
 
             <!-- 注文フォームタイトル -->
-            <div class="reserve-intro" id="form-section" style="display:none;">
+            <div class="reserve-intro" id="form-section">
                 <h2>注文フォーム</h2>
                 <p>受付はお届け予定日の前日20:00までです。</p>
             </div>
 
-            <div class="form-container" id="form-container" style="margin-bottom: 80px; display:none;">
-                <form class="demae-form" id="demae-form" onsubmit="handleSubmit(event)">
+            <div class="form-container" id="form-container">
+                <form class="demae-form" id="demae-form">
 
                     <!-- エラー通知 -->
-                    <div class="hours-notice" id="form-notice" style="display:none;"></div>
+                    <div class="hours-notice" id="form-notice"></div>
 
                     <!-- お客様情報 -->
-                    <div class="section-title" style="margin-top:0;">お客様情報</div>
+                    <div class="section-title section-title--first">お客様情報</div>
 
                     <div class="form-group">
                         <label>お名前<span class="required">*</span></label>
@@ -478,7 +103,7 @@
                     </div>
                     <div class="form-group">
                         <label>お届け先住所<span class="required">*</span>
-                            <span style="font-size:0.8rem;color:#888;font-weight:400;">（店舗から半径2.5km圏内）</span>
+                            <span class="demae-addr-hint">（店舗から半径2.5km圏内）</span>
                         </label>
                         <input type="text" id="f-address" required placeholder="札幌市豊平区〇〇1-2-3">
                     </div>
@@ -488,22 +113,22 @@
                     </div>
 
                     <!-- 注文内容 -->
-                    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+                    <div class="section-title section-title--row">
                         <span>ご注文内容</span>
-                        <span style="font-size:0.78rem;font-weight:400;color:#888;">※ すべて税込み価格</span>
+                        <span class="demae-price-hint">※ すべて税込み価格</span>
                     </div>
 
                     <!-- カテゴリ・品目プルダウン -->
                     <div class="add-item-row">
                         <div>
                             <label>カテゴリ</label>
-                            <select id="sel-category" onchange="onCategoryChange()">
+                            <select id="sel-category">
                                 <option value="">カテゴリを選択</option>
                             </select>
                         </div>
                         <div>
                             <label>品目</label>
-                            <select id="sel-item" onchange="onItemChange()">
+                            <select id="sel-item">
                                 <option value="">品目を選択</option>
                             </select>
                         </div>
@@ -522,8 +147,8 @@
                                 <option value="10">10</option>
                             </select>
                         </div>
-                        <div style="display:flex;align-items:flex-end;">
-                            <button type="button" class="add-btn" onclick="addToCart()">追加</button>
+                        <div class="add-item-col-end">
+                            <button type="button" class="add-btn">追加</button>
                         </div>
                     </div>
 
@@ -539,7 +164,7 @@
                     </div>
 
                     <!-- 備考 -->
-                    <div class="form-group" style="margin-top: 24px;">
+                    <div class="form-group form-group--mt">
                         <label>備考（任意）</label>
                         <textarea id="f-notes" rows="3" placeholder="アレルギー・配達時間のご希望など"></textarea>
                     </div>
@@ -575,8 +200,8 @@
                 ※ 価格はすべて出前価格・税込8%です。
             </div>
             <div class="confirm-modal-btns">
-                <button class="btn-back"    onclick="closeConfirmModal()">修正する</button>
-                <button class="btn-confirm" id="btn-confirm-submit" onclick="confirmAndSubmit()">この内容で注文する</button>
+                <button class="btn-back">修正する</button>
+                <button class="btn-confirm" id="btn-confirm-submit">この内容で注文する</button>
             </div>
         </div>
     </div>
@@ -584,452 +209,11 @@
     <!-- フッター -->
     <footer>
         <div class="footer-bottom">
-            <p><a href="privacy.html" style="color:#888; text-decoration:none;">プライバシーポリシー</a></p>
+            <p><a href="privacy.html" class="footer-privacy">プライバシーポリシー</a></p>
             <p>© 2026 鮨処ひし田. All rights reserved.</p>
         </div>
     </footer>
 
-    <script>
-        const GAS_URL      = "https://script.google.com/macros/s/AKfycbzZdvg1RYMFYOcq2EonTxLZdzEJ7SrVbrpuiJ_7zXOHZI50pqhpUPI1PG7LxN7Fejb6Ng/exec";
-        const DELIVERY_FEE = 550;
-
-        // ===== 店舗座標（豊平区福住1条2丁目8-21）=====
-        const SHOP_LAT   = 43.0342;
-        const SHOP_LNG   = 141.3820;
-        const MAX_DIST   = 2.5; // km
-
-        // ===== メニューマスタ =====
-        const MENU = [
-            {
-                category: "お好み（寿司一貫）",
-                items: [
-                    { name: "大トロ",     price: 870 },
-                    { name: "雲丹",       price: 870 },
-                    { name: "大牡蠣海老", price: 870 },
-                    { name: "中トロ",     price: 650 },
-                    { name: "穴子",       price: 650 },
-                    { name: "小肌",       price: 540 },
-                    { name: "平目",       price: 540 },
-                    { name: "〆サバ",     price: 540 },
-                    { name: "活ツブ",     price: 540 },
-                    { name: "いくら",     price: 440 },
-                    { name: "ずわいがに", price: 440 },
-                    { name: "活ホタテ",   price: 440 },
-                    { name: "鮪赤身",     price: 440 },
-                    { name: "活ホッキ",   price: 440 },
-                    { name: "中牡丹海老", price: 440 },
-                    { name: "大タマゴ",   price: 330 },
-                    { name: "サーモン",   price: 330 },
-                    { name: "甘エビ",     price: 330 },
-                    { name: "いか",       price: 330 },
-                    { name: "たこ",       price: 220 },
-                    { name: "とびっこ",   price: 220 },
-                ]
-            },
-            {
-                category: "握り（1人前）",
-                items: [
-                    { name: "月握り",       price: 2650 },
-                    { name: "花握り",       price: 3140 },
-                    { name: "紫陽花握り",   price: 3140 },
-                    { name: "上握り",       price: 3730 },
-                    { name: "特上握り",     price: 4130 },
-                    { name: "極上握り",     price: 4420 },
-                    { name: "おまかせ握り", price: 4910 },
-                ]
-            },
-            {
-                category: "ちらし",
-                items: [
-                    { name: "月ちらし",   price: 2650 },
-                    { name: "花ちらし",   price: 3140 },
-                    { name: "上ちらし",   price: 3730 },
-                    { name: "特上ちらし", price: 4130 },
-                    { name: "極上ちらし", price: 4420 },
-                ]
-            },
-            {
-                category: "お造り",
-                items: [
-                    { name: "刺身八点盛り", price: 2700 },
-                ]
-            },
-            {
-                category: "２人前",
-                items: [
-                    { name: "木蓮（もくれん）", price: 3540 },
-                    { name: "銀杏（いちょう）", price: 4720 }
-                ]
-            },{
-                category: "３人前",
-                items: [
-                    { name: "蘭（らん）",   price: 19150 }
-                ]
-            },{
-                category: "５人前",
-                items: [
-                    { name: "牡丹（ぼたん）", price: 16990 },
-                    { name: "椿（つばき）",   price: 19450 },
-                ]
-            },
-            {
-                category: "巻物",
-                items: [
-                    { name: "海鮮太巻き",     price: 2490 },
-                    { name: "鉄火巻き",       price: 870  },
-                    { name: "がり鯖巻き",     price: 540  },
-                    { name: "トロ鉄火巻き",   price: 1180 },
-                    { name: "トロタク巻き",   price: 1180 },
-                    { name: "ネギトロ巻き",   price: 1180 },
-                    { name: "納豆巻き",       price: 400  },
-                    { name: "新香巻き",       price: 400  },
-                    { name: "ごぼう巻き",     price: 400  },
-                    { name: "たまご巻き",     price: 400  },
-                    { name: "かっぱ巻き",     price: 400  },
-                    { name: "梅しそ巻き",     price: 400  },
-                    { name: "かんぴょう巻き", price: 400  },
-                ]
-            },
-            {
-                category: "お料理",
-                items: [
-                    { name: "海鮮茶わん蒸し（※時間がかかります）", price: 970 },
-                    { name: "牛すじ煮込み", price: 970 },
-                    { name: "たまご焼き",   price: 890 },
-                ]
-            },
-            {
-                category: "揚げ物",
-                items: [
-                    { name: "北海道ザンギ",                     price: 1180 },
-                    { name: "ぶりぶりタコザンギ",               price: 980  },
-                    { name: "天ぷら盛り合わせ（海老1本）",      price: 1620 },
-                    { name: "上天ぷら盛り合わせ（海老2本）",    price: 1950 },
-                    { name: "海老天ぷら盛り合わせ（海老4本）",  price: 2160 },
-                ]
-            },
-        ];
-
-        // ===== 距離計算（ハーバーサイン公式）=====
-        function haversineKm(lat1, lon1, lat2, lon2) {
-            const R = 6371;
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = Math.sin(dLat/2)**2
-                    + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2)**2;
-            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        }
-
-        // ===== 住所 → 座標取得（Nominatim）→ 距離チェック =====
-        async function checkAddressInRange(address) {
-            const query = encodeURIComponent(address);
-            const url   = `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1&countrycodes=jp&accept-language=ja`;
-            const res   = await fetch(url);
-            const data  = await res.json();
-            if (!data.length) return { ok: false, msg: '住所を特定できませんでした。番地まで正確にご入力ください。' };
-            const dist = haversineKm(SHOP_LAT, SHOP_LNG, parseFloat(data[0].lat), parseFloat(data[0].lon));
-            if (dist > MAX_DIST) {
-                return { ok: false, msg: `配達エリア外です（店舗から約${dist.toFixed(1)}km）。配達は店舗から2.5km圏内のみ承っております。` };
-            }
-            return { ok: true };
-        }
-
-        // ===== 日付バリデーション =====
-        // お届け予定日の1ヶ月前〜前日20:00まで受付
-        function validateDate(dateStr) {
-            const now    = new Date();
-            const nowJst = new Date(now.getTime() + (now.getTimezoneOffset() + 540) * 60000);
-            const toStr  = d => d.toISOString().split('T')[0];
-            const h = nowJst.getHours();
-
-            // 翌日（20時以降なら明後日が最短）
-            const minD = new Date(nowJst);
-            minD.setDate(nowJst.getDate() + (h >= 20 ? 2 : 1));
-            const minStr = toStr(minD);
-
-            // 最大：1ヶ月後
-            const maxD = new Date(nowJst);
-            maxD.setMonth(nowJst.getMonth() + 1);
-            const maxStr = toStr(maxD);
-
-            if (dateStr < minStr) {
-                if (h >= 20) return '20:00を過ぎたため、明後日以降の日付を選択してください。';
-                return '翌日以降の日付を選択してください（前日20:00までに要注文）。';
-            }
-            if (dateStr > maxStr) return '1ヶ月先までの日付を選択してください。';
-            return null;
-        }
-
-        // ===== 日付inputのmin/max設定 =====
-        (function initDateInput() {
-            const now    = new Date();
-            const nowJst = new Date(now.getTime() + (now.getTimezoneOffset() + 540) * 60000);
-            const toStr  = d => d.toISOString().split('T')[0];
-            const h = nowJst.getHours();
-
-            // min: 翌日（20時以降なら明後日）
-            const minD = new Date(nowJst);
-            minD.setDate(nowJst.getDate() + (h >= 20 ? 2 : 1));
-
-            // max: 1ヶ月後
-            const maxD = new Date(nowJst);
-            maxD.setMonth(nowJst.getMonth() + 1);
-
-            const input = document.getElementById('f-date');
-            input.min   = toStr(minD);
-            input.max   = toStr(maxD);
-            input.value = toStr(minD);
-        })();
-
-        // ===== カート =====
-        let cart = []; // [{ name, price, qty }]
-
-        // ===== 初期化：カテゴリプルダウンを生成 =====
-        (function initCategorySelect() {
-            const sel = document.getElementById('sel-category');
-            MENU.forEach((cat, i) => {
-                const opt = document.createElement('option');
-                opt.value = i;
-                opt.textContent = cat.category;
-                sel.appendChild(opt);
-            });
-        })();
-
-        // ===== カテゴリ変更 → 品目プルダウンを更新 =====
-        function onCategoryChange() {
-            const catIdx = document.getElementById('sel-category').value;
-            const itemSel = document.getElementById('sel-item');
-            itemSel.innerHTML = '<option value="">品目を選択</option>';
-            if (catIdx === '') return;
-            MENU[parseInt(catIdx)].items.forEach((item, i) => {
-                const opt = document.createElement('option');
-                opt.value = i;
-                opt.textContent = `${item.name}　${item.price.toLocaleString()}円`;
-                itemSel.appendChild(opt);
-            });
-        }
-
-        // ===== 品目選択時：個数を1にリセット =====
-        function onItemChange() {
-            document.getElementById('inp-qty').value = 1;
-        }
-
-        // ===== カートに追加 =====
-        function addToCart() {
-            const catIdx  = document.getElementById('sel-category').value;
-            const itemIdx = document.getElementById('sel-item').value;
-            const qty     = parseInt(document.getElementById('inp-qty').value) || 1;
-
-            if (catIdx === '' || itemIdx === '') {
-                alert('カテゴリと品目を選択してください。');
-                return;
-            }
-
-            const item = MENU[parseInt(catIdx)].items[parseInt(itemIdx)];
-
-            // 同じ品目があれば個数を加算
-            const existing = cart.find(c => c.name === item.name);
-            if (existing) {
-                existing.qty += qty;
-            } else {
-                cart.push({ name: item.name, price: item.price, qty: qty });
-            }
-
-            renderCart();
-
-            // 品目・個数をリセット
-            document.getElementById('sel-item').value = '';
-            document.getElementById('inp-qty').value  = 1;
-        }
-
-        // ===== カートから削除 =====
-        function removeFromCart(idx) {
-            cart.splice(idx, 1);
-            renderCart();
-        }
-
-        // ===== カート表示更新 =====
-        function renderCart() {
-            const listEl = document.getElementById('order-list');
-            const emptyEl = document.getElementById('order-list-empty');
-
-            // 既存アイテム行を削除
-            listEl.querySelectorAll('.order-list-item').forEach(el => el.remove());
-
-            if (cart.length === 0) {
-                if (emptyEl) emptyEl.style.display = 'block';
-                document.getElementById('subtotal-display').textContent = '0円';
-                return;
-            }
-            if (emptyEl) emptyEl.style.display = 'none';
-
-            let subtotal = 0;
-            cart.forEach((c, i) => {
-                const lineTotal = c.price * c.qty;
-                subtotal += lineTotal;
-                const row = document.createElement('div');
-                row.className = 'order-list-item';
-                row.innerHTML = `
-                    <span class="order-item-name">${c.name}</span>
-                    <span class="order-item-qty">× ${c.qty}</span>
-                    <span class="order-item-price">${lineTotal.toLocaleString()}円</span>
-                    <span class="order-item-del" onclick="removeFromCart(${i})" title="削除">✕</span>
-                `;
-                listEl.appendChild(row);
-            });
-
-            document.getElementById('subtotal-display').textContent = subtotal.toLocaleString() + '円';
-        }
-
-        // ===== フォーム通知表示 =====
-        function showNotice(msg) {
-            const el = document.getElementById('form-notice');
-            el.textContent = msg;
-            el.style.display = 'block';
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-        function hideNotice() {
-            document.getElementById('form-notice').style.display = 'none';
-        }
-
-        // ===== フォーム送信（確認画面へ）=====
-        async function handleSubmit(event) {
-            event.preventDefault();
-            hideNotice();
-
-            // 日付バリデーション
-            const dateStr = document.getElementById('f-date').value;
-            const dateErr = validateDate(dateStr);
-            if (dateErr) { showNotice(dateErr); return; }
-
-            if (cart.length === 0) {
-                showNotice('1品以上ご選択ください。');
-                return;
-            }
-
-            // 住所の距離チェック
-            const submitBtn = document.getElementById('form-submit-btn');
-            submitBtn.disabled    = true;
-            submitBtn.textContent = '住所を確認中...';
-
-            const address = document.getElementById('f-address').value.trim();
-            try {
-                const check = await checkAddressInRange(address);
-                if (!check.ok) {
-                    showNotice(check.msg);
-                    return;
-                }
-            } catch(e) {
-                // ネットワークエラー等 → ジオコーディング失敗でも続行（店舗が確認）
-                console.warn('ジオコーディングエラー:', e);
-            } finally {
-                submitBtn.disabled    = false;
-                submitBtn.textContent = '注文内容を確認する';
-            }
-
-            // 確認モーダルへ
-            const subtotal = cart.reduce((sum, c) => sum + c.price * c.qty, 0);
-            const total    = subtotal + DELIVERY_FEE;
-
-            const [y, mo, d] = dateStr.split('-');
-            const dateLabel = `${parseInt(y)}年${parseInt(mo)}月${parseInt(d)}日`;
-
-            document.getElementById('c-name').textContent    = document.getElementById('f-name').value.trim();
-            document.getElementById('c-tel').textContent     = document.getElementById('f-tel').value.trim();
-            document.getElementById('c-address').textContent = address;
-            document.getElementById('c-date').textContent    = dateLabel;
-            document.getElementById('c-subtotal').textContent = subtotal.toLocaleString() + '円';
-            document.getElementById('c-total').textContent    = total.toLocaleString() + '円';
-
-            document.getElementById('c-items').innerHTML = cart.map(c =>
-                `<div class="confirm-item-line">
-                    <span>${c.name} × ${c.qty}</span>
-                    <span>${(c.price * c.qty).toLocaleString()}円</span>
-                </div>`
-            ).join('');
-
-            document.getElementById('confirm-modal').classList.add('show');
-        }
-
-        function closeConfirmModal() {
-            document.getElementById('confirm-modal').classList.remove('show');
-        }
-
-        // ===== 確定送信 =====
-        async function confirmAndSubmit() {
-            const btn = document.getElementById('btn-confirm-submit');
-            btn.disabled    = true;
-            btn.textContent = '送信中...';
-
-            const subtotal = cart.reduce((sum, c) => sum + c.price * c.qty, 0);
-            const total    = subtotal + DELIVERY_FEE;
-            const items    = cart.map(c => ({ name: c.name, price: c.price, qty: c.qty, subtotal: c.price * c.qty }));
-
-            const payload = {
-                type:         "demae",
-                name:         document.getElementById('f-name').value.trim(),
-                tel:          document.getElementById('f-tel').value.trim(),
-                address:      document.getElementById('f-address').value.trim(),
-                deliveryDate: document.getElementById('f-date').value,
-                items:        JSON.stringify(items),
-                subtotal:     subtotal,
-                total:        total,
-                notes:        document.getElementById('f-notes').value.trim()
-            };
-
-            try {
-                const res  = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
-                const data = await res.json();
-
-                if (data.success) {
-                    closeConfirmModal();
-                    document.getElementById('demae-form').style.display = 'none';
-                    const result = document.getElementById('form-result');
-                    result.className     = 'success';
-                    result.style.display = 'block';
-                    result.innerHTML = `
-                        <strong>ご注文ありがとうございます！</strong><br>
-                        注文番号：<strong>${data.orderNum}</strong><br>
-                        30分以内に店舗より確認のお電話をいたします。<br>
-                        連絡がない場合は <a href="tel:0118270537">011-827-0537</a> までお電話ください。
-                    `;
-                    result.scrollIntoView({ behavior: 'smooth' });
-                } else {
-                    throw new Error(data.error || '送信に失敗しました');
-                }
-            } catch(err) {
-                closeConfirmModal();
-                const result = document.getElementById('form-result');
-                result.className     = 'error';
-                result.style.display = 'block';
-                result.textContent   = 'エラーが発生しました。お手数ですがお電話にてご注文ください。（011-827-0537）';
-            } finally {
-                btn.disabled    = false;
-                btn.textContent = 'この内容で注文する';
-            }
-        }
-
-        // ===== フォームを開く =====
-        function openDemaeForm() {
-            document.getElementById('form-section').style.display = '';
-            document.getElementById('form-container').style.display = '';
-            document.getElementById('open-form-btn').style.display = 'none';
-            document.getElementById('form-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-
-        // ===== ハンバーガーメニュー =====
-        const _hamburger = document.getElementById('hamburger');
-        const _navLinks  = document.querySelector('.nav-links');
-        _hamburger.addEventListener('click', function() {
-            _hamburger.classList.toggle('open');
-            _navLinks.classList.toggle('open');
-        });
-        _navLinks.querySelectorAll('a').forEach(function(a) {
-            a.addEventListener('click', function() {
-                _hamburger.classList.remove('open');
-                _navLinks.classList.remove('open');
-            });
-        });
-    </script>
+    <script src="demae.js"></script>
 </body>
 </html>

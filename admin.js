@@ -184,7 +184,7 @@ function loadData() {
 
     if (btn) btn.disabled = true;
 
-    const isReservations = document.getElementById("tab-reservations").style.display !== "none";
+    const isReservations = getComputedStyle(document.getElementById("tab-reservations")).display !== "none";
     if (isReservations) {
         loadReservations();
         if (btn) btn.disabled = false;
@@ -1031,7 +1031,7 @@ async function pollDeliveryOrders() {
             showDeliveryBanner();
             startTitleBlink();
             // 予約一覧タブが表示中なら即リロード
-            if (document.getElementById("tab-reservations").style.display !== "none") {
+            if (getComputedStyle(document.getElementById("tab-reservations")).display !== "none") {
                 loadReservations();
             }
         }
@@ -1054,3 +1054,21 @@ if ('serviceWorker' in navigator) {
         .then(reg => console.log('SW registered:', reg.scope))
         .catch(err => console.warn('SW registration failed:', err));
 }
+
+// ============================================================
+// イベントリスナー（インラインハンドラの代替）
+// ============================================================
+document.getElementById("tab-btn-calendar")?.addEventListener("click", () => switchTab("calendar"));
+document.getElementById("tab-btn-reservations")?.addEventListener("click", () => switchTab("reservations"));
+document.getElementById("admin-refresh-btn")?.addEventListener("click", loadData);
+document.getElementById("toggle-kaiten-track")?.addEventListener("click", toggleKaitenOnly);
+document.getElementById("toggle-demae-only-track")?.addEventListener("click", toggleDemaeOnlyFilter);
+document.getElementById("toggle-today-track")?.addEventListener("click", toggleTodayOnly);
+document.getElementById("demae-banner")?.addEventListener("click", dismissDeliveryBanner);
+document.getElementById("demae-alert-confirm-btn")?.addEventListener("click", dismissFullscreenAlertAndSwitch);
+document.getElementById("demae-fullscreen-alert")?.addEventListener("click", dismissFullscreenAlert);
+document.querySelector(".demae-alert-box")?.addEventListener("click", e => e.stopPropagation());
+document.getElementById("modal-btn-circle")?.addEventListener("click", () => update("○"));
+document.getElementById("modal-btn-triangle")?.addEventListener("click", () => update("△"));
+document.getElementById("modal-btn-cross")?.addEventListener("click", () => update("×"));
+document.getElementById("modal-btn-cancel")?.addEventListener("click", closeModal);

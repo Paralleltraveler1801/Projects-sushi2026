@@ -38,16 +38,16 @@
 
     <!-- タブナビ -->
     <div class="menu-tabs">
-      <button class="menu-tab active" onclick="switchMenuTab('nigiri')">握り寿司</button>
-      <button class="menu-tab" onclick="switchMenuTab('moriawase')">盛り合わせ・丼</button>
-      <button class="menu-tab" onclick="switchMenuTab('sashimi')">お刺身</button>
-      <button class="menu-tab" onclick="switchMenuTab('banquet')">宴会料理</button>
-      <button class="menu-tab" onclick="switchMenuTab('ippin')">逸品料理</button>
-      <button class="menu-tab" onclick="switchMenuTab('drink')">お飲み物</button>
+      <button class="menu-tab active" data-tab="nigiri">握り寿司</button>
+      <button class="menu-tab" data-tab="moriawase">盛り合わせ・丼</button>
+      <button class="menu-tab" data-tab="sashimi">お刺身</button>
+      <button class="menu-tab" data-tab="banquet">宴会料理</button>
+      <button class="menu-tab" data-tab="ippin">逸品料理</button>
+      <button class="menu-tab" data-tab="drink">お飲み物</button>
     </div>
 
     <!-- 握り寿司 -->
-    <section id="tab-nigiri" class="menu-section">
+    <section id="tab-nigiri" class="menu-section active">
     <h2 class="section-heading">握り寿司</h2>
 
     <div class="menu-split">
@@ -59,7 +59,7 @@
           <div class="menu-carousel-track">
 
             <div class="menu-carousel-slide"
-                onclick="openImgModal('images/nigiri/omakase.png','おまかせ握り')">
+                data-img="images/nigiri/omakase.png" data-caption="おまかせ握り">
               <img src="images/nigiri/omakase.png" alt="おまかせ握り">
               <div class="menu-carousel-caption">
                 <div class="menu-carousel-name">おまかせ握り</div>
@@ -69,7 +69,7 @@
             </div>
 
             <div class="menu-carousel-slide"
-                onclick="openImgModal('images/nigiri/gokujo.png','極上握り')">
+                data-img="images/nigiri/gokujo.png" data-caption="極上握り">
               <img src="images/nigiri/gokujo.png" alt="極上握り">
               <div class="menu-carousel-caption">
                 <div class="menu-carousel-name">極上握り</div>
@@ -79,7 +79,7 @@
             </div>
 
             <div class="menu-carousel-slide"
-                onclick="openImgModal('images/nigiri/tokujo.png','特上握り')">
+                data-img="images/nigiri/tokujo.png" data-caption="特上握り">
               <img src="images/nigiri/tokujo.png" alt="特上握り">
               <div class="menu-carousel-caption">
                 <div class="menu-carousel-name">特上握り</div>
@@ -88,7 +88,7 @@
             </div>
 
             <div class="menu-carousel-slide"
-                onclick="openImgModal('images/nigiri/jo.png','上握り')">
+                data-img="images/nigiri/jo.png" data-caption="上握り">
               <img src="images/nigiri/jo.png" alt="上握り">
               <div class="menu-carousel-caption">
                 <div class="menu-carousel-name">上握り</div>
@@ -114,7 +114,7 @@
       </div>
     </div>
 
-    <div class="menu-category-label" style="margin-top:40px;">単品握り <small>※1個のお値段・入荷のない場合はご容赦願います</small></div>
+    <div class="menu-category-label menu-category-label--spaced">単品握り <small>※1個のお値段・入荷のない場合はご容赦願います</small></div>
     <div class="menu-2col">
       <div class="menu-2col-block">
         <div class="menu-row"><span class="menu-row-name">大トロ</span><span class="menu-row-price">880円</span></div>
@@ -147,9 +147,9 @@
 
 
     <!-- 盛り合わせ・丼 -->
-    <section id="tab-moriawase" class="menu-section" style="display:none;">
+    <section id="tab-moriawase" class="menu-section">
     <h2 class="section-heading">お寿司盛り合わせ・ちらし寿司・丼ぶり物</h2>
-    <p style="color:#666; font-size:0.88rem; margin-bottom:24px;">寿司盛り合わせは、2人前より各種ご用意。宴会や会合など、大人数でのお集まりにも最適です。</p>
+    <p class="menu-moriawase-note">寿司盛り合わせは、2人前より各種ご用意。宴会や会合など、大人数でのお集まりにも最適です。</p>
 
     <div class="menu-split">
       <div class="menu-carousel">
@@ -158,7 +158,7 @@
     <button class="menu-carousel-btn next">&#8594;</button>
     <div class="menu-carousel-track">
 
-      <div class="menu-carousel-slide" onclick="openImgModal('images/moriawase/mori-ran.png','蘭（らん）')">
+      <div class="menu-carousel-slide" data-img="images/moriawase/mori-ran.png" data-caption="蘭（らん）">
         <img src="images/moriawase/mori-ran.png" alt="蘭">
         <div class="menu-carousel-caption">
           <div class="menu-carousel-name">蘭（らん）</div>
@@ -167,7 +167,7 @@
         </div>
       </div>
 
-      <div class="menu-carousel-slide" onclick="openImgModal('images/moriawase/mori-ichyo.png','銀杏（いちょう）')">
+      <div class="menu-carousel-slide" data-img="images/moriawase/mori-ichyo.png" data-caption="銀杏（いちょう）">
         <img src="images/moriawase/mori-ichyo.png" alt="銀杏">
         <div class="menu-carousel-caption">
           <div class="menu-carousel-name">銀杏（いちょう）</div>
@@ -176,7 +176,7 @@
         </div>
       </div>
 
-      <div class="menu-carousel-slide" onclick="openImgModal('images/moriawase/chirashi-gokujo.png','極上ちらし')">
+      <div class="menu-carousel-slide" data-img="images/moriawase/chirashi-gokujo.png" data-caption="極上ちらし">
         <img src="images/moriawase/chirashi-gokujo.png" alt="極上ちらし">
         <div class="menu-carousel-caption">
           <div class="menu-carousel-name">極上ちらし</div>
@@ -204,7 +204,7 @@
       </div>
     </div>
 
-    <div class="menu-2col" style="margin-top:40px;">
+    <div class="menu-2col menu-2col--spaced">
       <div class="menu-2col-block">
         <div class="menu-category-label">ちらし寿司</div>
         <div class="menu-row"><span class="menu-row-name">極上ちらし</span><span class="menu-row-price">4,500円</span></div>
@@ -224,7 +224,7 @@
 
 
     <!-- お刺身 -->
-    <section id="tab-sashimi" class="menu-section" style="display:none;">
+    <section id="tab-sashimi" class="menu-section">
     <h2 class="section-heading">お刺身</h2>
 
     <div class="menu-split">
@@ -234,7 +234,7 @@
         <button class="menu-carousel-btn next">&#8594;</button>
         <div class="menu-carousel-track">
 
-          <div class="menu-carousel-slide" onclick="openImgModal('images/osashimi/sashimi-mori1.png','刺身盛り合わせ')">
+          <div class="menu-carousel-slide" data-img="images/osashimi/sashimi-mori1.png" data-caption="刺身盛り合わせ">
             <img src="images/osashimi/sashimi-mori1.png" alt="刺身盛り合わせ">
             <div class="menu-carousel-caption">
               <div class="menu-carousel-name">刺身盛り合わせ 8点盛</div>
@@ -243,7 +243,7 @@
             </div>
           </div>
 
-          <div class="menu-carousel-slide" onclick="openImgModal('images/osashimi/sashimi-mori2.png','刺身盛り合わせ')">
+          <div class="menu-carousel-slide" data-img="images/osashimi/sashimi-mori2.png" data-caption="刺身盛り合わせ">
             <img src="images/osashimi/sashimi-mori2.png" alt="刺身盛り合わせ">
             <div class="menu-carousel-caption">
               <div class="menu-carousel-name">刺身盛り合わせ 5点盛</div>
@@ -278,7 +278,7 @@
 
 
     <!-- 宴会料理 -->
-    <section id="tab-banquet" class="menu-section" style="display:none;">
+    <section id="tab-banquet" class="menu-section">
     <h2 class="section-heading">宴会料理</h2>
 
     <div class="menu-split">
@@ -289,7 +289,7 @@
           <div class="menu-carousel-track">
 
             <div class="menu-carousel-slide"
-                onclick="openImgModal('images/banquet/banquet-6000.jpg','宴会料理 6,000円コース')">
+                data-img="images/banquet/banquet-6000.jpg" data-caption="宴会料理 6,000円コース">
               <img src="images/banquet/banquet-6000.jpg" alt="宴会料理">
               <div class="menu-carousel-caption">
                 <div class="menu-carousel-name">宴会コース</div>
@@ -321,7 +321,7 @@
           <span class="menu-row-price">8,000円</span>
         </div>
 
-        <p style="font-size:0.82rem; color:#c8a882; margin-top:1.2rem; line-height:1.8;">
+        <p class="menu-course-note">
           ※コース料理は季節により、内容が若干変更になる場合がございます。
         </p>
 
@@ -333,7 +333,7 @@
 
 
     <!-- 逸品料理 -->
-    <section id="tab-ippin" class="menu-section" style="display:none;">
+    <section id="tab-ippin" class="menu-section">
     <h2 class="section-heading">逸品料理</h2>
 
     <div class="menu-split">
@@ -343,7 +343,7 @@
         <button class="menu-carousel-btn next">&#8594;</button>
         <div class="menu-carousel-track">
 
-          <div class="menu-carousel-slide" onclick="openImgModal('images/ippinmono/tempura-mori.png','天婦羅盛り合わせ')">
+          <div class="menu-carousel-slide" data-img="images/ippinmono/tempura-mori.png" data-caption="天婦羅盛り合わせ">
             <img src="images/ippinmono/tempura-mori.png" alt="天婦羅盛り合わせ">
             <div class="menu-carousel-caption">
               <div class="menu-carousel-name">天婦羅盛り合わせ</div>
@@ -352,7 +352,7 @@
             </div>
           </div>
 
-          <div class="menu-carousel-slide" onclick="openImgModal('images/ippinmono/kaisen-chawanmushi.png','海鮮茶碗蒸し')">
+          <div class="menu-carousel-slide" data-img="images/ippinmono/kaisen-chawanmushi.png" data-caption="海鮮茶碗蒸し">
             <img src="images/ippinmono/kaisen-chawanmushi.png" alt="海鮮茶碗蒸し">
             <div class="menu-carousel-caption">
               <div class="menu-carousel-name">海鮮茶碗蒸し</div>
@@ -360,7 +360,7 @@
             </div>
           </div>
 
-          <div class="menu-carousel-slide" onclick="openImgModal('images/ippinmono/tachi-konbu.png','たちの昆布焼き')">
+          <div class="menu-carousel-slide" data-img="images/ippinmono/tachi-konbu.png" data-caption="たちの昆布焼き">
             <img src="images/ippinmono/tachi-konbu.png" alt="たちの昆布焼き">
             <div class="menu-carousel-caption">
               <div class="menu-carousel-name">たちの昆布焼き</div>
@@ -368,7 +368,7 @@
             </div>
           </div>
 
-          <div class="menu-carousel-slide" onclick="openImgModal('images/ippinmono/kaisen-salad.png','海鮮サラダ')">
+          <div class="menu-carousel-slide" data-img="images/ippinmono/kaisen-salad.png" data-caption="海鮮サラダ">
             <img src="images/ippinmono/kaisen-salad.png" alt="海鮮サラダ">
             <div class="menu-carousel-caption">
               <div class="menu-carousel-name">海鮮サラダ</div>
@@ -376,7 +376,7 @@
             </div>
           </div>
 
-          <div class="menu-carousel-slide" onclick="openImgModal('images/ippinmono/tofu-salad.png','豆腐サラダ')">
+          <div class="menu-carousel-slide" data-img="images/ippinmono/tofu-salad.png" data-caption="豆腐サラダ">
             <img src="images/ippinmono/tofu-salad.png" alt="豆腐サラダ">
             <div class="menu-carousel-caption">
               <div class="menu-carousel-name">豆腐サラダ</div>
@@ -384,7 +384,7 @@
             </div>
           </div>
 
-          <div class="menu-carousel-slide" onclick="openImgModal('images/ippinmono/jikasei-okara.png','自家製しおから')">
+          <div class="menu-carousel-slide" data-img="images/ippinmono/jikasei-okara.png" data-caption="自家製しおから">
             <img src="images/ippinmono/jikasei-okara.png" alt="自家製しおから">
             <div class="menu-carousel-caption">
               <div class="menu-carousel-name">自家製しおから</div>
@@ -455,12 +455,12 @@
 
 
     <!-- お飲み物 -->
-    <section id="tab-drink" class="menu-section" style="display:none;">
+    <section id="tab-drink" class="menu-section">
     <h2 class="section-heading">お飲み物</h2>
 
     <!-- 上段：写真 + ビール・日本酒・地酒・焼酎 -->
     <div class="menu-split">
-      <div class="menu-single-img" onclick="openImgModal('images/drink/drink-main.png','お飲み物')">
+      <div class="menu-single-img" data-img="images/drink/drink-main.png" data-caption="お飲み物">
       <img src="images/drink/drink-main.png" alt="お飲み物">
       <div class="menu-carousel-caption">
         <div class="menu-carousel-name">豊富なドリンク</div>
@@ -547,12 +547,12 @@
   </main>
 
   <!-- 画像モーダル -->
-  <div id="img-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9998;" onclick="closeImgModal()"></div>
-  <div id="img-modal" style="display:none; position:fixed; inset:0; z-index:9999; display:none; justify-content:center; align-items:center; pointer-events:none;">
-    <div style="pointer-events:all; text-align:center; max-width:90vw; max-height:90vh;">
-      <img id="img-modal-img" src="" alt="" style="max-width:90vw; max-height:75vh; border-radius:10px; object-fit:contain;">
-      <p id="img-modal-caption" style="color:#c8a882; margin-top:12px; font-size:1.1rem;"></p>
-      <button onclick="closeImgModal()" style="margin-top:12px; background:#333; color:#fff; border:none; padding:8px 24px; border-radius:6px; cursor:pointer; font-size:0.95rem;">閉じる</button>
+  <div id="img-modal-overlay"></div>
+  <div id="img-modal">
+    <div class="img-modal-content">
+      <img id="img-modal-img" src="" alt="">
+      <p id="img-modal-caption"></p>
+      <button id="img-modal-close">閉じる</button>
     </div>
   </div>
 

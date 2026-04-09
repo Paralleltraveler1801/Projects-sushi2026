@@ -279,7 +279,19 @@ async function onDateChange(dateStr) {
     }
 }
 
+// ============================================================
+// イベントリスナー（インラインハンドラの代替）
+// ============================================================
+document.getElementById('form-open-btn')?.addEventListener('click', toggleForm);
+document.getElementById('refresh-btn')?.addEventListener('click', refreshCalendar);
+document.getElementById('reserve-form')?.addEventListener('submit', submitReserveForm);
+document.getElementById('f-date')?.addEventListener('change', function() { onDateChange(this.value); });
+document.getElementById('btn-confirm-back')?.addEventListener('click', closeConfirmModal);
+document.getElementById('btn-confirm-submit')?.addEventListener('click', confirmAndSubmit);
+
+// ============================================================
 // フォーム送信 → 確認モーダルを表示
+// ============================================================
 function submitReserveForm(e) {
     e.preventDefault();
 

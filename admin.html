@@ -13,58 +13,6 @@
   <link rel="apple-touch-icon" href="/images/shop01.jpg">
 </head>
 
-<<!-- 予約編集モーダル -->
-<!-- 背景暗転（スクロールなし） -->
-<div id="edit-overlay" style="
-  display:none;
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:rgba(0,0,0,0.75);
-  z-index:9998;
-"></div>
-
-<!-- モーダル（スクロールはこちら） -->
-<div id="edit-modal" style="
-  display:none;
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  z-index:9999;
-  overflow-y:scroll;
-  -webkit-overflow-scrolling:touch;
-">
-  <div style="
-    background:#1a1a1a;
-    border:1px solid #c8a882;
-    border-radius:12px;
-    padding:24px 20px;
-    width:calc(100% - 40px);
-    max-width:440px;
-    margin:80px auto 60px;
-    box-sizing:border-box;
-    position:relative;
-    z-index:10000;
-  ">
-    <h3 style="color:#c8a882; margin:0 0 16px;">予約内容の編集</h3>
-    <div id="edit-fields"></div>
-    <div style="display:flex; gap:10px; margin-top:20px;">
-      <button id="edit-save-btn" style="flex:1; background:#c8a882; color:#111; border:none; padding:14px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:1rem;">保存</button>
-      <button id="edit-close-btn" style="flex:1; background:#444; color:#fff; border:none; padding:14px; border-radius:6px; cursor:pointer; font-size:1rem;">閉じる</button>
-    </div>
-  </div>
-</div>
-
-
-
-
-
-
-
 <body>
 
     <!-- ローディングオーバーレイ（通信中に表示） -->
@@ -78,176 +26,100 @@
             <div class="logo">鮨処ひし田</div>
             <span class="admin-label"></span>
             <div class="admin-tabs">
-            <button class="tab-btn active" onclick="switchTab('calendar')">予約カレンダー管理</button>
-            <button class="tab-btn" onclick="switchTab('reservations')">予約一覧 <span id="demae-badge" style="display:none;background:#e53935;color:#fff;border-radius:10px;padding:1px 7px;font-size:0.75rem;margin-left:4px;">新着</span></button>
-            <button class="tab-btn" id="admin-refresh-btn" onclick="loadData()">更新</button>
-</div>
+                <button class="tab-btn active" id="tab-btn-calendar">予約カレンダー管理</button>
+                <button class="tab-btn" id="tab-btn-reservations">予約一覧 <span id="demae-badge">新着</span></button>
+                <button class="tab-btn" id="admin-refresh-btn">更新</button>
+            </div>
         </nav>
     </header>
 
     <!-- メインコンテンツ -->
     <main class="admin-container">
 
-        <!-- カレンダー管理（tab-calendarで囲む） -->
+        <!-- カレンダー管理 -->
         <div id="tab-calendar">
 
-        <!-- ぐるぐる -->
-        <div id="calendar-loading" style="display:flex; justify-content:center; padding:40px;">
-            <div class="spinner"></div>
-        </div>
-
-        <!-- ↓ calendar-wrap で囲んで最初は非表示に！ -->
-        <div id="calendar-wrap" style="display:none;">
-            <div id="month-label" class="month-label"></div>
-            <div class="calendar" id="calendar">
-            <div class="day-header">日</div>
-            <div class="day-header">月</div>
-            <div class="day-header">火</div>
-            <div class="day-header">水</div>
-            <div class="day-header">木</div>
-            <div class="day-header">金</div>
-            <div class="day-header">土</div>
+            <!-- ぐるぐる -->
+            <div id="calendar-loading">
+                <div class="spinner"></div>
             </div>
-        </div>
+
+            <div id="calendar-wrap">
+                <div id="month-label" class="month-label"></div>
+                <div class="calendar" id="calendar">
+                    <div class="day-header">日</div>
+                    <div class="day-header">月</div>
+                    <div class="day-header">火</div>
+                    <div class="day-header">水</div>
+                    <div class="day-header">木</div>
+                    <div class="day-header">金</div>
+                    <div class="day-header">土</div>
+                </div>
+            </div>
 
         </div>
 
         <!-- 予約一覧 -->
-        <div id="tab-reservations" style="display:none;">
-            <div style="display:flex; align-items:center; gap:14px; margin-bottom:16px; flex-wrap:wrap;">
-                <h2 style="margin:0;">予約一覧</h2>
+        <div id="tab-reservations">
+            <div class="reservation-list-header">
+                <h2>予約一覧</h2>
                 <!-- 来店予約のみ スイッチ -->
-                <div id="toggle-kaiten-track" onclick="toggleKaitenOnly()" style="display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none;">
-                    <div style="position:relative; width:44px; height:24px;">
-                        <div id="toggle-kaiten-bg" style="width:44px; height:24px; border-radius:12px; background:#555; transition:background 0.2s;"></div>
-                        <div id="toggle-kaiten-thumb" style="position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:transform 0.2s;"></div>
+                <div id="toggle-kaiten-track" class="toggle-track">
+                    <div class="toggle-switch">
+                        <div id="toggle-kaiten-bg" class="toggle-bg"></div>
+                        <div id="toggle-kaiten-thumb" class="toggle-thumb"></div>
                     </div>
-                    <span id="toggle-kaiten-label" style="font-size:0.9rem; color:#aaa;">来店予約のみ</span>
+                    <span id="toggle-kaiten-label" class="toggle-label">来店予約のみ</span>
                 </div>
                 <!-- 出前注文のみ スイッチ -->
-                <div id="toggle-demae-only-track" onclick="toggleDemaeOnlyFilter()" style="display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none;">
-                    <div style="position:relative; width:44px; height:24px;">
-                        <div id="toggle-demae-bg" style="width:44px; height:24px; border-radius:12px; background:#555; transition:background 0.2s;"></div>
-                        <div id="toggle-demae-thumb" style="position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:transform 0.2s;"></div>
+                <div id="toggle-demae-only-track" class="toggle-track">
+                    <div class="toggle-switch">
+                        <div id="toggle-demae-bg" class="toggle-bg"></div>
+                        <div id="toggle-demae-thumb" class="toggle-thumb"></div>
                     </div>
-                    <span id="toggle-demae-label" style="font-size:0.9rem; color:#aaa;">出前注文のみ</span>
+                    <span id="toggle-demae-label" class="toggle-label">出前注文のみ</span>
                 </div>
                 <!-- 今日のみ スイッチ -->
-                <div id="toggle-today-track" onclick="toggleTodayOnly()" style="display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none;">
-                    <div style="position:relative; width:44px; height:24px;">
-                        <div id="toggle-today-bg" style="width:44px; height:24px; border-radius:12px; background:#555; transition:background 0.2s;"></div>
-                        <div id="toggle-today-thumb" style="position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:transform 0.2s;"></div>
+                <div id="toggle-today-track" class="toggle-track">
+                    <div class="toggle-switch">
+                        <div id="toggle-today-bg" class="toggle-bg"></div>
+                        <div id="toggle-today-thumb" class="toggle-thumb"></div>
                     </div>
-                    <span id="toggle-today-label" style="font-size:0.9rem; color:#aaa;">今日のみ</span>
+                    <span id="toggle-today-label" class="toggle-label">今日のみ</span>
                 </div>
             </div>
             <div id="reservation-list">読み込み中...</div>
         </div>
 
-</main>
+    </main>
 
-<!-- 新着出前通知バナー（トップ帯） -->
-<div id="demae-banner" style="
-    display:none;
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    background:#e53935;
-    color:#fff;
-    text-align:center;
-    padding:14px;
-    font-size:1rem;
-    font-weight:700;
-    z-index:20000;
-    cursor:pointer;
-" onclick="dismissDeliveryBanner()">
-    新しい出前注文が入りました ― クリックして確認する
-</div>
-
-<!-- 新着出前 全画面アラート -->
-<style>
-#demae-fullscreen-alert {
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 99999;
-    background: rgba(0,0,0,0.85);
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-}
-#demae-fullscreen-alert.show {
-    display: flex;
-    animation: demae-flash 0.5s infinite alternate;
-}
-@keyframes demae-flash {
-    from { background: rgba(200,168,130,0.92); }
-    to   { background: rgba(0,0,0,0.88); }
-}
-.demae-alert-box {
-    background: #fff;
-    border-radius: 16px;
-    padding: 48px 40px 36px;
-    text-align: center;
-    max-width: 380px;
-    width: 90%;
-    box-shadow: 0 0 60px rgba(200,168,130,0.8);
-    animation: demae-pulse 0.6s infinite alternate;
-}
-@keyframes demae-pulse {
-    from { box-shadow: 0 0 40px rgba(200,168,130,0.6); transform: scale(1); }
-    to   { box-shadow: 0 0 80px rgba(200,168,130,1);   transform: scale(1.02); }
-}
-.demae-alert-icon {
-    margin-bottom: 12px;
-    animation: demae-shake 0.4s infinite;
-}
-.demae-alert-icon img {
-    width: 72px;
-    height: 72px;
-    filter: invert(60%) sepia(60%) saturate(400%) hue-rotate(5deg) brightness(95%);
-}
-@keyframes demae-shake {
-    0%,100% { transform: rotate(-8deg); }
-    50%      { transform: rotate(8deg); }
-}
-.demae-alert-title {
-    font-size: 1.5rem;
-    font-weight: 900;
-    color: #c8a882;
-    margin-bottom: 8px;
-    letter-spacing: 0.05em;
-}
-.demae-alert-sub {
-    font-size: 1rem;
-    color: #555;
-    margin-bottom: 28px;
-}
-.demae-alert-btn {
-    display: block;
-    width: 100%;
-    padding: 16px;
-    background: #c8a882;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-size: 1.1rem;
-    font-weight: 700;
-    cursor: pointer;
-    letter-spacing: 0.08em;
-}
-.demae-alert-btn:active { opacity: 0.85; }
-</style>
-<div id="demae-fullscreen-alert" onclick="dismissFullscreenAlert()">
-    <div class="demae-alert-box" onclick="event.stopPropagation()">
-        <div class="demae-alert-icon"><img src="images/icon/delivery_dining.svg" alt="出前"></div>
-        <div class="demae-alert-title">新着出前注文！</div>
-        <div class="demae-alert-sub">予約一覧タブを確認してください</div>
-        <button class="demae-alert-btn" onclick="dismissFullscreenAlertAndSwitch()">確認する</button>
+    <!-- 新着出前通知バナー（トップ帯） -->
+    <div id="demae-banner">
+        新しい出前注文が入りました ― クリックして確認する
     </div>
-</div>
 
+    <!-- 新着出前 全画面アラート -->
+    <div id="demae-fullscreen-alert">
+        <div class="demae-alert-box">
+            <div class="demae-alert-icon"><img src="images/icon/delivery_dining.svg" alt="出前"></div>
+            <div class="demae-alert-title">新着出前注文！</div>
+            <div class="demae-alert-sub">予約一覧タブを確認してください</div>
+            <button class="demae-alert-btn" id="demae-alert-confirm-btn">確認する</button>
+        </div>
+    </div>
+
+    <!-- 予約編集モーダル -->
+    <div id="edit-overlay"></div>
+    <div id="edit-modal">
+        <div class="edit-modal-box">
+            <h3 class="edit-modal-title">予約内容の編集</h3>
+            <div id="edit-fields"></div>
+            <div class="edit-modal-actions">
+                <button id="edit-save-btn">保存</button>
+                <button id="edit-close-btn">閉じる</button>
+            </div>
+        </div>
+    </div>
 
     <!-- ステータス変更モーダル -->
     <div class="modal" id="modal">
@@ -255,11 +127,11 @@
             <h2 id="modal-date"></h2>
             <p class="modal-sub">予約状況を選択してください</p>
             <div class="modal-buttons">
-                <button class="modal-btn btn-○" onclick="update('○')">○ 空席あり</button>
-                <button class="modal-btn btn-△" onclick="update('△')">△ 残りわずか</button>
-                <button class="modal-btn btn-×" onclick="update('×')">× 満席</button>
+                <button class="modal-btn btn-○" id="modal-btn-circle">○ 空席あり</button>
+                <button class="modal-btn btn-△" id="modal-btn-triangle">△ 残りわずか</button>
+                <button class="modal-btn btn-×" id="modal-btn-cross">× 満席</button>
             </div>
-            <button class="modal-btn btn-cancel" onclick="closeModal()">キャンセル</button>
+            <button class="modal-btn btn-cancel" id="modal-btn-cancel">キャンセル</button>
         </div>
     </div>
 

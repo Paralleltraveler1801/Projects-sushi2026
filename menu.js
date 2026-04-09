@@ -1,11 +1,13 @@
-function switchMenuTab(tab) {
+function switchMenuTab(tab, clickedBtn) {
     document.querySelectorAll('.menu-tab').forEach(btn => btn.classList.remove('active'));
-    event.currentTarget.classList.add('active');
+    if (clickedBtn) clickedBtn.classList.add('active');
 
     const sections = ['nigiri', 'moriawase', 'sashimi', 'banquet', 'ippin', 'drink'];
     sections.forEach(id => {
         const el = document.getElementById('tab-' + id);
-        if (el) el.style.display = id === tab ? 'block' : 'none';
+        if (el) {
+            el.classList.toggle('active', id === tab);
+        }
     });
 
     const activeSection = document.getElementById('tab-' + tab);
@@ -32,12 +34,12 @@ function openImgModal(src, caption) {
   document.body.style.width = '100%';
 
   document.getElementById('img-modal-overlay').style.display = 'block';
-  document.getElementById('img-modal').style.display = 'flex';
+  document.getElementById('img-modal').classList.add('open');
 }
 
 function closeImgModal() {
   document.getElementById('img-modal-overlay').style.display = 'none';
-  document.getElementById('img-modal').style.display = 'none';
+  document.getElementById('img-modal').classList.remove('open');
 
   document.body.style.overflow = '';
   document.body.style.position = '';
@@ -50,6 +52,21 @@ function closeImgModal() {
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeImgModal();
 });
+
+// ============================================================
+// イベントリスナー（インラインハンドラの代替）
+// ============================================================
+document.querySelectorAll('.menu-tab[data-tab]').forEach(btn => {
+  btn.addEventListener('click', () => switchMenuTab(btn.dataset.tab, btn));
+});
+
+document.addEventListener('click', e => {
+  const slide = e.target.closest('[data-img]');
+  if (slide) openImgModal(slide.dataset.img, slide.dataset.caption || '');
+});
+
+document.getElementById('img-modal-overlay')?.addEventListener('click', closeImgModal);
+document.getElementById('img-modal-close')?.addEventListener('click', closeImgModal);
 
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.menu-carousel').forEach(carousel => {

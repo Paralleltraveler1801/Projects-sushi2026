@@ -1280,3 +1280,14 @@ footer {
     padding: 100px 5% 40px;
   }
 }
+
+/* フッタープライバシーリンク */
+.footer-privacy {
+    color: #888;
+    text-decoration: none;
+}
+
+/* Googleマップ iframe */
+.shop-map-iframe {
+    border: 0;
+}
