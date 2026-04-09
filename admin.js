@@ -266,12 +266,12 @@ async function loadReservations() {
             card.className = "reservation-card";
 
             card.innerHTML = `
-                <p>👤 <strong>${r["お名前"]}</strong> 様</p>
-                <p>🕐 ${formatTime(r["来店時刻"])}　👥 ${r["来店人数"]}</p>
-                <p>🍣 ${r["ご利用プラン"]}</p>
-                <p>📞 ${r["電話番号"]}</p>
-                <p>🪑 座席：${r["座席のタイプ"] || "-"}</p>
-                ${r["備考"] ? `<p style="color:#aaa;font-size:0.85rem;margin-top:6px;">📝 ${r["備考"].replace(/\n/g, '<br>')}</p>` : ""}
+                <p><img src="images/icon/person.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> お名前：<strong>${r["お名前"]}</strong> 様</p>
+                <p><img src="images/icon/schedule.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 来店時刻：${formatTime(r["来店時刻"])}　<img src="images/icon/group.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 人数：${r["来店人数"]}</p>
+                <p><img src="images/icon/restaurant.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> ご利用プラン：${r["ご利用プラン"]}</p>
+                <p><img src="images/icon/phone.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 電話番号：${r["電話番号"]}</p>
+                <p><img src="images/icon/event_seat.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 座席：${r["座席のタイプ"] || "-"}</p>
+                ${r["備考"] ? `<p style="color:#aaa;font-size:0.85rem;margin-top:6px;"><img src="images/icon/description.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 備考：${r["備考"].replace(/\n/g, '<br>')}</p>` : ""}
             `;
 
             const cancelBtn = document.createElement("button");
@@ -590,7 +590,7 @@ function renderDemaeOrders(data) {
                 currentDateKey = dateKey;
                 const dateEl = document.createElement("div");
                 dateEl.className = "reservation-date";
-                dateEl.textContent = `📅 お届け日：${deliveryDateStr || "日付不明"}`;
+                dateEl.innerHTML = `<img src="images/icon/event.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> お届け日：${deliveryDateStr || "日付不明"}`;
                 container.appendChild(dateEl);
             }
 
@@ -657,14 +657,14 @@ function renderDemaeOrders(data) {
 
             card.innerHTML = `
                 <p style="font-size:0.8rem;color:#aaa;margin-bottom:6px;">${tsStr}</p>
-                <p>📋 <strong>${order["注文番号"] || "-"}</strong>
+                <p><img src="images/icon/assignment.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 注文番号：<strong>${order["注文番号"] || "-"}</strong>
                    &nbsp;<span class="demae-status-badge" style="background:${statusColor};color:#fff;border-radius:4px;padding:2px 8px;font-size:0.8rem;">${order["ステータス"] || "-"}</span></p>
-                <p>👤 <strong>${order["氏名"] || "-"}</strong> 様</p>
-                <p>📞 ${order["電話番号"] || "-"}</p>
-                <p>📍 ${order["住所"] || "-"}</p>
-                <p style="margin-top:6px;">🍣 ${itemLines}</p>
+                <p><img src="images/icon/person.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> お名前：<strong>${order["氏名"] || "-"}</strong> 様</p>
+                <p><img src="images/icon/phone.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 電話番号：${order["電話番号"] || "-"}</p>
+                <p><img src="images/icon/location_on.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 住所：${order["住所"] || "-"}</p>
+                <p style="margin-top:6px;"><img src="images/icon/restaurant.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> ご注文内容：${itemLines}</p>
                 ${priceStr ? `<p>${priceStr}</p>` : ""}
-                ${order["備考"] ? `<p style="color:#aaa;font-size:0.85rem;">📝 ${order["備考"]}</p>` : ""}
+                ${order["備考"] ? `<p style="color:#aaa;font-size:0.85rem;"><img src="images/icon/description.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 備考：${order["備考"]}</p>` : ""}
                 <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;">
                     ${statusButtons}
                 </div>
