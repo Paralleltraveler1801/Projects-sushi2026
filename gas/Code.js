@@ -173,13 +173,29 @@ function doGet(e) {
       return ContentService.createTextOutput("NOT_FOUND").setMimeType(ContentService.MimeType.TEXT);
     }
     const fieldMap = { "氏名": "name", "電話番号": "tel", "住所": "address", "お届け希望日": "deliveryDate", "備考": "note", "ステータス": "status" };
+    const diffs = [];
     Object.keys(fieldMap).forEach(function(field) {
       const colIdx = headers.findIndex(function(h) { return h === field; });
-      const val = e.parameter[fieldMap[field]];
-      if (colIdx !== -1 && val !== undefined) {
-        sheet.getRange(rowIdx + 2, colIdx + 1).setValue(val);
+      const newVal = e.parameter[fieldMap[field]];
+      if (colIdx === -1 || newVal === undefined) return;
+      const oldVal = String(data[rowIdx + 1][colIdx] || "").trim();
+      if (oldVal !== String(newVal).trim()) {
+        diffs.push(field + ": " + oldVal + "→" + newVal);
       }
+      sheet.getRange(rowIdx + 2, colIdx + 1).setValue(newVal);
     });
+
+    // 編集ログ列に追記
+    let logCol = headers.findIndex(function(h) { return h === "編集ログ"; });
+    if (logCol === -1) {
+      logCol = headers.length;
+      sheet.getRange(1, logCol + 1).setValue("編集ログ");
+    }
+    const now = Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy/MM/dd HH:mm");
+    const logEntry = "[" + now + "] " + (diffs.length > 0 ? diffs.join("、") : "変更なし");
+    const existing = String(sheet.getRange(rowIdx + 2, logCol + 1).getValue() || "").trim();
+    sheet.getRange(rowIdx + 2, logCol + 1).setValue(existing ? existing + "\n" + logEntry : logEntry);
+
     return ContentService.createTextOutput("OK").setMimeType(ContentService.MimeType.TEXT);
   }
 
