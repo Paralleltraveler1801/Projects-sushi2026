@@ -17,6 +17,14 @@ let originalReservation = null;
 let savedScrollY = 0;
 
 // ============================================================
+// 予約一覧フィルター状態
+// ============================================================
+let _showKaitenOnly      = false;   // 来店予約のみ
+let _showDemaeOnlyFilter = false;   // 出前注文のみ
+let _showTodayOnly       = false;   // 今日のみ
+let _reservationCache    = null;    // 来店予約キャッシュ
+
+// ============================================================
 // 日付・時刻フォーマット
 // ============================================================
 function formatDate(val) {
@@ -208,18 +216,15 @@ if (document.getElementById("calendar")) loadData();
 // タブ切り替え
 // ============================================================
 function switchTab(tab) {
-    document.getElementById("tab-calendar").style.display    = tab === "calendar"     ? "block" : "none";
+    document.getElementById("tab-calendar").style.display     = tab === "calendar"     ? "block" : "none";
     document.getElementById("tab-reservations").style.display = tab === "reservations" ? "block" : "none";
-    document.getElementById("tab-demae").style.display       = tab === "demae"        ? "block" : "none";
     document.querySelectorAll(".tab-btn").forEach((btn, i) => {
         btn.classList.toggle("active",
             (i === 0 && tab === "calendar") ||
-            (i === 1 && tab === "reservations") ||
-            (i === 2 && tab === "demae")
+            (i === 1 && tab === "reservations")
         );
     });
     if (tab === "reservations") loadReservations();
-    if (tab === "demae") loadDemaeOrders();
 }
 
 // ============================================================
@@ -234,61 +239,233 @@ async function loadReservations() {
             <div class="spinner"></div>
         </div>`;
 
-    const res = await fetch(GAS_URL + "?action=getReservations");
-    const data = await res.json();
+    try {
+        const [resData, demaeData] = await Promise.all([
+            fetch(GAS_URL + "?action=getReservations").then(r => r.json()),
+            fetch(GAS_URL + "?action=getDeliveryOrders").then(r => r.json())
+        ]);
+        _reservationCache = resData;
+        _demaeCache = demaeData;
+        renderUnifiedList(resData, demaeData);
+    } catch(err) {
+        container.innerHTML = "<p style='color:#e57373;padding:20px;'>読み込みエラーが発生しました。</p>";
+        console.error("予約一覧読み込みエラー:", err);
+    }
+}
 
-    const grouped = {};
-    data.forEach(row => {
-        const date = formatDate(row["来店日時"]) || "日付不明";
-        if (!grouped[date]) grouped[date] = [];
-        grouped[date].push(row);
-    });
+// ============================================================
+// フィルタースイッチ UI 更新
+// ============================================================
+function _updateFilterSwitchUI() {
+    const setSwitch = (bgId, thumbId, labelId, isOn) => {
+        const bg    = document.getElementById(bgId);
+        const thumb = document.getElementById(thumbId);
+        const label = document.getElementById(labelId);
+        if (bg)    bg.style.background    = isOn ? "#c8a882" : "#555";
+        if (thumb) thumb.style.transform  = isOn ? "translateX(20px)" : "translateX(0)";
+        if (label) label.style.color      = isOn ? "#c8a882" : "#aaa";
+    };
+    setSwitch("toggle-kaiten-bg", "toggle-kaiten-thumb", "toggle-kaiten-label", _showKaitenOnly);
+    setSwitch("toggle-demae-bg",  "toggle-demae-thumb",  "toggle-demae-label",  _showDemaeOnlyFilter);
+    setSwitch("toggle-today-bg",  "toggle-today-thumb",  "toggle-today-label",  _showTodayOnly);
+}
 
+function toggleKaitenOnly() {
+    _showKaitenOnly = !_showKaitenOnly;
+    if (_showKaitenOnly) _showDemaeOnlyFilter = false;
+    _updateFilterSwitchUI();
+    if (_reservationCache !== null && _demaeCache !== null) {
+        renderUnifiedList(_reservationCache, _demaeCache);
+    } else {
+        loadReservations();
+    }
+}
+
+function toggleDemaeOnlyFilter() {
+    _showDemaeOnlyFilter = !_showDemaeOnlyFilter;
+    if (_showDemaeOnlyFilter) _showKaitenOnly = false;
+    _updateFilterSwitchUI();
+    if (_reservationCache !== null && _demaeCache !== null) {
+        renderUnifiedList(_reservationCache, _demaeCache);
+    } else {
+        loadReservations();
+    }
+}
+
+function toggleTodayOnly() {
+    _showTodayOnly = !_showTodayOnly;
+    _updateFilterSwitchUI();
+    if (_reservationCache !== null && _demaeCache !== null) {
+        renderUnifiedList(_reservationCache, _demaeCache);
+    } else {
+        loadReservations();
+    }
+}
+
+// ============================================================
+// 統合予約一覧レンダリング
+// ============================================================
+function renderUnifiedList(reservations, demaeOrders) {
+    const container = document.getElementById("reservation-list");
+    if (!container) return;
     container.innerHTML = "";
 
-    if (Object.keys(grouped).length === 0) {
-        container.innerHTML = "<p>予約はまだありません。</p>";
+    const showBoth   = !_showKaitenOnly && !_showDemaeOnlyFilter;
+    const showKaiten = showBoth || _showKaitenOnly;
+    const showDemae  = showBoth || _showDemaeOnlyFilter;
+
+    // 今日の日付（JST）
+    const todayJST = new Date(new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }));
+    todayJST.setHours(0, 0, 0, 0);
+    const todayStr = `${todayJST.getFullYear()}-${String(todayJST.getMonth()+1).padStart(2,'0')}-${String(todayJST.getDate()).padStart(2,'0')}`;
+
+    // 来店予約アイテム
+    const kaitenItems = [];
+    if (showKaiten && Array.isArray(reservations)) {
+        reservations.forEach(r => {
+            const dateKey = parseJapaneseDate(formatDate(r["来店日時"])) || "9999-99-99";
+            if (_showTodayOnly && dateKey !== todayStr) return;
+            kaitenItems.push({ type: "kaiten", dateKey, data: r });
+        });
+    }
+
+    // 出前注文アイテム
+    const demaeItems = [];
+    if (showDemae && Array.isArray(demaeOrders)) {
+        demaeOrders.forEach(o => {
+            if (o["ステータス"] === "キャンセル") return;
+            const deliveryRaw = o["お届け希望日"] || "";
+            const dm = deliveryRaw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (dm) {
+                const deliveryDate = new Date(Number(dm[1]), Number(dm[2]) - 1, Number(dm[3]));
+                if (deliveryDate < todayJST) return;
+            }
+            const dateKey = deliveryRaw.replace(/^(\d{4}-\d{2}-\d{2}).*/, "$1") || "9999-99-99";
+            if (_showTodayOnly && !deliveryRaw.startsWith(todayStr)) return;
+            demaeItems.push({ type: "demae", dateKey, data: o });
+        });
+    }
+
+    // 統合・ソート（日付昇順、同日は来店→出前の順）
+    const allItems = [...kaitenItems, ...demaeItems].sort((a, b) => {
+        if (a.dateKey !== b.dateKey) return a.dateKey < b.dateKey ? -1 : 1;
+        if (a.type !== b.type) return a.type === "kaiten" ? -1 : 1;
+        return 0;
+    });
+
+    if (allItems.length === 0) {
+        container.innerHTML = "<p style='padding:20px;color:#aaa;'>表示する予約はありません。</p>";
         return;
     }
 
-    Object.keys(grouped).sort((a, b) => {
-        const da = parseJapaneseDate(a);
-        const db = parseJapaneseDate(b);
-        return da < db ? -1 : da > db ? 1 : 0;
-    }).forEach(date => {
-        const dateEl = document.createElement("div");
-        dateEl.className = "reservation-date";
-        dateEl.textContent = date;
-        container.appendChild(dateEl);
-
-        grouped[date].forEach(r => {
-            const card = document.createElement("div");
-            card.className = "reservation-card";
-
-            card.innerHTML = `
-                <p><img src="images/icon/person.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> お名前：<strong>${r["お名前"]}</strong> 様</p>
-                <p><img src="images/icon/schedule.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 来店時刻：${formatTime(r["来店時刻"])}　<img src="images/icon/group.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 人数：${r["来店人数"]}</p>
-                <p><img src="images/icon/restaurant.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> ご利用プラン：${r["ご利用プラン"]}</p>
-                <p><img src="images/icon/phone.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 電話番号：${r["電話番号"]}</p>
-                <p><img src="images/icon/event_seat.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 座席：${r["座席のタイプ"] || "-"}</p>
-                ${r["備考"] ? `<p style="color:#aaa;font-size:0.85rem;margin-top:6px;"><img src="images/icon/description.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 備考：${r["備考"].replace(/\n/g, '<br>')}</p>` : ""}
-            `;
-
-            const cancelBtn = document.createElement("button");
-            cancelBtn.className = "cancel-btn";
-            cancelBtn.textContent = "キャンセル";
-            cancelBtn.addEventListener("click", () => cancelReservation(r["タイムスタンプ"], cancelBtn));
-            card.appendChild(cancelBtn);
-
-            const editBtn = document.createElement("button");
-            editBtn.className = "edit-btn";
-            editBtn.textContent = "編集";
-            editBtn.addEventListener("click", () => openEditModal(r));
-            card.appendChild(editBtn);
-
-            container.appendChild(card);
-        });
+    let currentDateKey = null;
+    allItems.forEach(item => {
+        if (item.dateKey !== currentDateKey) {
+            currentDateKey = item.dateKey;
+            const dateEl = document.createElement("div");
+            dateEl.className = "reservation-date";
+            const dm = item.dateKey.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            dateEl.textContent = dm
+                ? `${dm[1]}年${parseInt(dm[2])}月${parseInt(dm[3])}日`
+                : item.dateKey;
+            container.appendChild(dateEl);
+        }
+        if (item.type === "kaiten") {
+            _renderKaitenCard(container, item.data);
+        } else {
+            _renderDemaeCard(container, item.data);
+        }
     });
+}
+
+function _renderKaitenCard(container, r) {
+    const card = document.createElement("div");
+    card.className = "reservation-card";
+    card.style.borderLeft = "4px solid #5b9bd5";
+
+    card.innerHTML = `
+        <p style="font-size:0.75rem;color:#5b9bd5;font-weight:700;margin-bottom:6px;letter-spacing:0.05em;">来店予約</p>
+        <p><img src="images/icon/person.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> お名前：<strong>${r["お名前"]}</strong> 様</p>
+        <p><img src="images/icon/schedule.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 来店時刻：${formatTime(r["来店時刻"])}　<img src="images/icon/group.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 人数：${r["来店人数"]}</p>
+        <p><img src="images/icon/restaurant.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> ご利用プラン：${r["ご利用プラン"]}</p>
+        <p><img src="images/icon/phone.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 電話番号：${r["電話番号"]}</p>
+        <p><img src="images/icon/event_seat.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 座席：${r["座席のタイプ"] || "-"}</p>
+        ${r["備考"] ? `<p style="color:#aaa;font-size:0.85rem;margin-top:6px;"><img src="images/icon/description.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 備考：${r["備考"].replace(/\n/g, '<br>')}</p>` : ""}
+    `;
+
+    const cancelBtn = document.createElement("button");
+    cancelBtn.className = "cancel-btn";
+    cancelBtn.textContent = "キャンセル";
+    cancelBtn.addEventListener("click", () => cancelReservation(r["タイムスタンプ"], cancelBtn));
+    card.appendChild(cancelBtn);
+
+    const editBtn = document.createElement("button");
+    editBtn.className = "edit-btn";
+    editBtn.textContent = "編集";
+    editBtn.addEventListener("click", () => openEditModal(r));
+    card.appendChild(editBtn);
+
+    container.appendChild(card);
+}
+
+function _renderDemaeCard(container, order) {
+    const card = document.createElement("div");
+    card.className = "reservation-card";
+    card.style.borderLeft = "4px solid #c8a882";
+
+    const ts = order["タイムスタンプ"] ? new Date(order["タイムスタンプ"]) : null;
+    const tsStr = ts && !isNaN(ts) ? ts.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }) : "-";
+
+    let itemLines = "－";
+    try {
+        const items = JSON.parse(order["注文内容"] || "[]");
+        if (Array.isArray(items) && items.length) {
+            itemLines = items.map(i =>
+                `<span style="display:inline-block;margin-right:12px;">${i.name} ×${i.qty}</span>`
+            ).join("");
+        }
+    } catch(e) {}
+
+    const subtotal = isNaN(Number(order["小計"]))    ? null : Number(order["小計"]);
+    const delFee   = isNaN(Number(order["配送料"]))  ? 550  : Number(order["配送料"]);
+    const total    = isNaN(Number(order["合計金額"])) ? null : Number(order["合計金額"]);
+    const priceStr = subtotal !== null && total !== null
+        ? `小計 ${subtotal.toLocaleString()}円 ＋ 配送料 ${delFee.toLocaleString()}円 ＝ <strong>合計 ${total.toLocaleString()}円</strong>`
+        : "";
+
+    const statusColor = {
+        "未対応": "#e53935", "確認中": "#fb8c00",
+        "完了":   "#43a047", "キャンセル": "#757575"
+    }[order["ステータス"]] || "#888";
+
+    const statusButtons = DEMAE_STATUSES.map(s => {
+        const btnColor = {
+            "未対応": "#e53935", "確認中": "#fb8c00",
+            "完了":   "#43a047", "キャンセル": "#757575"
+        }[s] || "#888";
+        const isCurrent = order["ステータス"] === s;
+        return `<button
+            class="demae-status-btn"
+            data-status="${s}"
+            data-ordernum="${order["注文番号"]}"
+            style="padding:6px 12px;border:2px solid ${btnColor};border-radius:6px;font-size:0.85rem;font-weight:700;cursor:pointer;background:${isCurrent ? btnColor : 'transparent'};color:${isCurrent ? '#fff' : btnColor};transition:background 0.15s,color 0.15s;"
+        >${s}</button>`;
+    }).join("");
+
+    card.innerHTML = `
+        <p style="font-size:0.75rem;color:#c8a882;font-weight:700;margin-bottom:2px;letter-spacing:0.05em;">出前注文</p>
+        <p style="font-size:0.8rem;color:#aaa;margin-bottom:6px;">${tsStr}</p>
+        <p><img src="images/icon/assignment.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 注文番号：<strong>${order["注文番号"] || "-"}</strong>
+           &nbsp;<span class="demae-status-badge" style="background:${statusColor};color:#fff;border-radius:4px;padding:2px 8px;font-size:0.8rem;">${order["ステータス"] || "-"}</span></p>
+        <p><img src="images/icon/person.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> お名前：<strong>${order["氏名"] || "-"}</strong> 様</p>
+        <p><img src="images/icon/phone.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 電話番号：${order["電話番号"] || "-"}</p>
+        <p><img src="images/icon/location_on.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 住所：${order["住所"] || "-"}</p>
+        <p style="margin-top:6px;"><img src="images/icon/restaurant.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> ご注文内容：${itemLines}</p>
+        ${priceStr ? `<p>${priceStr}</p>` : ""}
+        ${order["備考"] ? `<p style="color:#aaa;font-size:0.85rem;"><img src="images/icon/description.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 備考：${order["備考"]}</p>` : ""}
+        <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;">${statusButtons}</div>
+    `;
+    container.appendChild(card);
 }
 
 // ============================================================
@@ -496,185 +673,8 @@ window.openEditModal = openEditModal;
 const DEMAE_STATUSES = ["未対応", "確認中", "完了", "キャンセル"];
 let _demaeCache = null; // 取得済みデータをキャッシュ
 
-// 今日のみトグル
-let _demaeShowTodayOnly = false;
-function toggleDemaeToday() {
-    _demaeShowTodayOnly = !_demaeShowTodayOnly;
-    document.getElementById("demae-toggle-bg").style.background   = _demaeShowTodayOnly ? "#c8a882" : "#555";
-    document.getElementById("demae-toggle-thumb").style.transform = _demaeShowTodayOnly ? "translateX(20px)" : "translateX(0)";
-    document.getElementById("demae-toggle-label").style.color     = _demaeShowTodayOnly ? "#c8a882" : "#aaa";
-    // キャッシュがあれば再取得せず即反映
-    if (_demaeCache) {
-        renderDemaeOrders(_demaeCache);
-    } else {
-        loadDemaeOrders();
-    }
-}
-
-async function loadDemaeOrders() {
-    const container = document.getElementById("demae-list");
-    if (!container) return;
-
-    container.innerHTML = `
-        <div style="display:flex; justify-content:center; padding:40px;">
-            <div class="spinner"></div>
-        </div>`;
-
-    try {
-        const res  = await fetch(GAS_URL + "?action=getDeliveryOrders");
-        const data = await res.json();
-        _demaeCache = data; // キャッシュに保存
-        renderDemaeOrders(data);
-    } catch(err) {
-        container.innerHTML = "<p style='color:#e57373;padding:20px;'>読み込みエラーが発生しました。</p>";
-        console.error("出前注文読み込みエラー:", err);
-    }
-}
-
-function renderDemaeOrders(data) {
-    const container = document.getElementById("demae-list");
-    if (!container) return;
-
-    container.innerHTML = "";
-
-    if (!data.length) {
-        container.innerHTML = "<p style='padding:20px;color:#aaa;'>出前注文はまだありません。</p>";
-        return;
-    }
-
-    // 今日の日付（JST、時刻なし）
-    const todayJST = new Date(new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }));
-    todayJST.setHours(0, 0, 0, 0);
-
-    // 今日の日付文字列（YYYY-MM-DD）
-    const todayStr = `${todayJST.getFullYear()}-${String(todayJST.getMonth()+1).padStart(2,'0')}-${String(todayJST.getDate()).padStart(2,'0')}`;
-
-    // キャンセル済み・お届け日翌日以降を除外してお届け希望日順に表示
-    const sorted = data
-            .filter(o => {
-                if (o["ステータス"] === "キャンセル") return false;
-                const deliveryRaw = o["お届け希望日"] || "";
-                const dm = deliveryRaw.match(/^(\d{4})-(\d{2})-(\d{2})/);
-                if (!dm) return true;
-                const deliveryDate = new Date(Number(dm[1]), Number(dm[2]) - 1, Number(dm[3]));
-                if (deliveryDate < todayJST) return false; // 翌日以降は非表示
-                // 今日のみモード
-                if (_demaeShowTodayOnly) return deliveryRaw.startsWith(todayStr);
-                return true;
-            })
-            .sort((a, b) => {
-                // お届け希望日順（昇順）、同日はタイムスタンプ昇順
-                const da = a["お届け希望日"] || "";
-                const db = b["お届け希望日"] || "";
-                if (da !== db) return da < db ? -1 : 1;
-                return new Date(a["タイムスタンプ"]) - new Date(b["タイムスタンプ"]);
-            });
-
-        if (!sorted.length) {
-            container.innerHTML = "<p style='padding:20px;color:#aaa;'>出前注文はまだありません。</p>";
-            return;
-        }
-
-        let currentDateKey = null;
-
-        sorted.forEach(order => {
-            // お届け希望日（YYYY-MM-DD → YYYY年M月D日）
-            const deliveryDateRaw = order["お届け希望日"] || "";
-            let deliveryDateStr = deliveryDateRaw;
-            const dm = deliveryDateRaw.match(/^(\d{4})-(\d{2})-(\d{2})/);
-            if (dm) deliveryDateStr = `${dm[1]}年${parseInt(dm[2])}月${parseInt(dm[3])}日`;
-
-            // 日付グループヘッダー（日付が変わったら挿入）
-            const dateKey = deliveryDateRaw || "日付不明";
-            if (dateKey !== currentDateKey) {
-                currentDateKey = dateKey;
-                const dateEl = document.createElement("div");
-                dateEl.className = "reservation-date";
-                dateEl.innerHTML = `<img src="images/icon/event.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> お届け日：${deliveryDateStr || "日付不明"}`;
-                container.appendChild(dateEl);
-            }
-
-            const card = document.createElement("div");
-            card.className = "reservation-card";
-            card.style.borderLeft = "4px solid #c8a882";
-            card.style.marginBottom = "16px";
-
-            // タイムスタンプ
-            const ts = order["タイムスタンプ"] ? new Date(order["タイムスタンプ"]) : null;
-            const tsStr = ts && !isNaN(ts) ? ts.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }) : "-";
-
-            // 注文内容（JSONパース。失敗時は"－"）
-            let itemLines = "－";
-            try {
-                const items = JSON.parse(order["注文内容"] || "[]");
-                if (Array.isArray(items) && items.length) {
-                    itemLines = items.map(i =>
-                        `<span style="display:inline-block;margin-right:12px;">${i.name} ×${i.qty}</span>`
-                    ).join("");
-                }
-            } catch(e) { /* JSONでなければ非表示 */ }
-
-            // 金額（数値に変換できない場合は"－"）
-            const subtotal = isNaN(Number(order["小計"]))    ? null : Number(order["小計"]);
-            const delFee   = isNaN(Number(order["配送料"]))  ? 550  : Number(order["配送料"]);
-            const total    = isNaN(Number(order["合計金額"])) ? null : Number(order["合計金額"]);
-            const priceStr = subtotal !== null && total !== null
-                ? `小計 ${subtotal.toLocaleString()}円 ＋ 配送料 ${delFee.toLocaleString()}円 ＝ <strong>合計 ${total.toLocaleString()}円</strong>`
-                : "";
-
-            const statusColor = {
-                "未対応": "#e53935",
-                "確認中": "#fb8c00",
-                "完了":   "#43a047",
-                "キャンセル": "#757575"
-            }[order["ステータス"]] || "#888";
-
-            const statusButtons = DEMAE_STATUSES.map(s => {
-                const btnColor = {
-                    "未対応":   "#e53935",
-                    "確認中":   "#fb8c00",
-                    "完了":     "#43a047",
-                    "キャンセル": "#757575"
-                }[s] || "#888";
-                const isCurrent = order["ステータス"] === s;
-                return `<button
-                    class="demae-status-btn"
-                    data-status="${s}"
-                    data-ordernum="${order["注文番号"]}"
-                    style="
-                        padding:6px 12px;
-                        border:2px solid ${btnColor};
-                        border-radius:6px;
-                        font-size:0.85rem;
-                        font-weight:700;
-                        cursor:pointer;
-                        background:${isCurrent ? btnColor : 'transparent'};
-                        color:${isCurrent ? '#fff' : btnColor};
-                        transition:background 0.15s, color 0.15s;
-                    "
-                >${s}</button>`;
-            }).join("");
-
-            card.innerHTML = `
-                <p style="font-size:0.8rem;color:#aaa;margin-bottom:6px;">${tsStr}</p>
-                <p><img src="images/icon/assignment.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 注文番号：<strong>${order["注文番号"] || "-"}</strong>
-                   &nbsp;<span class="demae-status-badge" style="background:${statusColor};color:#fff;border-radius:4px;padding:2px 8px;font-size:0.8rem;">${order["ステータス"] || "-"}</span></p>
-                <p><img src="images/icon/person.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> お名前：<strong>${order["氏名"] || "-"}</strong> 様</p>
-                <p><img src="images/icon/phone.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 電話番号：${order["電話番号"] || "-"}</p>
-                <p><img src="images/icon/location_on.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 住所：${order["住所"] || "-"}</p>
-                <p style="margin-top:6px;"><img src="images/icon/restaurant.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> ご注文内容：${itemLines}</p>
-                ${priceStr ? `<p>${priceStr}</p>` : ""}
-                ${order["備考"] ? `<p style="color:#aaa;font-size:0.85rem;"><img src="images/icon/description.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 備考：${order["備考"]}</p>` : ""}
-                <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;">
-                    ${statusButtons}
-                </div>
-            `;
-            container.appendChild(card);
-        });
-}
-
 // ステータスボタンのクリックを一度だけ登録（累積防止）
-document.getElementById("demae-list").addEventListener("click", e => {
+document.getElementById("reservation-list").addEventListener("click", e => {
     const btn = e.target.closest(".demae-status-btn");
     if (!btn) return;
     const orderNum = btn.dataset.ordernum;
@@ -918,8 +918,8 @@ function dismissDeliveryBanner() {
     if (banner) banner.style.display = "none";
     stopAlertRepeat();
     stopTitleBlink();
-    // 出前タブに切り替え
-    switchTab("demae");
+    // 予約一覧タブに切り替え
+    switchTab("reservations");
 }
 
 async function pollDeliveryOrders() {
@@ -939,12 +939,12 @@ async function pollDeliveryOrders() {
         if (ts !== _lastDeliveryTimestamp && new Date(ts) > new Date(_lastDeliveryTimestamp)) {
             _lastDeliveryTimestamp = ts;
             playAlertSound();
-            showToast("🍣 新しい出前注文が入りました！出前タブを確認してください。");
+            showToast("🍣 新しい出前注文が入りました！予約一覧タブを確認してください。");
             showDeliveryBanner();
             startTitleBlink();
-            // 出前タブが表示中なら即リロード
-            if (document.getElementById("tab-demae").style.display !== "none") {
-                loadDemaeOrders();
+            // 予約一覧タブが表示中なら即リロード
+            if (document.getElementById("tab-reservations").style.display !== "none") {
+                loadReservations();
             }
         }
     } catch(e) {

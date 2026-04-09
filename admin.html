@@ -79,8 +79,7 @@
             <span class="admin-label"></span>
             <div class="admin-tabs">
             <button class="tab-btn active" onclick="switchTab('calendar')">予約カレンダー管理</button>
-            <button class="tab-btn" onclick="switchTab('reservations')">予約一覧</button>
-            <button class="tab-btn" onclick="switchTab('demae')">出前注文 <span id="demae-badge" style="display:none;background:#e53935;color:#fff;border-radius:10px;padding:1px 7px;font-size:0.75rem;margin-left:4px;">新着</span></button>
+            <button class="tab-btn" onclick="switchTab('reservations')">予約一覧 <span id="demae-badge" style="display:none;background:#e53935;color:#fff;border-radius:10px;padding:1px 7px;font-size:0.75rem;margin-left:4px;">新着</span></button>
             <button class="tab-btn" id="admin-refresh-btn" onclick="loadData()">更新</button>
 </div>
         </nav>
@@ -115,31 +114,34 @@
 
         <!-- 予約一覧 -->
         <div id="tab-reservations" style="display:none;">
-            <h2>予約一覧</h2>
-            <div id="reservation-list">読み込み中...</div>
-        </div>
-
-        <!-- 出前注文一覧 -->
-        <div id="tab-demae" style="display:none;">
-            <div style="display:flex; align-items:center; gap:14px; margin-bottom:8px;">
-                <h2 style="margin:0;">出前注文一覧</h2>
-                <div id="demae-toggle-track" onclick="toggleDemaeToday()" style="
-                    display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none;">
+            <div style="display:flex; align-items:center; gap:14px; margin-bottom:16px; flex-wrap:wrap;">
+                <h2 style="margin:0;">予約一覧</h2>
+                <!-- 来店予約のみ スイッチ -->
+                <div id="toggle-kaiten-track" onclick="toggleKaitenOnly()" style="display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none;">
                     <div style="position:relative; width:44px; height:24px;">
-                        <div id="demae-toggle-bg" style="
-                            width:44px; height:24px; border-radius:12px;
-                            background:#555; transition:background 0.2s;
-                        "></div>
-                        <div id="demae-toggle-thumb" style="
-                            position:absolute; top:3px; left:3px;
-                            width:18px; height:18px; border-radius:50%;
-                            background:#fff; transition:transform 0.2s;
-                        "></div>
+                        <div id="toggle-kaiten-bg" style="width:44px; height:24px; border-radius:12px; background:#555; transition:background 0.2s;"></div>
+                        <div id="toggle-kaiten-thumb" style="position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:transform 0.2s;"></div>
                     </div>
-                    <span id="demae-toggle-label" style="font-size:0.9rem; color:#aaa;">今日のみ</span>
+                    <span id="toggle-kaiten-label" style="font-size:0.9rem; color:#aaa;">来店予約のみ</span>
+                </div>
+                <!-- 出前注文のみ スイッチ -->
+                <div id="toggle-demae-only-track" onclick="toggleDemaeOnlyFilter()" style="display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none;">
+                    <div style="position:relative; width:44px; height:24px;">
+                        <div id="toggle-demae-bg" style="width:44px; height:24px; border-radius:12px; background:#555; transition:background 0.2s;"></div>
+                        <div id="toggle-demae-thumb" style="position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:transform 0.2s;"></div>
+                    </div>
+                    <span id="toggle-demae-label" style="font-size:0.9rem; color:#aaa;">出前注文のみ</span>
+                </div>
+                <!-- 今日のみ スイッチ -->
+                <div id="toggle-today-track" onclick="toggleTodayOnly()" style="display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none;">
+                    <div style="position:relative; width:44px; height:24px;">
+                        <div id="toggle-today-bg" style="width:44px; height:24px; border-radius:12px; background:#555; transition:background 0.2s;"></div>
+                        <div id="toggle-today-thumb" style="position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:transform 0.2s;"></div>
+                    </div>
+                    <span id="toggle-today-label" style="font-size:0.9rem; color:#aaa;">今日のみ</span>
                 </div>
             </div>
-            <div id="demae-list">読み込み中...</div>
+            <div id="reservation-list">読み込み中...</div>
         </div>
 
 </main>
@@ -241,7 +243,7 @@
     <div class="demae-alert-box" onclick="event.stopPropagation()">
         <div class="demae-alert-icon"><img src="images/icon/delivery_dining.svg" alt="出前"></div>
         <div class="demae-alert-title">新着出前注文！</div>
-        <div class="demae-alert-sub">出前タブを確認してください</div>
+        <div class="demae-alert-sub">予約一覧タブを確認してください</div>
         <button class="demae-alert-btn" onclick="dismissFullscreenAlertAndSwitch()">確認する</button>
     </div>
 </div>
