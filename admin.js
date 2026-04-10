@@ -4,6 +4,18 @@
 const GAS_URL = "https://script.google.com/macros/s/AKfycbwUrrgZI6jHzAWyIiaYYEF01dgmBpm3Hf3-lvrcQqUbC-hdw74g2g1zkANt3y8wxEEFfA/exec";
 
 // ============================================================
+// XSS対策: HTMLエスケープ
+// ============================================================
+function escapeHtml(str) {
+    return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+// ============================================================
 // 認証管理
 // ============================================================
 function getAdminToken() {
@@ -497,12 +509,12 @@ function _renderKaitenCard(container, r) {
 
     card.innerHTML = `
         <p style="font-size:0.75rem;color:#5b9bd5;font-weight:700;margin-bottom:6px;letter-spacing:0.05em;">来店予約</p>
-        <p><img src="images/icon/person.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> お名前：<strong>${r["お名前"]}</strong> 様</p>
-        <p><img src="images/icon/schedule.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 来店時刻：${formatTime(r["来店時刻"])}　<img src="images/icon/group.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 人数：${r["来店人数"]}</p>
-        <p><img src="images/icon/restaurant.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> ご利用プラン：${r["ご利用プラン"]}</p>
-        <p><img src="images/icon/phone.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 電話番号：${r["電話番号"]}</p>
-        <p><img src="images/icon/event_seat.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 座席：${r["座席のタイプ"] || "-"}</p>
-        ${r["備考"] ? `<p style="color:#aaa;font-size:0.85rem;margin-top:6px;"><img src="images/icon/description.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 備考：${r["備考"].replace(/\n/g, '<br>')}</p>` : ""}
+        <p><img src="images/icon/person.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> お名前：<strong>${escapeHtml(r["お名前"])}</strong> 様</p>
+        <p><img src="images/icon/schedule.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 来店時刻：${escapeHtml(formatTime(r["来店時刻"]))}　<img src="images/icon/group.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 人数：${escapeHtml(r["来店人数"])}</p>
+        <p><img src="images/icon/restaurant.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> ご利用プラン：${escapeHtml(r["ご利用プラン"])}</p>
+        <p><img src="images/icon/phone.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 電話番号：${escapeHtml(r["電話番号"])}</p>
+        <p><img src="images/icon/event_seat.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 座席：${escapeHtml(r["座席のタイプ"] || "-")}</p>
+        ${r["備考"] ? `<p style="color:#aaa;font-size:0.85rem;margin-top:6px;"><img src="images/icon/description.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 備考：${escapeHtml(r["備考"]).replace(/\n/g, '<br>')}</p>` : ""}
     `;
 
     const cancelBtn = document.createElement("button");
@@ -533,7 +545,7 @@ function _renderDemaeCard(container, order) {
         const items = JSON.parse(order["注文内容"] || "[]");
         if (Array.isArray(items) && items.length) {
             itemLines = items.map(i =>
-                `<span style="display:inline-block;margin-right:12px;">${i.name} ×${i.qty}</span>`
+                `<span style="display:inline-block;margin-right:12px;">${escapeHtml(i.name)} ×${escapeHtml(String(i.qty))}</span>`
             ).join("");
         }
     } catch(e) {}
@@ -558,28 +570,28 @@ function _renderDemaeCard(container, order) {
     const progressBtn = _nextStatus
         ? `<button
             class="demae-status-btn"
-            data-status="${_nextStatus}"
-            data-ordernum="${order["注文番号"]}"
-            style="padding:8px 18px;border:none;border-radius:6px;font-size:0.85rem;font-weight:700;cursor:pointer;background:${_nextBtnColor};color:#fff;"
-          >${_nextStatusLabel[_nextStatus]}</button>`
+            data-status="${escapeHtml(_nextStatus)}"
+            data-ordernum="${escapeHtml(order["注文番号"])}"
+            style="padding:8px 18px;border:none;border-radius:6px;font-size:0.85rem;font-weight:700;cursor:pointer;background:${escapeHtml(_nextBtnColor)};color:#fff;"
+          >${escapeHtml(_nextStatusLabel[_nextStatus])}</button>`
         : "";
 
     const demaeCancel = `<button
         class="demae-cancel-btn cancel-btn"
-        data-ordernum="${order["注文番号"]}"
+        data-ordernum="${escapeHtml(order["注文番号"])}"
       >キャンセル</button>`;
 
     card.innerHTML = `
         <p style="font-size:0.75rem;color:#c8a882;font-weight:700;margin-bottom:2px;letter-spacing:0.05em;">出前注文</p>
-        <p style="font-size:0.8rem;color:#aaa;margin-bottom:6px;">${tsStr}</p>
-        <p><img src="images/icon/assignment.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 注文番号：<strong>${order["注文番号"] || "-"}</strong>
-           &nbsp;<span class="demae-status-badge" style="background:${statusColor};color:#fff;border-radius:4px;padding:2px 8px;font-size:0.8rem;">${order["ステータス"] || "-"}</span></p>
-        <p><img src="images/icon/person.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> お名前：<strong>${order["氏名"] || "-"}</strong> 様</p>
-        <p><img src="images/icon/phone.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 電話番号：${order["電話番号"] || "-"}</p>
-        <p><img src="images/icon/location_on.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 住所：${order["住所"] || "-"}</p>
+        <p style="font-size:0.8rem;color:#aaa;margin-bottom:6px;">${escapeHtml(tsStr)}</p>
+        <p><img src="images/icon/assignment.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 注文番号：<strong>${escapeHtml(order["注文番号"] || "-")}</strong>
+           &nbsp;<span class="demae-status-badge" style="background:${escapeHtml(statusColor)};color:#fff;border-radius:4px;padding:2px 8px;font-size:0.8rem;">${escapeHtml(order["ステータス"] || "-")}</span></p>
+        <p><img src="images/icon/person.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> お名前：<strong>${escapeHtml(order["氏名"] || "-")}</strong> 様</p>
+        <p><img src="images/icon/phone.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 電話番号：${escapeHtml(order["電話番号"] || "-")}</p>
+        <p><img src="images/icon/location_on.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 住所：${escapeHtml(order["住所"] || "-")}</p>
         <p style="margin-top:6px;"><img src="images/icon/restaurant.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> ご注文内容：${itemLines}</p>
         ${priceStr ? `<p>${priceStr}</p>` : ""}
-        ${order["備考"] ? `<p style="color:#aaa;font-size:0.85rem;"><img src="images/icon/description.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 備考：${order["備考"]}</p>` : ""}
+        ${order["備考"] ? `<p style="color:#aaa;font-size:0.85rem;"><img src="images/icon/description.svg" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:4px;" alt=""> 備考：${escapeHtml(order["備考"])}</p>` : ""}
         <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;">${progressBtn}${demaeCancel}<button class="demae-edit-btn edit-btn">編集</button></div>
     `;
     card.querySelector(".demae-edit-btn").addEventListener("click", () => openDemaeEditModal(order));
@@ -626,11 +638,11 @@ function openEditModal(r) {
 
     document.getElementById("edit-fields").innerHTML = `
         <label style="display:block;margin-bottom:12px;color:#ddd;">お名前<br>
-        <input id="e-name" type="text" value="${r["お名前"]||""}" style="${s}"></label>
+        <input id="e-name" type="text" value="${escapeHtml(r["お名前"])}" style="${s}"></label>
         <label style="display:block;margin-bottom:12px;color:#ddd;">電話番号<br>
-        <input id="e-tel" type="tel" value="${r["電話番号"]||""}" style="${s}"></label>
+        <input id="e-tel" type="tel" value="${escapeHtml(r["電話番号"])}" style="${s}"></label>
         <label style="display:block;margin-bottom:12px;color:#ddd;">来店日<br>
-        <input id="e-date" type="date" value="${parseJapaneseDate(r["来店日時"])}" style="${s} -webkit-appearance:none; appearance:none; height:44px; line-height:44px;"></label>
+        <input id="e-date" type="date" value="${escapeHtml(parseJapaneseDate(r["来店日時"]))}" style="${s} -webkit-appearance:none; appearance:none; height:44px; line-height:44px;"></label>
         <label style="display:block;margin-bottom:12px;color:#ddd;">来店時刻<br>
             <select id="e-time" style="${s}">
                 <option value="">時刻を選択</option>
@@ -790,15 +802,15 @@ function openDemaeEditModal(order) {
 
     document.getElementById("edit-fields").innerHTML = `
         <label style="display:block;margin-bottom:12px;color:#ddd;">お名前<br>
-        <input id="de-name" type="text" value="${order["氏名"] || ""}" style="${s}"></label>
+        <input id="de-name" type="text" value="${escapeHtml(order["氏名"])}" style="${s}"></label>
         <label style="display:block;margin-bottom:12px;color:#ddd;">電話番号<br>
-        <input id="de-tel" type="tel" value="${order["電話番号"] || ""}" style="${s}"></label>
+        <input id="de-tel" type="tel" value="${escapeHtml(order["電話番号"])}" style="${s}"></label>
         <label style="display:block;margin-bottom:12px;color:#ddd;">住所<br>
-        <input id="de-address" type="text" value="${order["住所"] || ""}" style="${s}"></label>
+        <input id="de-address" type="text" value="${escapeHtml(order["住所"])}" style="${s}"></label>
         <label style="display:block;margin-bottom:12px;color:#ddd;">お届け希望日<br>
-        <input id="de-date" type="date" value="${dateVal}" style="${s} -webkit-appearance:none; appearance:none; height:44px; line-height:44px;"></label>
+        <input id="de-date" type="date" value="${escapeHtml(dateVal)}" style="${s} -webkit-appearance:none; appearance:none; height:44px; line-height:44px;"></label>
         <label style="display:block;margin-bottom:12px;color:#ddd;">備考<br>
-        <textarea id="de-note" style="width:100%;padding:10px 8px;margin-top:4px;background:#2a2a2a;color:#fff;border:1px solid #555;border-radius:6px;font-size:1rem;box-sizing:border-box;height:80px;">${order["備考"] || ""}</textarea></label>
+        <textarea id="de-note" style="width:100%;padding:10px 8px;margin-top:4px;background:#2a2a2a;color:#fff;border:1px solid #555;border-radius:6px;font-size:1rem;box-sizing:border-box;height:80px;">${escapeHtml(order["備考"])}</textarea></label>
     `;
 
     savedScrollY = window.scrollY || window.pageYOffset;
