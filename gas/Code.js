@@ -677,31 +677,88 @@ function initCalendar() {
   }
 }
 
+// ===== データ保全設定 =====
+// アーカイブシートへの移動から何日後に完全削除するか
+const ARCHIVE_RETENTION_DAYS = 30;
+
+// ============================================================
+// 共通: 対象行をアーカイブシートに移動してから元シートで削除
+// rowIndices: sourceData上の0始まりインデックス（0=ヘッダー行なので1以上）
+// ============================================================
+function _archiveRows(sourceSheet, archiveSheetName, rowIndices) {
+  if (rowIndices.length === 0) return;
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let archiveSheet = ss.getSheetByName(archiveSheetName);
+  if (!archiveSheet) {
+    archiveSheet = ss.insertSheet(archiveSheetName);
+  }
+
+  const sourceData = sourceSheet.getDataRange().getValues();
+  const sourceHeaders = sourceData[0];
+
+  // アーカイブシートが空なら「削除日時」「元シート」+ 元ヘッダーを設定
+  if (archiveSheet.getLastRow() === 0) {
+    archiveSheet.getRange(1, 1, 1, sourceHeaders.length + 2)
+      .setValues([["削除日時", "元シート"].concat(sourceHeaders)]);
+  }
+
+  const now = new Date();
+  const rowsToWrite = rowIndices.map(function(i) {
+    return [now, sourceSheet.getName()].concat(sourceData[i]);
+  });
+
+  archiveSheet.getRange(archiveSheet.getLastRow() + 1, 1, rowsToWrite.length, rowsToWrite[0].length)
+    .setValues(rowsToWrite);
+
+  // 元シートから削除（後ろの行から削除してインデックスずれを防ぐ）
+  rowIndices.slice().sort(function(a, b) { return b - a; }).forEach(function(i) {
+    sourceSheet.deleteRow(i + 1);
+  });
+}
+
+// ============================================================
+// 来店予約：来店日が過去のものをアーカイブへ移動
+// ============================================================
 function deleteOldReservations() {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Form_Responses");
+  if (!sheet || sheet.getLastRow() <= 1) return;
+
   const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+  // ヘッダー名で「来店日時」列を特定（ハードコードインデックス廃止）
+  const dateCol = headers.findIndex(function(h) { return String(h).startsWith("来店日時"); });
+  if (dateCol === -1) { Logger.log("deleteOldReservations: 来店日時 列が見つかりません"); return; }
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  for (let i = data.length - 1; i >= 1; i--) {
-    const raw = data[i][5];
+
+  const targets = [];
+  for (let i = 1; i < data.length; i++) {
+    const raw = data[i][dateCol];
     if (!raw) continue;
     let d;
     if (raw && typeof raw.getTime === 'function') {
       d = new Date(raw.getTime());
     } else {
-      const str = String(raw).trim();
-      const m = str.match(/(\d{4})[年\/\-](\d{1,2})[月\/\-](\d{1,2})/);
+      const m = String(raw).trim().match(/(\d{4})[年\/\-](\d{1,2})[月\/\-](\d{1,2})/);
       if (!m) continue;
       d = new Date(parseInt(m[1]), parseInt(m[2]) - 1, parseInt(m[3]));
     }
     d.setHours(0, 0, 0, 0);
-    if (d < today) sheet.deleteRow(i + 1);
+    if (d < today) targets.push(i);
   }
+
+  _archiveRows(sheet, "削除済み_予約", targets);
 }
 
+// ============================================================
+// 出前注文：お届け日が過去のものをアーカイブへ移動
+// ============================================================
 function deleteOldDemaeOrders() {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("出前");
   if (!sheet || sheet.getLastRow() <= 1) return;
+
   const data = sheet.getDataRange().getValues();
   const headers = data[0];
   const dateCol = headers.findIndex(function(h) { return String(h) === "お届け希望日"; });
@@ -709,26 +766,57 @@ function deleteOldDemaeOrders() {
 
   const todayJst = new Date(Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy-MM-dd") + "T00:00:00+09:00");
 
-  for (let i = data.length - 1; i >= 1; i--) {
+  const targets = [];
+  for (let i = 1; i < data.length; i++) {
     const raw = data[i][dateCol];
     if (!raw) continue;
     let d;
     if (raw && typeof raw.getTime === 'function') {
-      // Date型の場合はJSTで解釈
       d = new Date(Utilities.formatDate(raw, "Asia/Tokyo", "yyyy-MM-dd") + "T00:00:00+09:00");
     } else {
       const m = String(raw).trim().match(/(\d{4})[年\/\-](\d{1,2})[月\/\-](\d{1,2})/);
       if (!m) continue;
       d = new Date(m[1] + "-" + String(m[2]).padStart(2,"0") + "-" + String(m[3]).padStart(2,"0") + "T00:00:00+09:00");
     }
-    if (d < todayJst) sheet.deleteRow(i + 1);
+    if (d < todayJst) targets.push(i);
   }
+
+  _archiveRows(sheet, "削除済み_出前", targets);
 }
 
-// 予約・出前注文の古いデータをまとめて削除（タイマートリガーから呼ぶ）
+// ============================================================
+// アーカイブ保全期間を超えたデータを完全削除
+// ============================================================
+function purgeOldArchive() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - ARCHIVE_RETENTION_DAYS);
+  cutoff.setHours(0, 0, 0, 0);
+
+  ["削除済み_予約", "削除済み_出前"].forEach(function(sheetName) {
+    const sheet = ss.getSheetByName(sheetName);
+    if (!sheet || sheet.getLastRow() <= 1) return;
+
+    const data = sheet.getDataRange().getValues();
+    // 1列目（インデックス0）が「削除日時」
+    for (let i = data.length - 1; i >= 1; i--) {
+      const deletedAt = data[i][0];
+      if (!deletedAt) continue;
+      const d = (deletedAt instanceof Date) ? deletedAt : new Date(String(deletedAt));
+      if (!isNaN(d.getTime()) && d < cutoff) sheet.deleteRow(i + 1);
+    }
+  });
+}
+
+// ============================================================
+// タイマートリガーから呼ぶメイン関数（毎日深夜に実行）
+// 1. 昨日以前のデータをアーカイブシートへ移動
+// 2. アーカイブ保全期間（30日）を超えたデータを完全削除
+// ============================================================
 function deleteOldData() {
   deleteOldReservations();
   deleteOldDemaeOrders();
+  purgeOldArchive();
 }
 
 function testEmail() {
