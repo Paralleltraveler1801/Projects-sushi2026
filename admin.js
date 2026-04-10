@@ -1,7 +1,7 @@
 // ============================================================
 // 管理画面専用
 // ============================================================
-const GAS_URL = "https://script.google.com/macros/s/AKfycbzZdvg1RYMFYOcq2EonTxLZdzEJ7SrVbrpuiJ_7zXOHZI50pqhpUPI1PG7LxN7Fejb6Ng/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwUrrgZI6jHzAWyIiaYYEF01dgmBpm3Hf3-lvrcQqUbC-hdw74g2g1zkANt3y8wxEEFfA/exec";
 
 // ============================================================
 // 認証管理

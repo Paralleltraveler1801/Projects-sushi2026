@@ -1,4 +1,4 @@
-const GAS_URL      = "https://script.google.com/macros/s/AKfycbzZdvg1RYMFYOcq2EonTxLZdzEJ7SrVbrpuiJ_7zXOHZI50pqhpUPI1PG7LxN7Fejb6Ng/exec";
+const GAS_URL      = "https://script.google.com/macros/s/AKfycbwUrrgZI6jHzAWyIiaYYEF01dgmBpm3Hf3-lvrcQqUbC-hdw74g2g1zkANt3y8wxEEFfA/exec";
 const DELIVERY_FEE = 550;
 
 // ===== 店舗座標（豊平区福住1条2丁目8-21）=====
