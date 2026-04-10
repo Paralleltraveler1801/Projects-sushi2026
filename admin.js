@@ -1,10 +1,123 @@
 // ============================================================
 // 管理画面専用
 // ============================================================
-// ============================================================
-// 管理画面専用
-// ============================================================
 const GAS_URL = "https://script.google.com/macros/s/AKfycbzZdvg1RYMFYOcq2EonTxLZdzEJ7SrVbrpuiJ_7zXOHZI50pqhpUPI1PG7LxN7Fejb6Ng/exec";
+
+// ============================================================
+// 認証管理
+// ============================================================
+function getAdminToken() {
+    return sessionStorage.getItem("admin_token") || "";
+}
+
+// 管理者専用のGAS GETリクエストURLにトークンを付与するヘルパー
+function adminUrl(base, params = {}) {
+    const url = new URL(base);
+    url.searchParams.set("token", getAdminToken());
+    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+    return url.toString();
+}
+
+// GASレスポンスが unauthorized の場合に再ログインを促す
+function isUnauthorized(data) {
+    return data && typeof data === "object" && data.error === "unauthorized";
+}
+
+function handleUnauthorized() {
+    sessionStorage.removeItem("admin_token");
+    showLoginOverlay("セッションが切れました。再ログインしてください。");
+}
+
+function showLoginOverlay(msg = "") {
+    const overlay = document.getElementById("login-overlay");
+    const errEl   = document.getElementById("login-error");
+    if (overlay) overlay.style.display = "flex";
+    if (errEl)   { errEl.textContent = msg; errEl.style.display = msg ? "block" : "none"; }
+    const pwEl = document.getElementById("login-password");
+    if (pwEl)  { pwEl.value = ""; pwEl.focus(); }
+}
+
+function hideLoginOverlay() {
+    const overlay = document.getElementById("login-overlay");
+    if (overlay) overlay.style.display = "none";
+}
+
+async function handleLogin() {
+    const pwEl = document.getElementById("login-password");
+    const pw   = pwEl ? pwEl.value.trim() : "";
+    if (!pw) return;
+
+    const errEl = document.getElementById("login-error");
+    if (errEl) errEl.style.display = "none";
+
+    try {
+        const url = new URL(GAS_URL);
+        url.searchParams.set("action", "verifyToken");
+        url.searchParams.set("token", pw);
+        const res  = await fetch(url.toString());
+        const data = await res.json();
+        if (data.ok) {
+            sessionStorage.setItem("admin_token", pw);
+            hideLoginOverlay();
+            initAdmin();
+        } else {
+            if (errEl) { errEl.textContent = "パスワードが違います"; errEl.style.display = "block"; }
+        }
+    } catch(e) {
+        if (errEl) { errEl.textContent = "通信エラーが発生しました"; errEl.style.display = "block"; }
+    }
+}
+
+// 管理機能の初期化（ログイン後に呼ぶ）
+function initAdmin() {
+    if (document.getElementById("calendar")) loadData();
+
+    setInterval(pollDeliveryOrders, 30000);
+    setTimeout(pollDeliveryOrders, 5000);
+    setInterval(pollReservations, 30000);
+    setTimeout(pollReservations, 7000);
+
+    requestNotificationPermission();
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log('SW registered:', reg.scope))
+            .catch(err => console.warn('SW registration failed:', err));
+    }
+
+    document.getElementById("tab-btn-calendar")?.addEventListener("click", () => switchTab("calendar"));
+    document.getElementById("tab-btn-reservations")?.addEventListener("click", () => switchTab("reservations"));
+    document.getElementById("admin-refresh-btn")?.addEventListener("click", loadData);
+    document.getElementById("toggle-kaiten-track")?.addEventListener("click", toggleKaitenOnly);
+    document.getElementById("toggle-demae-only-track")?.addEventListener("click", toggleDemaeOnlyFilter);
+    document.getElementById("toggle-today-track")?.addEventListener("click", toggleTodayOnly);
+    document.getElementById("demae-banner")?.addEventListener("click", dismissDeliveryBanner);
+    document.getElementById("demae-alert-confirm-btn")?.addEventListener("click", dismissFullscreenAlertAndSwitch);
+    document.getElementById("demae-fullscreen-alert")?.addEventListener("click", dismissFullscreenAlert);
+    document.querySelector(".demae-alert-box")?.addEventListener("click", e => e.stopPropagation());
+    document.getElementById("modal-btn-circle")?.addEventListener("click", () => update("○"));
+    document.getElementById("modal-btn-triangle")?.addEventListener("click", () => update("△"));
+    document.getElementById("modal-btn-cross")?.addEventListener("click", () => update("×"));
+    document.getElementById("modal-btn-cancel")?.addEventListener("click", closeModal);
+}
+
+// DOMContentLoaded でトークン確認 → ログイン画面 or 管理画面初期化
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("login-btn")?.addEventListener("click", handleLogin);
+    document.getElementById("login-password")?.addEventListener("keydown", e => {
+        if (e.key === "Enter") handleLogin();
+    });
+    document.getElementById("logout-btn")?.addEventListener("click", () => {
+        sessionStorage.removeItem("admin_token");
+        showLoginOverlay();
+    });
+
+    if (getAdminToken()) {
+        initAdmin();
+    } else {
+        showLoginOverlay();
+    }
+});
 
 let calendarData = [];
 let selectedDate = null;
@@ -162,7 +275,7 @@ function update(status) {
 
     fetch(GAS_URL, {
         method: "POST",
-        body: JSON.stringify({ date: dateToUpdate, status: status })
+        body: JSON.stringify({ date: dateToUpdate, status: status, token: getAdminToken() })
     })
     .then(res => res.text())
     .then(() => {
@@ -210,8 +323,6 @@ function loadData() {
         });
 }
 
-if (document.getElementById("calendar")) loadData();
-
 // ============================================================
 // タブ切り替え
 // ============================================================
@@ -241,9 +352,10 @@ async function loadReservations() {
 
     try {
         const [resData, demaeData] = await Promise.all([
-            fetch(GAS_URL + "?action=getReservations").then(r => r.json()),
-            fetch(GAS_URL + "?action=getDeliveryOrders").then(r => r.json())
+            fetch(adminUrl(GAS_URL, { action: "getReservations" })).then(r => r.json()),
+            fetch(adminUrl(GAS_URL, { action: "getDeliveryOrders" })).then(r => r.json())
         ]);
+        if (isUnauthorized(resData) || isUnauthorized(demaeData)) { handleUnauthorized(); return; }
         _reservationCache = resData;
         _demaeCache = demaeData;
         renderUnifiedList(resData, demaeData);
@@ -486,6 +598,7 @@ async function cancelReservation(timestamp, btn) {
     const url = new URL(GAS_URL);
     url.searchParams.set("action", "cancelReservation");
     url.searchParams.set("timestamp", timestamp);
+    url.searchParams.set("token", getAdminToken());
     const res = await fetch(url.toString());
 
     const text = await res.text();
@@ -654,6 +767,7 @@ async function saveEdit() {
         url.searchParams.set("count", payload["来店人数"]);
         url.searchParams.set("plan", payload["ご利用プラン"]);
         url.searchParams.set("seat", payload["座席のタイプ"]);
+        url.searchParams.set("token", getAdminToken());
         const res = await fetch(url.toString());
         const text = await res.text();
         if (text.trim() === "OK") {
@@ -720,6 +834,7 @@ async function saveDemaeEdit(orderNum) {
         url.searchParams.set("address",      document.getElementById("de-address").value);
         url.searchParams.set("deliveryDate", document.getElementById("de-date").value);
         url.searchParams.set("note",         document.getElementById("de-note").value);
+        url.searchParams.set("token", getAdminToken());
         const res = await fetch(url.toString());
         const text = await res.text();
         if (text.trim() === "OK") {
@@ -810,6 +925,7 @@ async function updateDemaeStatus(orderNum, status, clickedBtn) {
         url.searchParams.set("action", "updateDemaeStatus");
         url.searchParams.set("orderNum", orderNum);
         url.searchParams.set("status", status);
+        url.searchParams.set("token", getAdminToken());
         const res  = await fetch(url.toString());
         const text = await res.text();
 
@@ -1026,7 +1142,7 @@ function dismissDeliveryBanner() {
 
 async function pollDeliveryOrders() {
     try {
-        const res  = await fetch(GAS_URL + "?action=getLastDeliveryTimestamp");
+        const res  = await fetch(adminUrl(GAS_URL, { action: "getLastDeliveryTimestamp" }));
         const data = await res.json();
         const ts   = data.timestamp;
 
@@ -1056,7 +1172,7 @@ async function pollDeliveryOrders() {
 
 async function pollReservations() {
     try {
-        const res  = await fetch(GAS_URL + "?action=getLastReservationTimestamp");
+        const res  = await fetch(adminUrl(GAS_URL, { action: "getLastReservationTimestamp" }));
         const data = await res.json();
         const ts   = data.timestamp;
 
@@ -1091,38 +1207,4 @@ function dismissReservationBanner() {
     switchTab("reservations");
 }
 
-// 30秒ごとにポーリング開始
-setInterval(pollDeliveryOrders, 30000);
-// 初回は5秒後（ページロード直後の通信負荷を避ける）
-setTimeout(pollDeliveryOrders, 5000);
-
-setInterval(pollReservations, 30000);
-setTimeout(pollReservations, 7000);
-
-// ページ読み込み時にブラウザ通知の許可を求める
-requestNotificationPermission();
-
-// サービスワーカー登録（PWA）
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js')
-        .then(reg => console.log('SW registered:', reg.scope))
-        .catch(err => console.warn('SW registration failed:', err));
-}
-
-// ============================================================
-// イベントリスナー（インラインハンドラの代替）
-// ============================================================
-document.getElementById("tab-btn-calendar")?.addEventListener("click", () => switchTab("calendar"));
-document.getElementById("tab-btn-reservations")?.addEventListener("click", () => switchTab("reservations"));
-document.getElementById("admin-refresh-btn")?.addEventListener("click", loadData);
-document.getElementById("toggle-kaiten-track")?.addEventListener("click", toggleKaitenOnly);
-document.getElementById("toggle-demae-only-track")?.addEventListener("click", toggleDemaeOnlyFilter);
-document.getElementById("toggle-today-track")?.addEventListener("click", toggleTodayOnly);
-document.getElementById("demae-banner")?.addEventListener("click", dismissDeliveryBanner);
-document.getElementById("demae-alert-confirm-btn")?.addEventListener("click", dismissFullscreenAlertAndSwitch);
-document.getElementById("demae-fullscreen-alert")?.addEventListener("click", dismissFullscreenAlert);
-document.querySelector(".demae-alert-box")?.addEventListener("click", e => e.stopPropagation());
-document.getElementById("modal-btn-circle")?.addEventListener("click", () => update("○"));
-document.getElementById("modal-btn-triangle")?.addEventListener("click", () => update("△"));
-document.getElementById("modal-btn-cross")?.addEventListener("click", () => update("×"));
-document.getElementById("modal-btn-cancel")?.addEventListener("click", closeModal);
+// ※ 初期化は initAdmin()（ログイン後に呼ばれる）に移動済み

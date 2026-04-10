@@ -15,6 +15,18 @@
 
 <body>
 
+    <!-- 管理者ログインオーバーレイ -->
+    <div id="login-overlay">
+        <div id="login-box">
+            <div class="login-logo">鮨処ひし田</div>
+            <h2 class="login-title">管理画面</h2>
+            <p class="login-sub">パスワードを入力してください</p>
+            <input type="password" id="login-password" placeholder="パスワード" autocomplete="current-password">
+            <p id="login-error"></p>
+            <button id="login-btn">ログイン</button>
+        </div>
+    </div>
+
     <!-- ローディングオーバーレイ（通信中に表示） -->
     <div class="loading-overlay" id="loading">
         <div class="spinner"></div>
@@ -29,6 +41,7 @@
                 <button class="tab-btn active" id="tab-btn-calendar">予約カレンダー管理</button>
                 <button class="tab-btn" id="tab-btn-reservations">予約一覧 <span id="demae-badge">新着</span></button>
                 <button class="tab-btn" id="admin-refresh-btn">更新</button>
+                <button class="tab-btn tab-btn-logout" id="logout-btn">ログアウト</button>
             </div>
         </nav>
     </header>

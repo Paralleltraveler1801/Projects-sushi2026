@@ -81,6 +81,26 @@ ${itemsText}
 // ===== Webアプリ用エンドポイント（GET） =====
 function doGet(e) {
   const action = e.parameter.action;
+  const ADMIN_SECRET = PropertiesService.getScriptProperties().getProperty('ADMIN_SECRET');
+
+  // トークン検証エンドポイント（ログイン確認用）
+  if (action === "verifyToken") {
+    const ok = !!(ADMIN_SECRET && e.parameter.token === ADMIN_SECRET);
+    return ContentService.createTextOutput(JSON.stringify({ ok: ok }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // 管理者専用アクションのトークン検証
+  const PROTECTED_ACTIONS = [
+    "getDeliveryOrders", "getLastDeliveryTimestamp", "getLastReservationTimestamp",
+    "updateDemaeStatus", "updateDemaeOrder", "getReservations", "cancelReservation", "updateReservation"
+  ];
+  if (PROTECTED_ACTIONS.indexOf(action) !== -1) {
+    if (!ADMIN_SECRET || e.parameter.token !== ADMIN_SECRET) {
+      return ContentService.createTextOutput(JSON.stringify({ error: "unauthorized" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+  }
 
   // 出前注文一覧取得
   if (action === "getDeliveryOrders") {
@@ -545,6 +565,15 @@ function doGet(e) {
 function doPost(e) {
   const params = JSON.parse(e.postData.contents);
   const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  // 出前注文（一般ユーザー）以外は管理者トークン必須
+  if (params.type !== "demae") {
+    const secret = PropertiesService.getScriptProperties().getProperty('ADMIN_SECRET');
+    if (!secret || params.token !== secret) {
+      return ContentService.createTextOutput(JSON.stringify({ error: "unauthorized" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+  }
 
   // 出前注文
   if (params.type === "demae") {
