@@ -129,6 +129,20 @@ function doGet(e) {
       .setMimeType(ContentService.MimeType.JSON);
   }
 
+  // 来店予約最新タイムスタンプ（ポーリング用）
+  if (action === "getLastReservationTimestamp") {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Form_Responses");
+    if (!sheet || sheet.getLastRow() <= 1) {
+      return ContentService.createTextOutput(JSON.stringify({ timestamp: null }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    const lastRow = sheet.getLastRow();
+    const tsVal = sheet.getRange(lastRow, 1).getValue();
+    const ts = tsVal instanceof Date ? tsVal.toISOString() : String(tsVal || '');
+    return ContentService.createTextOutput(JSON.stringify({ timestamp: ts }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
   // 出前ステータス更新
   if (action === "updateDemaeStatus") {
     const ss = SpreadsheetApp.getActiveSpreadsheet();

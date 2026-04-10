@@ -856,8 +856,9 @@ function _rollbackStatus(card, badge, prevStatus, colorMap) {
 // ============================================================
 // ポーリング・新着通知
 // ============================================================
-let _lastDeliveryTimestamp = null;
-let _titleBlinkInterval    = null;
+let _lastDeliveryTimestamp     = null;
+let _lastReservationTimestamp  = null;
+let _titleBlinkInterval        = null;
 const ORIGINAL_TITLE       = document.title;
 
 // ===== 音声 =====
@@ -909,6 +910,19 @@ function playUpdateSound() {
     if (_isAlertPlaying) return;
     _updateAudio.currentTime = 0;
     _updateAudio.play().catch(e => console.warn("play error:", e));
+}
+
+// 来店予約通知音（2回鳴らす）
+const _reservationAudio = new Audio("sucess_sound.mp3");
+_reservationAudio.preload = "auto";
+function playReservationSound() {
+    _reservationAudio.currentTime = 0;
+    _reservationAudio.play().catch(e => console.warn("play error:", e));
+    _reservationAudio.onended = () => {
+        _reservationAudio.onended = null;
+        _reservationAudio.currentTime = 0;
+        _reservationAudio.play().catch(e => console.warn("play error:", e));
+    };
 }
 
 // トースト通知
@@ -1040,10 +1054,50 @@ async function pollDeliveryOrders() {
     }
 }
 
+async function pollReservations() {
+    try {
+        const res  = await fetch(GAS_URL + "?action=getLastReservationTimestamp");
+        const data = await res.json();
+        const ts   = data.timestamp;
+
+        if (!ts) return;
+
+        if (_lastReservationTimestamp === null) {
+            _lastReservationTimestamp = ts;
+            return;
+        }
+
+        if (ts !== _lastReservationTimestamp && new Date(ts) > new Date(_lastReservationTimestamp)) {
+            _lastReservationTimestamp = ts;
+            playReservationSound();
+            showReservationBanner();
+            if (getComputedStyle(document.getElementById("tab-reservations")).display !== "none") {
+                loadReservations();
+            }
+        }
+    } catch(e) {
+        console.warn("予約ポーリングエラー:", e);
+    }
+}
+
+function showReservationBanner() {
+    const banner = document.getElementById("reservation-banner");
+    if (banner) banner.style.display = "block";
+}
+
+function dismissReservationBanner() {
+    const banner = document.getElementById("reservation-banner");
+    if (banner) banner.style.display = "none";
+    switchTab("reservations");
+}
+
 // 30秒ごとにポーリング開始
 setInterval(pollDeliveryOrders, 30000);
 // 初回は5秒後（ページロード直後の通信負荷を避ける）
 setTimeout(pollDeliveryOrders, 5000);
+
+setInterval(pollReservations, 30000);
+setTimeout(pollReservations, 7000);
 
 // ページ読み込み時にブラウザ通知の許可を求める
 requestNotificationPermission();

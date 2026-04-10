@@ -607,6 +607,23 @@ nav {
     cursor: pointer;
 }
 
+/* ===== 新着来店予約通知バナー ===== */
+#reservation-banner {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #e53935;
+    color: #fff;
+    text-align: center;
+    padding: 14px;
+    font-size: 1rem;
+    font-weight: 700;
+    z-index: 19999;
+    cursor: pointer;
+}
+
 /* ===== 新着出前 全画面アラート ===== */
 #demae-fullscreen-alert {
     display: none;
