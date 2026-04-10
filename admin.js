@@ -10,12 +10,12 @@ function getAdminToken() {
     return sessionStorage.getItem("admin_token") || "";
 }
 
-// 管理者専用のGAS GETリクエストURLにトークンを付与するヘルパー
-function adminUrl(base, params = {}) {
-    const url = new URL(base);
-    url.searchParams.set("token", getAdminToken());
-    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-    return url.toString();
+// 管理者専用GASリクエスト：トークンをリクエストボディ（POST）で送る
+async function adminPost(action, params = {}) {
+    return fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify({ action, token: getAdminToken(), ...params })
+    });
 }
 
 // GASレスポンスが unauthorized の場合に再ログインを促す
@@ -51,10 +51,10 @@ async function handleLogin() {
     if (errEl) errEl.style.display = "none";
 
     try {
-        const url = new URL(GAS_URL);
-        url.searchParams.set("action", "verifyToken");
-        url.searchParams.set("token", pw);
-        const res  = await fetch(url.toString());
+        const res  = await fetch(GAS_URL, {
+            method: "POST",
+            body: JSON.stringify({ action: "verifyToken", token: pw })
+        });
         const data = await res.json();
         if (data.ok) {
             sessionStorage.setItem("admin_token", pw);
@@ -352,8 +352,8 @@ async function loadReservations() {
 
     try {
         const [resData, demaeData] = await Promise.all([
-            fetch(adminUrl(GAS_URL, { action: "getReservations" })).then(r => r.json()),
-            fetch(adminUrl(GAS_URL, { action: "getDeliveryOrders" })).then(r => r.json())
+            adminPost("getReservations").then(r => r.json()),
+            adminPost("getDeliveryOrders").then(r => r.json())
         ]);
         if (isUnauthorized(resData) || isUnauthorized(demaeData)) { handleUnauthorized(); return; }
         _reservationCache = resData;
@@ -595,11 +595,7 @@ async function cancelReservation(timestamp, btn) {
     btn.disabled = true;
     btn.textContent = "処理中...";
 
-    const url = new URL(GAS_URL);
-    url.searchParams.set("action", "cancelReservation");
-    url.searchParams.set("timestamp", timestamp);
-    url.searchParams.set("token", getAdminToken());
-    const res = await fetch(url.toString());
+    const res = await adminPost("cancelReservation", { timestamp });
 
     const text = await res.text();
     if (text === "OK") {
@@ -756,19 +752,17 @@ async function saveEdit() {
     btn.textContent = "保存中...";
 
     try {
-        const url = new URL(GAS_URL);
-        url.searchParams.set("action", "updateReservation");
-        url.searchParams.set("ts", editingTimestamp);
-        url.searchParams.set("memo", editMemo);
-        url.searchParams.set("name", payload["お名前"]);
-        url.searchParams.set("tel", payload["電話番号"]);
-        url.searchParams.set("date", payload["来店日時"]);
-        url.searchParams.set("time", payload["来店時刻"]);
-        url.searchParams.set("count", payload["来店人数"]);
-        url.searchParams.set("plan", payload["ご利用プラン"]);
-        url.searchParams.set("seat", payload["座席のタイプ"]);
-        url.searchParams.set("token", getAdminToken());
-        const res = await fetch(url.toString());
+        const res = await adminPost("updateReservation", {
+            ts:    editingTimestamp,
+            memo:  editMemo,
+            name:  payload["お名前"],
+            tel:   payload["電話番号"],
+            date:  payload["来店日時"],
+            time:  payload["来店時刻"],
+            count: payload["来店人数"],
+            plan:  payload["ご利用プラン"],
+            seat:  payload["座席のタイプ"]
+        });
         const text = await res.text();
         if (text.trim() === "OK") {
             alert("更新しました！");
@@ -826,16 +820,14 @@ async function saveDemaeEdit(orderNum) {
     btn.textContent = "保存中...";
 
     try {
-        const url = new URL(GAS_URL);
-        url.searchParams.set("action", "updateDemaeOrder");
-        url.searchParams.set("orderNum", orderNum);
-        url.searchParams.set("name",         document.getElementById("de-name").value);
-        url.searchParams.set("tel",          document.getElementById("de-tel").value);
-        url.searchParams.set("address",      document.getElementById("de-address").value);
-        url.searchParams.set("deliveryDate", document.getElementById("de-date").value);
-        url.searchParams.set("note",         document.getElementById("de-note").value);
-        url.searchParams.set("token", getAdminToken());
-        const res = await fetch(url.toString());
+        const res = await adminPost("updateDemaeOrder", {
+            orderNum,
+            name:         document.getElementById("de-name").value,
+            tel:          document.getElementById("de-tel").value,
+            address:      document.getElementById("de-address").value,
+            deliveryDate: document.getElementById("de-date").value,
+            note:         document.getElementById("de-note").value
+        });
         const text = await res.text();
         if (text.trim() === "OK") {
             alert("更新しました！");
@@ -921,12 +913,7 @@ async function updateDemaeStatus(orderNum, status, clickedBtn) {
     if (card) card.querySelectorAll(".demae-status-btn, .demae-cancel-btn").forEach(b => b.disabled = true);
 
     try {
-        const url = new URL(GAS_URL);
-        url.searchParams.set("action", "updateDemaeStatus");
-        url.searchParams.set("orderNum", orderNum);
-        url.searchParams.set("status", status);
-        url.searchParams.set("token", getAdminToken());
-        const res  = await fetch(url.toString());
+        const res  = await adminPost("updateDemaeStatus", { orderNum, status });
         const text = await res.text();
 
         if (text.trim() === "OK") {
@@ -1142,7 +1129,7 @@ function dismissDeliveryBanner() {
 
 async function pollDeliveryOrders() {
     try {
-        const res  = await fetch(adminUrl(GAS_URL, { action: "getLastDeliveryTimestamp" }));
+        const res  = await adminPost("getLastDeliveryTimestamp");
         const data = await res.json();
         const ts   = data.timestamp;
 
@@ -1172,7 +1159,7 @@ async function pollDeliveryOrders() {
 
 async function pollReservations() {
     try {
-        const res  = await fetch(adminUrl(GAS_URL, { action: "getLastReservationTimestamp" }));
+        const res  = await adminPost("getLastReservationTimestamp");
         const data = await res.json();
         const ts   = data.timestamp;
 

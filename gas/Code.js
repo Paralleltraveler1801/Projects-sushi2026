@@ -78,160 +78,10 @@ ${itemsText}
   MailApp.sendEmail({ to: shopEmail, subject: subject, body: body });
 }
 
-// ===== Webアプリ用エンドポイント（GET） =====
+// ===== Webアプリ用エンドポイント（GET） - 一般ユーザー向け公開アクションのみ =====
+// 管理者アクションはすべて doPost（トークンはリクエストボディで送信）へ移動済み
 function doGet(e) {
   const action = e.parameter.action;
-  const ADMIN_SECRET = PropertiesService.getScriptProperties().getProperty('ADMIN_SECRET');
-
-  // トークン検証エンドポイント（ログイン確認用）
-  if (action === "verifyToken") {
-    const ok = !!(ADMIN_SECRET && e.parameter.token === ADMIN_SECRET);
-    return ContentService.createTextOutput(JSON.stringify({ ok: ok }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-
-  // 管理者専用アクションのトークン検証
-  const PROTECTED_ACTIONS = [
-    "getDeliveryOrders", "getLastDeliveryTimestamp", "getLastReservationTimestamp",
-    "updateDemaeStatus", "updateDemaeOrder", "getReservations", "cancelReservation", "updateReservation"
-  ];
-  if (PROTECTED_ACTIONS.indexOf(action) !== -1) {
-    if (!ADMIN_SECRET || e.parameter.token !== ADMIN_SECRET) {
-      return ContentService.createTextOutput(JSON.stringify({ error: "unauthorized" }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-  }
-
-  // 出前注文一覧取得
-  if (action === "getDeliveryOrders") {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const sheet = ss.getSheetByName("出前");
-    if (!sheet || sheet.getLastRow() <= 1) {
-      return ContentService.createTextOutput(JSON.stringify([]))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-    const data = sheet.getDataRange().getValues();
-    const headers = data[0];
-    const result = data.slice(1).map(function(row) {
-      const obj = {};
-      headers.forEach(function(h, i) {
-        const key = String(h);
-        const val = row[i];
-        if (val instanceof Date) {
-          // お届け希望日はJSTの日付文字列（YYYY-MM-DD）で返す
-          if (key === "お届け希望日") {
-            obj[key] = Utilities.formatDate(val, "Asia/Tokyo", "yyyy-MM-dd");
-          } else {
-            obj[key] = val.toISOString();
-          }
-        } else {
-          obj[key] = String(val === null || val === undefined ? '' : val);
-        }
-      });
-      return obj;
-    });
-    return ContentService.createTextOutput(JSON.stringify(result))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-
-  // 出前注文最新タイムスタンプ（ポーリング用）
-  if (action === "getLastDeliveryTimestamp") {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const sheet = ss.getSheetByName("出前");
-    if (!sheet || sheet.getLastRow() <= 1) {
-      return ContentService.createTextOutput(JSON.stringify({ timestamp: null }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-    const lastRow = sheet.getLastRow();
-    const tsVal = sheet.getRange(lastRow, 1).getValue();
-    const ts = tsVal instanceof Date ? tsVal.toISOString() : String(tsVal || '');
-    return ContentService.createTextOutput(JSON.stringify({ timestamp: ts }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-
-  // 来店予約最新タイムスタンプ（ポーリング用）
-  if (action === "getLastReservationTimestamp") {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Form_Responses");
-    if (!sheet || sheet.getLastRow() <= 1) {
-      return ContentService.createTextOutput(JSON.stringify({ timestamp: null }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-    const lastRow = sheet.getLastRow();
-    const tsVal = sheet.getRange(lastRow, 1).getValue();
-    const ts = tsVal instanceof Date ? tsVal.toISOString() : String(tsVal || '');
-    return ContentService.createTextOutput(JSON.stringify({ timestamp: ts }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-
-  // 出前ステータス更新
-  if (action === "updateDemaeStatus") {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const sheet = ss.getSheetByName("出前");
-    if (!sheet) {
-      return ContentService.createTextOutput("NOT_FOUND").setMimeType(ContentService.MimeType.TEXT);
-    }
-    const orderNum = String(e.parameter.orderNum || "").trim();
-    const status   = String(e.parameter.status   || "").trim();
-    const data = sheet.getDataRange().getValues();
-    const headers = data[0];
-    const orderNumCol = headers.findIndex(function(h) { return h === "注文番号"; });
-    const statusCol   = headers.findIndex(function(h) { return h === "ステータス"; });
-    if (orderNumCol === -1 || statusCol === -1) {
-      return ContentService.createTextOutput("COLUMN_NOT_FOUND").setMimeType(ContentService.MimeType.TEXT);
-    }
-    for (let i = 1; i < data.length; i++) {
-      if (String(data[i][orderNumCol]).trim() === orderNum) {
-        sheet.getRange(i + 1, statusCol + 1).setValue(status);
-        return ContentService.createTextOutput("OK").setMimeType(ContentService.MimeType.TEXT);
-      }
-    }
-    return ContentService.createTextOutput("NOT_FOUND").setMimeType(ContentService.MimeType.TEXT);
-  }
-
-  // 出前注文内容更新
-  if (action === "updateDemaeOrder") {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const sheet = ss.getSheetByName("出前");
-    if (!sheet) {
-      return ContentService.createTextOutput("NOT_FOUND").setMimeType(ContentService.MimeType.TEXT);
-    }
-    const orderNum = String(e.parameter.orderNum || "").trim();
-    const data = sheet.getDataRange().getValues();
-    const headers = data[0];
-    const orderNumCol = headers.findIndex(function(h) { return h === "注文番号"; });
-    if (orderNumCol === -1) {
-      return ContentService.createTextOutput("COLUMN_NOT_FOUND").setMimeType(ContentService.MimeType.TEXT);
-    }
-    const rowIdx = data.slice(1).findIndex(function(row) { return String(row[orderNumCol]).trim() === orderNum; });
-    if (rowIdx === -1) {
-      return ContentService.createTextOutput("NOT_FOUND").setMimeType(ContentService.MimeType.TEXT);
-    }
-    const fieldMap = { "氏名": "name", "電話番号": "tel", "住所": "address", "お届け希望日": "deliveryDate", "備考": "note", "ステータス": "status" };
-    const diffs = [];
-    Object.keys(fieldMap).forEach(function(field) {
-      const colIdx = headers.findIndex(function(h) { return h === field; });
-      const newVal = e.parameter[fieldMap[field]];
-      if (colIdx === -1 || newVal === undefined) return;
-      const oldVal = String(data[rowIdx + 1][colIdx] || "").trim();
-      if (oldVal !== String(newVal).trim()) {
-        diffs.push(field + ": " + oldVal + "→" + newVal);
-      }
-      sheet.getRange(rowIdx + 2, colIdx + 1).setValue(newVal);
-    });
-
-    // 編集ログ列に追記
-    let logCol = headers.findIndex(function(h) { return h === "編集ログ"; });
-    if (logCol === -1) {
-      logCol = headers.length;
-      sheet.getRange(1, logCol + 1).setValue("編集ログ");
-    }
-    const now = Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy/MM/dd HH:mm");
-    const logEntry = "[" + now + "] " + (diffs.length > 0 ? diffs.join("、") : "変更なし");
-    const existing = String(sheet.getRange(rowIdx + 2, logCol + 1).getValue() || "").trim();
-    sheet.getRange(rowIdx + 2, logCol + 1).setValue(existing ? existing + "\n" + logEntry : logEntry);
-
-    return ContentService.createTextOutput("OK").setMimeType(ContentService.MimeType.TEXT);
-  }
 
   if (action === "getTimestamp") {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
@@ -239,35 +89,6 @@ function doGet(e) {
     return ContentService.createTextOutput(
       JSON.stringify({ timestamp: timestamp })
     ).setMimeType(ContentService.MimeType.JSON);
-  }
-
-  if (action === "getReservations") {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Form_Responses");
-    const data = sheet.getDataRange().getValues();
-    const headers = data[0];
-    const result = data.slice(1).map(row => {
-      const obj = {};
-      headers.forEach((h, i) => {
-        const hStr = String(h || "");
-        const normalizedKey = hStr.startsWith("来店時間") ? "来店時刻" : hStr;
-        const val = row[i];
-        const isDate = val && typeof val.getTime === 'function';
-        if (isDate) {
-          if (hStr === 'タイムスタンプ') {
-            obj[normalizedKey] = val.toISOString();
-          } else if (hStr.startsWith('来店時間')) {
-            obj[normalizedKey] = String(val.getHours()).padStart(2,'00') + '時' + String(val.getMinutes()).padStart(2,'0') + '分';
-          } else {
-            obj[normalizedKey] = Utilities.formatDate(val, 'Asia/Tokyo', 'yyyy年M月d日');
-          }
-        } else {
-          obj[normalizedKey] = String(val || '').trim();
-        }
-      });
-      return obj;
-    });
-    return ContentService.createTextOutput(JSON.stringify(result))
-      .setMimeType(ContentService.MimeType.JSON);
   }
 
   if (action === "checkPrivateRoom") {
@@ -379,69 +200,6 @@ function doGet(e) {
 
     return ContentService.createTextOutput(JSON.stringify(result))
       .setMimeType(ContentService.MimeType.JSON);
-  }
-
-  if (action === "cancelReservation") {
-    const timestamp = e.parameter.timestamp;
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Form_Responses");
-    const data = sheet.getDataRange().getValues();
-    const paramSec = Math.round(new Date(timestamp).getTime() / 1000);
-    for (let i = 1; i < data.length; i++) {
-      const tsA = data[i][0];
-      const tsDate = (tsA instanceof Date) ? tsA : new Date(String(tsA));
-      if (isNaN(tsDate.getTime())) continue;
-      if (Math.round(tsDate.getTime() / 1000) === paramSec) {
-        sheet.deleteRow(i + 1);
-        break;
-      }
-    }
-    return ContentService.createTextOutput("OK").setMimeType(ContentService.MimeType.TEXT);
-  }
-
-  if (action === "updateReservation") {
-    const formSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Form_Responses");
-    const data = formSheet.getDataRange().getValues();
-    const headers = data[0];
-    const paramTs = String(e.parameter.ts || "");
-    const paramSec = Math.round(new Date(paramTs).getTime() / 1000);
-
-    let foundRow = -1;
-    for (let i = 1; i < data.length; i++) {
-      const tsA = data[i][0];
-      const tsDate = (tsA instanceof Date) ? tsA : new Date(String(tsA));
-      if (isNaN(tsDate.getTime())) continue;
-      if (Math.round(tsDate.getTime() / 1000) === paramSec) { foundRow = i; break; }
-    }
-
-    if (foundRow === -1) {
-      return ContentService.createTextOutput("TIMESTAMP_NOT_FOUND").setMimeType(ContentService.MimeType.TEXT);
-    }
-
-    const keyMap = {
-      "お名前": e.parameter.name,
-      "電話番号": e.parameter.tel,
-      "来店日時": e.parameter.date,
-      "来店時刻": e.parameter.time,
-      "来店人数": e.parameter.count,
-      "ご利用プラン": e.parameter.plan,
-      "座席のタイプ": e.parameter.seat,
-    };
-
-    for (let col = 0; col < headers.length; col++) {
-      const hStr = String(headers[col] || "");
-      const key = hStr.startsWith("来店時間") ? "来店時刻" : hStr;
-      if (keyMap[key] !== undefined) {
-        formSheet.getRange(foundRow + 1, col + 1).setValue(keyMap[key]);
-      }
-    }
-
-    let bikoCol = headers.findIndex(h => h === "備考");
-    if (bikoCol === -1) { bikoCol = headers.length; formSheet.getRange(1, bikoCol + 1).setValue("備考"); }
-    const now = Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy/MM/dd HH:mm");
-    const newLog = "[" + now + "] " + (e.parameter.memo || "編集実行");
-    const existing = formSheet.getRange(foundRow + 1, bikoCol + 1).getValue() || "";
-    formSheet.getRange(foundRow + 1, bikoCol + 1).setValue(existing ? existing + "\n" + newLog : newLog);
-    return ContentService.createTextOutput("OK").setMimeType(ContentService.MimeType.TEXT);
   }
 
   if (action === "submitReservation") {
@@ -573,6 +331,192 @@ function doPost(e) {
       return ContentService.createTextOutput(JSON.stringify({ error: "unauthorized" }))
         .setMimeType(ContentService.MimeType.JSON);
     }
+  }
+
+  // ===== 管理者アクション（トークン検証済み） =====
+
+  // ログイン確認（トークンが正しければここに到達 → ok: true）
+  if (params.action === "verifyToken") {
+    return ContentService.createTextOutput(JSON.stringify({ ok: true }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // 出前注文一覧取得
+  if (params.action === "getDeliveryOrders") {
+    const sheet = ss.getSheetByName("出前");
+    if (!sheet || sheet.getLastRow() <= 1) {
+      return ContentService.createTextOutput(JSON.stringify([]))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    const result = data.slice(1).map(function(row) {
+      const obj = {};
+      headers.forEach(function(h, i) {
+        const key = String(h);
+        const val = row[i];
+        if (val instanceof Date) {
+          obj[key] = key === "お届け希望日"
+            ? Utilities.formatDate(val, "Asia/Tokyo", "yyyy-MM-dd")
+            : val.toISOString();
+        } else {
+          obj[key] = String(val === null || val === undefined ? '' : val);
+        }
+      });
+      return obj;
+    });
+    return ContentService.createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // 出前注文最新タイムスタンプ（ポーリング用）
+  if (params.action === "getLastDeliveryTimestamp") {
+    const sheet = ss.getSheetByName("出前");
+    if (!sheet || sheet.getLastRow() <= 1) {
+      return ContentService.createTextOutput(JSON.stringify({ timestamp: null }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    const tsVal = sheet.getRange(sheet.getLastRow(), 1).getValue();
+    const ts = tsVal instanceof Date ? tsVal.toISOString() : String(tsVal || '');
+    return ContentService.createTextOutput(JSON.stringify({ timestamp: ts }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // 来店予約最新タイムスタンプ（ポーリング用）
+  if (params.action === "getLastReservationTimestamp") {
+    const sheet = ss.getSheetByName("Form_Responses");
+    if (!sheet || sheet.getLastRow() <= 1) {
+      return ContentService.createTextOutput(JSON.stringify({ timestamp: null }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    const tsVal = sheet.getRange(sheet.getLastRow(), 1).getValue();
+    const ts = tsVal instanceof Date ? tsVal.toISOString() : String(tsVal || '');
+    return ContentService.createTextOutput(JSON.stringify({ timestamp: ts }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // 出前ステータス更新
+  if (params.action === "updateDemaeStatus") {
+    const sheet = ss.getSheetByName("出前");
+    if (!sheet) return ContentService.createTextOutput("NOT_FOUND").setMimeType(ContentService.MimeType.TEXT);
+    const orderNum = String(params.orderNum || "").trim();
+    const status   = String(params.status   || "").trim();
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    const orderNumCol = headers.findIndex(function(h) { return h === "注文番号"; });
+    const statusCol   = headers.findIndex(function(h) { return h === "ステータス"; });
+    if (orderNumCol === -1 || statusCol === -1) return ContentService.createTextOutput("COLUMN_NOT_FOUND").setMimeType(ContentService.MimeType.TEXT);
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][orderNumCol]).trim() === orderNum) {
+        sheet.getRange(i + 1, statusCol + 1).setValue(status);
+        return ContentService.createTextOutput("OK").setMimeType(ContentService.MimeType.TEXT);
+      }
+    }
+    return ContentService.createTextOutput("NOT_FOUND").setMimeType(ContentService.MimeType.TEXT);
+  }
+
+  // 出前注文内容更新
+  if (params.action === "updateDemaeOrder") {
+    const sheet = ss.getSheetByName("出前");
+    if (!sheet) return ContentService.createTextOutput("NOT_FOUND").setMimeType(ContentService.MimeType.TEXT);
+    const orderNum = String(params.orderNum || "").trim();
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    const orderNumCol = headers.findIndex(function(h) { return h === "注文番号"; });
+    if (orderNumCol === -1) return ContentService.createTextOutput("COLUMN_NOT_FOUND").setMimeType(ContentService.MimeType.TEXT);
+    const rowIdx = data.slice(1).findIndex(function(row) { return String(row[orderNumCol]).trim() === orderNum; });
+    if (rowIdx === -1) return ContentService.createTextOutput("NOT_FOUND").setMimeType(ContentService.MimeType.TEXT);
+    const fieldMap = { "氏名": "name", "電話番号": "tel", "住所": "address", "お届け希望日": "deliveryDate", "備考": "note", "ステータス": "status" };
+    const diffs = [];
+    Object.keys(fieldMap).forEach(function(field) {
+      const colIdx = headers.findIndex(function(h) { return h === field; });
+      const newVal = params[fieldMap[field]];
+      if (colIdx === -1 || newVal === undefined) return;
+      const oldVal = String(data[rowIdx + 1][colIdx] || "").trim();
+      if (oldVal !== String(newVal).trim()) diffs.push(field + ": " + oldVal + "→" + newVal);
+      sheet.getRange(rowIdx + 2, colIdx + 1).setValue(newVal);
+    });
+    let logCol = headers.findIndex(function(h) { return h === "編集ログ"; });
+    if (logCol === -1) { logCol = headers.length; sheet.getRange(1, logCol + 1).setValue("編集ログ"); }
+    const now = Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy/MM/dd HH:mm");
+    const logEntry = "[" + now + "] " + (diffs.length > 0 ? diffs.join("、") : "変更なし");
+    const existing = String(sheet.getRange(rowIdx + 2, logCol + 1).getValue() || "").trim();
+    sheet.getRange(rowIdx + 2, logCol + 1).setValue(existing ? existing + "\n" + logEntry : logEntry);
+    return ContentService.createTextOutput("OK").setMimeType(ContentService.MimeType.TEXT);
+  }
+
+  // 来店予約一覧取得
+  if (params.action === "getReservations") {
+    const sheet = ss.getSheetByName("Form_Responses");
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    const result = data.slice(1).map(row => {
+      const obj = {};
+      headers.forEach((h, i) => {
+        const hStr = String(h || "");
+        const normalizedKey = hStr.startsWith("来店時間") ? "来店時刻" : hStr;
+        const val = row[i];
+        const isDate = val && typeof val.getTime === 'function';
+        if (isDate) {
+          if (hStr === 'タイムスタンプ') {
+            obj[normalizedKey] = val.toISOString();
+          } else if (hStr.startsWith('来店時間')) {
+            obj[normalizedKey] = String(val.getHours()).padStart(2,'00') + '時' + String(val.getMinutes()).padStart(2,'0') + '分';
+          } else {
+            obj[normalizedKey] = Utilities.formatDate(val, 'Asia/Tokyo', 'yyyy年M月d日');
+          }
+        } else {
+          obj[normalizedKey] = String(val || '').trim();
+        }
+      });
+      return obj;
+    });
+    return ContentService.createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // 来店予約キャンセル
+  if (params.action === "cancelReservation") {
+    const sheet = ss.getSheetByName("Form_Responses");
+    const data = sheet.getDataRange().getValues();
+    const paramSec = Math.round(new Date(params.timestamp).getTime() / 1000);
+    for (let i = 1; i < data.length; i++) {
+      const tsDate = (data[i][0] instanceof Date) ? data[i][0] : new Date(String(data[i][0]));
+      if (!isNaN(tsDate.getTime()) && Math.round(tsDate.getTime() / 1000) === paramSec) {
+        sheet.deleteRow(i + 1);
+        break;
+      }
+    }
+    return ContentService.createTextOutput("OK").setMimeType(ContentService.MimeType.TEXT);
+  }
+
+  // 来店予約更新
+  if (params.action === "updateReservation") {
+    const formSheet = ss.getSheetByName("Form_Responses");
+    const data = formSheet.getDataRange().getValues();
+    const headers = data[0];
+    const paramSec = Math.round(new Date(String(params.ts || "")).getTime() / 1000);
+    let foundRow = -1;
+    for (let i = 1; i < data.length; i++) {
+      const tsDate = (data[i][0] instanceof Date) ? data[i][0] : new Date(String(data[i][0]));
+      if (!isNaN(tsDate.getTime()) && Math.round(tsDate.getTime() / 1000) === paramSec) { foundRow = i; break; }
+    }
+    if (foundRow === -1) return ContentService.createTextOutput("TIMESTAMP_NOT_FOUND").setMimeType(ContentService.MimeType.TEXT);
+    const keyMap = {
+      "お名前": params.name, "電話番号": params.tel, "来店日時": params.date,
+      "来店時刻": params.time, "来店人数": params.count, "ご利用プラン": params.plan, "座席のタイプ": params.seat,
+    };
+    for (let col = 0; col < headers.length; col++) {
+      const key = String(headers[col] || "").startsWith("来店時間") ? "来店時刻" : String(headers[col] || "");
+      if (keyMap[key] !== undefined) formSheet.getRange(foundRow + 1, col + 1).setValue(keyMap[key]);
+    }
+    let bikoCol = headers.findIndex(h => h === "備考");
+    if (bikoCol === -1) { bikoCol = headers.length; formSheet.getRange(1, bikoCol + 1).setValue("備考"); }
+    const now = Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy/MM/dd HH:mm");
+    const newLog = "[" + now + "] " + (params.memo || "編集実行");
+    const existing = formSheet.getRange(foundRow + 1, bikoCol + 1).getValue() || "";
+    formSheet.getRange(foundRow + 1, bikoCol + 1).setValue(existing ? existing + "\n" + newLog : newLog);
+    return ContentService.createTextOutput("OK").setMimeType(ContentService.MimeType.TEXT);
   }
 
   // 出前注文
